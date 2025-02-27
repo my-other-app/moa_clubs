@@ -14,6 +14,7 @@ export default function CollegeDetails() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-white">
+         <button className="self-start text-gray-600">&larr; Back</button>
       <div className="bg-white p-8 rounded-xl shadow-md border border-gray-300 w-96">
         {/* Progress Bar */}
         <div className="flex justify-between mb-4">

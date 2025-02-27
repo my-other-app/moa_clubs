@@ -15,8 +15,14 @@ export default function SocialMediaDetails() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-white">
+    <div>
+    <button className="text-gray-600 mt-4 ml-4">&larr; Back</button>
+    <div className="min-h-screen flex justify-center items-center">
+      
       <div className="bg-white p-8 rounded-xl shadow-md border border-gray-300 w-96">
+        {/* Back Button */}
+        
+
         {/* Progress Bar */}
         <div className="flex justify-between mb-4">
           <div className="w-1/5 h-1 bg-green-500"></div>
@@ -74,6 +80,7 @@ export default function SocialMediaDetails() {
           </button>
         </form>
       </div>
+    </div>
     </div>
   );
 }

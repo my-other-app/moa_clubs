@@ -2,13 +2,14 @@
 
 import Navbar from '@/components/navbar'; 
 import Events from './Dashboard/events';
+import HackathonDashboard from './Dashboard/dashScreen';
 
 export default function Home() {
   return (
     <ul>
       <li>
       <Navbar />
-       <Events />
+       <HackathonDashboard />
       </li>
     </ul>
   );

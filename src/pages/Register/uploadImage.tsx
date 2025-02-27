@@ -22,11 +22,12 @@ export default function UploadImage() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-lg w-96 border border-gray-300">
-        <div className="flex justify-between mb-4">
-          <div className="w-1/4 h-1 bg-green-500" />
-          <div className="w-1/4 h-1 bg-gray-300" />
-          <div className="w-1/4 h-1 bg-gray-300" />
-          <div className="w-1/4 h-1 bg-gray-300" />
+      <div className="flex justify-center mb-4">
+          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
+          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
+          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
+          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
+          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
         </div>
         <h1 className="text-xl font-bold text-center mb-4">DROP YOUR DETAILS IN!</h1>
         <div className="flex flex-col items-center mb-4">

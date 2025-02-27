@@ -24,12 +24,12 @@ export default function SocialMediaDetails() {
         
 
         {/* Progress Bar */}
-        <div className="flex justify-between mb-4">
-          <div className="w-1/5 h-1 bg-green-500"></div>
-          <div className="w-1/5 h-1 bg-green-500"></div>
-          <div className="w-1/5 h-1 bg-green-500"></div>
-          <div className="w-1/5 h-1 bg-green-500"></div>
-          <div className="w-1/5 h-1 bg-gray-300"></div>
+        <div className="flex justify-center mb-4">
+          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
+          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
+          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
+          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
+          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
         </div>
 
         {/* Form Header */}

@@ -33,11 +33,12 @@ export default function ClubSelection() {
       <button className="self-start text-gray-600">&larr; Back</button>
       <div className="bg-white p-8 rounded-lg shadow-lg w-[50%] border border-gray-300">
         {/* Progress Bar */}
-        <div className="flex justify-between mb-4">
-          <div className="w-1/4 h-1 bg-green-500" />
-          <div className="w-1/4 h-1 bg-green-500" />
-          <div className="w-1/4 h-1 bg-gray-300" />
-          <div className="w-1/4 h-1 bg-gray-300" />
+        <div className="flex justify-center mb-4">
+          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
+          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
+          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
+          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
+          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
         </div>
 
         <div className="space-y-4 p-5 rounded-xl flex flex-col items-center">

@@ -17,12 +17,12 @@ export default function CollegeDetails() {
          <button className="self-start text-gray-600">&larr; Back</button>
       <div className="bg-white p-8 rounded-xl shadow-md border border-gray-300 w-96">
         {/* Progress Bar */}
-        <div className="flex justify-between mb-4">
-          <div className="w-1/5 h-1 bg-green-500"></div>
-          <div className="w-1/5 h-1 bg-green-500"></div>
-          <div className="w-1/5 h-1 bg-green-500"></div>
-          <div className="w-1/5 h-1 bg-gray-300"></div>
-          <div className="w-1/5 h-1 bg-gray-300"></div>
+        <div className="flex justify-center mb-4">
+          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
+          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
+          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
+          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
+          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
         </div>
 
         {/* Form Header */}

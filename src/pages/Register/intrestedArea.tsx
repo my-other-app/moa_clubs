@@ -30,6 +30,7 @@ export default function ClubSelection() {
 
   return (
     <div className="flex flex-col items-center justify-center p-6">
+      <button className="self-start text-gray-600">&larr; Back</button>
       <div className="bg-white p-8 rounded-lg shadow-lg w-[50%] border border-gray-300">
         {/* Progress Bar */}
         <div className="flex justify-between mb-4">

@@ -1,7 +1,10 @@
 import { useRouter } from "next/router";
 import { useState } from "react";
+import { useNavigate } from '@/utils/navigation';
 
 const FinalFill = () => {
+  const { navigateTo } = useNavigate();
+
   const router = useRouter();
   const [formData, setFormData] = useState({ name: "", phone: "" });
 
@@ -72,6 +75,7 @@ const FinalFill = () => {
             {/* Submit Button */}
             <button
               type="submit"
+              onClick={() => navigateTo('/dashboard/events')}
               className="w-full bg-gray-900 text-white py-2 rounded-md hover:bg-gray-800"
             >
               FINISH

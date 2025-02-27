@@ -2,6 +2,7 @@ import { useState } from "react";
 import Image from "next/image"
 import { FiSearch } from "react-icons/fi";
 import { FaEdit, FaTrash, FaExternalLinkAlt } from "react-icons/fa";
+import { useNavigate } from "@/utils/navigation";
 
 const dummyEvents = [
   {
@@ -28,6 +29,8 @@ const dummyEvents = [
 ];
 
 export default function EventsList() {
+  const { navigateTo } = useNavigate();
+
   const [activeTab, setActiveTab] = useState("live");
 
   return (
@@ -35,7 +38,9 @@ export default function EventsList() {
       
 
       {/* Events List */}
-      <div className="space-y-4">
+      <div className="space-y-4"
+         onClick={() => navigateTo('/dashboard/dashScreen')}
+         >
         {dummyEvents.map((event) => (
           <div key={event.id} className="flex justify-between items-center border p-4 rounded-lg shadow-sm">
             <div className="flex items-center space-x-4">
@@ -52,7 +57,9 @@ export default function EventsList() {
             <div className="flex space-x-2">
               <button className="p-2 bg-gray-200 rounded"><FaEdit /></button>
               <button className="p-2 bg-gray-200 rounded"><FaTrash /></button>
-              <button className="p-2 bg-gray-200 rounded"><FaExternalLinkAlt /></button>
+              <button
+             
+               className="p-2 bg-gray-200 rounded"><FaExternalLinkAlt /></button>
             </div>
           </div>
         ))}

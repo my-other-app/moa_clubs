@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from '@/utils/navigation';
 
 const categories = [
   {
@@ -19,7 +20,9 @@ const categories = [
   },
 ];
 
-export default function ClubSelection() {
+export default function IntrestedArea() {
+  const { navigateTo } = useNavigate();
+
   const [selected, setSelected] = useState<string[]>([]);
 
   const toggleSelection = (option: string) => {
@@ -74,6 +77,7 @@ export default function ClubSelection() {
           {/* Continue Button */}
           <button
             type="submit"
+            onClick={() => navigateTo('/register/collegeDetails')}
             className="w-full bg-gray-900 text-white p-2 rounded-lg font-semibold hover:bg-gray-800 mt-4"
           >
             CONTINUE

@@ -2,8 +2,11 @@
 
 import { useState } from 'react';
 import '@/styles/globals.css';
+import { useNavigate } from '@/utils/navigation';
 
 export default function CollegeDetails() {
+  const { navigateTo } = useNavigate();
+
   const [college, setCollege] = useState('');
   const [location, setLocation] = useState('');
 
@@ -51,6 +54,7 @@ export default function CollegeDetails() {
 
           <button
             type="submit"
+            onClick={() => navigateTo('/register/socialMediaDetails')}
             className="w-full bg-gray-900 text-white p-2 rounded-lg font-semibold hover:bg-gray-700"
           >
             CONTINUE

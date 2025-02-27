@@ -3,8 +3,12 @@
 import { useState } from 'react';
 import '@/styles/globals.css';
 import { FiPlus } from 'react-icons/fi';
+import { useNavigate } from '@/utils/navigation';
 
 export default function UploadImage() {
+
+  const { navigateTo } = useNavigate();
+
   const [clubLogo, setClubLogo] = useState<string | null>(null);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,6 +51,7 @@ export default function UploadImage() {
         <form onSubmit={handleSubmit}>
           <button
             type="submit"
+            onClick={() => navigateTo('/register/intrestedArea')}
             className="w-full bg-gray-900 text-white p-2 rounded-lg font-semibold hover:bg-gray-800"
           >
             CONTINUE

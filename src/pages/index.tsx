@@ -1,16 +1,12 @@
 'use client';
 
-import Navbar from '@/components/navbar'; 
-import Events from './Dashboard/events';
-import HackathonDashboard from './Dashboard/dashScreen';
+
+import Welcome from './register/welcome';
 
 export default function Home() {
   return (
-    <ul>
-      <li>
-      <Navbar />
-       <HackathonDashboard />
-      </li>
-    </ul>
+    <>
+      <Welcome />
+    </>
   );
 }

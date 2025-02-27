@@ -2,8 +2,11 @@
 
 import { useState } from 'react';
 import '@/styles/globals.css';
+import { useNavigate } from '@/utils/navigation';
 
 export default function SocialMediaDetails() {
+  const { navigateTo } = useNavigate();
+
   const [instagram, setInstagram] = useState('');
   const [linkedin, setLinkedin] = useState('');
   const [youtube, setYoutube] = useState('');
@@ -74,6 +77,7 @@ export default function SocialMediaDetails() {
 
           <button
             type="submit"
+            onClick={() => navigateTo('/register/finalFill')}
             className="w-full bg-gray-900 text-white p-2 rounded-lg font-semibold hover:bg-gray-700"
           >
             CONTINUE

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import '@/styles/globals.css';
 
-export default function LoginPage() {
+export default function Welcome() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 

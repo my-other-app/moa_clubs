@@ -4,8 +4,7 @@ import { useState } from 'react';
 import '@/styles/globals.css';
 import { FiPlus } from 'react-icons/fi';
 
-export default function ClubDetailsForm() {
-  const [clubName, setClubName] = useState<string>('');
+export default function UploadImage() {
   const [clubLogo, setClubLogo] = useState<string | null>(null);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -17,7 +16,7 @@ export default function ClubDetailsForm() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log({ clubName, clubLogo });
+    console.log({ clubLogo });
   };
 
   return (
@@ -45,15 +44,6 @@ export default function ClubDetailsForm() {
           <p className="text-sm text-gray-600 mt-2">Add Club Logo</p>
         </div>
         <form onSubmit={handleSubmit}>
-          <label className="block mb-2 text-gray-700">Club Name</label>
-          <input
-            type="text"
-            placeholder="Enter Your Club Name"
-            className="w-full p-2 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={clubName}
-            onChange={(e) => setClubName(e.target.value)}
-            required
-          />
           <button
             type="submit"
             className="w-full bg-gray-900 text-white p-2 rounded-lg font-semibold hover:bg-gray-800"

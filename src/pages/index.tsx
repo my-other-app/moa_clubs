@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link'
-import Welcome from './Register/uploadImage'; 
+import Welcome from './Register/intrestedArea'; 
 
 export default function Home() {
   return (

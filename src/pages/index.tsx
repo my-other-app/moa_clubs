@@ -1,11 +1,14 @@
 'use client';
 
-import Page1 from './Register/page1'; 
+import Link from 'next/link'
+import Welcome from './Register/uploadImage'; 
 
 export default function Home() {
   return (
-    <>
-      <Page1 />
-    </>
+    <ul>
+      <li>
+      <Welcome />
+      </li>
+    </ul>
   );
 }

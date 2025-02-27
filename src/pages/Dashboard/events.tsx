@@ -1,7 +1,7 @@
 import EventsHeader from '@/components/Events/Header'
 import EventsList from '@/components/Events/List'
 import React from 'react'
-import { useNavigate } from '@/utils/navigation';
+
 
 
 export default function Events() {

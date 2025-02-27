@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { FaEdit, FaTrash, FaCog, FaDownload, FaClipboardList } from 'react-icons/fa';
-import { useNavigate } from '@/utils/navigation';
+
 
 const registrations = Array(7).fill({
   id: 'NEX25AA001',
@@ -14,8 +14,8 @@ const registrations = Array(7).fill({
 });
 
 export default function DashScreen() {
-  const { navigateTo } = useNavigate();
-  
+
+
   const [message, setMessage] = useState('');
 
   return (

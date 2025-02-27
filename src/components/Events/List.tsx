@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Image from "next/image"
-import { FiSearch } from "react-icons/fi";
+
 import { FaEdit, FaTrash, FaExternalLinkAlt } from "react-icons/fa";
 import { useNavigate } from "@/utils/navigation";
 
@@ -31,7 +31,7 @@ const dummyEvents = [
 export default function EventsList() {
   const { navigateTo } = useNavigate();
 
-  const [activeTab, setActiveTab] = useState("live");
+
 
   return (
     <div className="p-6">

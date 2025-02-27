@@ -4,6 +4,7 @@ import { useState } from 'react';
 import '@/styles/globals.css';
 import { FiPlus } from 'react-icons/fi';
 import { useNavigate } from '@/utils/navigation';
+import Image from 'next/image';
 
 export default function UploadImage() {
 
@@ -40,7 +41,7 @@ export default function UploadImage() {
             className="w-24 h-24 border-2 border-dashed border-gray-400 flex items-center justify-center rounded-full cursor-pointer"
           >
             {clubLogo ? (
-              <img src={clubLogo} alt="Club Logo" className="w-full h-full rounded-full object-cover" />
+              <Image src={clubLogo} width={50} height={50} alt="Club Logo" className="w-full h-full rounded-full object-cover" />
             ) : (
               <FiPlus className="text-gray-500 text-3xl" />
             )}

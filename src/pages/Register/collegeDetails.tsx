@@ -1,24 +1,39 @@
 'use client';
-
-import { useState } from 'react';
+import { useRouter } from "next/router";
+import { useState, useEffect } from 'react';
 import '@/styles/globals.css';
 import { useNavigate } from '@/utils/navigation';
 
 export default function CollegeDetails() {
   const { navigateTo } = useNavigate();
-
+  const router = useRouter();
   const [college, setCollege] = useState('');
   const [location, setLocation] = useState('');
 
+  // Load saved values from sessionStorage when the component mounts
+  useEffect(() => {
+    const savedCollege = sessionStorage.getItem('college');
+    const savedLocation = sessionStorage.getItem('location');
+    if (savedCollege) setCollege(savedCollege);
+    if (savedLocation) setLocation(savedLocation);
+  }, []);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({ college, location });
+
+    // Save values to sessionStorage
+    sessionStorage.setItem('college', college);
+    sessionStorage.setItem('location', location);
+
+    // Navigate to the next page
+    navigateTo('/register/socialMediaDetails');
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-white relative">
       {/* Back Button */}
-      <button className="absolute top-4 left-4 text-gray-600">
+      
+      <button onClick={() => router.back()} className="absolute top-4 left-4 text-gray-600 cursor-pointer">
         &larr; Back
       </button>
 
@@ -28,7 +43,7 @@ export default function CollegeDetails() {
           <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
           <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
           <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
-          <div className="w-1/5 h-1 bg-gray-300 mx-1"></div>
+          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
           <div className="w-1/5 h-1 bg-gray-300 mx-1"></div>
         </div>
 
@@ -58,8 +73,7 @@ export default function CollegeDetails() {
 
           <button
             type="submit"
-            onClick={() => navigateTo('/register/socialMediaDetails')}
-            className="w-full bg-gray-700 h-12 text-2xl bebas text-white p-2 rounded-lg font-semibold hover:bg-gray-700"
+            className="w-full bg-gray-700 h-12 text-2xl bebas text-white p-2 rounded-lg font-semibold hover:bg-gray-800"
           >
             CONTINUE
           </button>

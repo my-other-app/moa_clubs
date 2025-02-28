@@ -1,26 +1,41 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import '@/styles/globals.css';
 import { useNavigate } from '@/utils/navigation';
 
 export default function Welcome() {
   const { navigateTo } = useNavigate();
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  // Load saved values from sessionStorage when the component mounts
+  useEffect(() => {
+    const savedEmail = sessionStorage.getItem('email');
+    const savedPassword = sessionStorage.getItem('password');
+    if (savedEmail) setEmail(savedEmail);
+    if (savedPassword) setPassword(savedPassword);
+  }, []);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({ email, password });
+
+    // Save to sessionStorage
+    sessionStorage.setItem('email', email);
+    sessionStorage.setItem('password', password);
+
+    // Navigate to the next page
+    navigateTo('/register/uploadImage');
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 ">
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="bg-white p-10 rounded-lg shadow-lg w-auto border-gray-700 border-2 border-solid">
-        <h1 className="text-5xl text-black font-bold text-center mb-2 bebas">WELCOME TO MYOTHERAPP</h1>
+        <h1 className="text-5xl text-black font-bold text-center mb-2 bebas">
+          WELCOME TO MYOTHERAPP
+        </h1>
         <p className="text-gray-700 text-center mb-8">
-          We provide you with the end-to-end<br></br> solution for managing events
+          We provide you with the end-to-end solution for managing events
         </p>
         <form onSubmit={handleSubmit}>
           <label className="block mb-2 font-medium text-gray-900">Email</label>
@@ -43,7 +58,6 @@ export default function Welcome() {
           />
           <button
             type="submit"
-            onClick={() => navigateTo('/register/uploadImage')}
             className="w-full bg-gray-700 h-15 text-2xl bebas text-white p-2 rounded-lg font-semibold hover:bg-gray-800"
           >
             START THE JOURNEY

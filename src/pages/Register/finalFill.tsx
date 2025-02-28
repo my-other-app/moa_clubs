@@ -1,13 +1,22 @@
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import '@/styles/globals.css';
 import { useNavigate } from '@/utils/navigation';
 
 const FinalFill = () => {
   const { navigateTo } = useNavigate();
-
   const router = useRouter();
+
   const [formData, setFormData] = useState({ name: "", phone: "" });
+
+  // Load saved values from sessionStorage when the component mounts
+  useEffect(() => {
+    const savedName = sessionStorage.getItem("clubLeadName");
+    const savedPhone = sessionStorage.getItem("clubLeadPhone");
+    
+    if (savedName) setFormData((prev) => ({ ...prev, name: savedName }));
+    if (savedPhone) setFormData((prev) => ({ ...prev, phone: savedPhone }));
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -15,23 +24,27 @@ const FinalFill = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(formData);
+
+    // Save to sessionStorage
+    sessionStorage.setItem("clubLeadName", formData.name);
+    sessionStorage.setItem("clubLeadPhone", formData.phone);
+
+    // Navigate to the next page
+    navigateTo('/dashboard/events');
   };
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Back Button (Positioned Separately) */}
-      <button
-        onClick={() => router.back()}
-        className="mt-4 ml-4 text-gray-700 hover:underline flex items-center self-start"
-      >
-        ← Back
+      {/* Back Button */}
+      <button onClick={() => router.back()} className="absolute top-4 left-4 text-gray-600 cursor-pointer">
+        &larr; Back
       </button>
 
       {/* Centered Form */}
-      <div className="flex flex-grow items-center justify-center p-4 ">
+      <div className="flex flex-grow items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm border-2 border-gray-700">
-          {/* Header */}
+          
+          {/* Progress Bar */}
           <div className="flex justify-center mb-4">
             <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
             <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
@@ -76,7 +89,6 @@ const FinalFill = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              onClick={() => navigateTo('/dashboard/events')}
               className="w-full bebas text-2xl h-12 bg-gray-700 text-white py-2 rounded-md hover:bg-gray-800"
             >
               FINISH

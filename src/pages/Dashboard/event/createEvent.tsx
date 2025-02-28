@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { FiPlus } from "react-icons/fi";
+import Sidebar from "@/components/sidebar";
 
 type Volunteer = {
   name: string;
@@ -33,6 +34,8 @@ export default function CreateEvent() {
   };
 
   return (
+    <>
+    <Sidebar/>
     <div className="max-w-4xl mx-auto p-6 rounded-lg font-sans">
       <h1 className="text-3xl font-bold mb-6">CREATE NEW EVENT</h1>
       
@@ -116,5 +119,6 @@ export default function CreateEvent() {
       <textarea placeholder="Enter Event Guidelines" className="w-full p-2 border rounded mt-4"></textarea>
       <button className="mt-4 w-full py-2 bg-black text-white rounded">CONTINUE</button>
     </div>
+    </>
   );
 }

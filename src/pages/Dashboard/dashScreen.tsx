@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { FaEdit, FaTrash, FaCog, FaDownload, FaClipboardList } from 'react-icons/fa';
+import Sidebar from '@/components/sidebar';
 
 
 const registrations = Array(7).fill({
@@ -19,6 +20,8 @@ export default function DashScreen() {
   const [message, setMessage] = useState('');
 
   return (
+    <>
+    <Sidebar/>
     <div className="flex flex-col items-center justify-center min-h-screen px-4">
       <div className="p-4 sm:p-6 w-full max-w-5xl space-y-6 bg-white rounded-lg">
         {/* Header */}
@@ -121,5 +124,6 @@ export default function DashScreen() {
         </div>
       </div>
     </div>
+    </>
   );
 }

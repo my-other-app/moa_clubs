@@ -1,5 +1,6 @@
 "use client";
 
+import Sidebar from "@/components/sidebar";
 import { ChevronLeft, ChevronDown, Circle } from "lucide-react";
 import { useState } from "react";
 
@@ -11,6 +12,8 @@ const EditRegistrationForm = () => {
   };
 
   return (
+    <>
+    <Sidebar/>
     <div className="max-w-3xl mx-auto p-6">
       {/* Back Button */}
       <button className="flex items-center text-gray-600 hover:text-black mb-4">
@@ -122,6 +125,7 @@ const EditRegistrationForm = () => {
           CONTINUE
         </button>
     </div>
+  </>
   );
 };
 

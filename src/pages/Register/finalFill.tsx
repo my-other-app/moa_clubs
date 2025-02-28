@@ -1,13 +1,10 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import '@/styles/globals.css';
-import { useNavigate } from '@/utils/navigation';
-import { registerClub } from '@/api/clubregistration';
 
 const FinalFill = () => {
-  const { navigateTo } = useNavigate();
   const router = useRouter();
-  const [loading, setLoading] = useState(false); // Track API request status
+  const [loading, setLoading] = useState(false);
 
   // State to store form data
   const [formData, setFormData] = useState({
@@ -27,40 +24,36 @@ const FinalFill = () => {
 
   // Update form state and sessionStorage when user types
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newFormData = { ...formData, [e.target.name]: e.target.value };
-    setFormData(newFormData);
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
 
     if (typeof window !== "undefined") {
-      sessionStorage.setItem(e.target.name === "name" ? "clubLeadName" : "clubLeadPhone", e.target.value);
+      sessionStorage.setItem(name === "name" ? "clubLeadName" : "clubLeadPhone", value);
     }
   };
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true); // Set loading state to true
+    setLoading(true);
 
-    // Ensure form data is stored in sessionStorage
+    // Store in sessionStorage (redundant but ensures persistence)
     if (typeof window !== "undefined") {
       sessionStorage.setItem("clubLeadName", formData.name);
       sessionStorage.setItem("clubLeadPhone", formData.phone);
     }
 
+    // Simulate API call (replace with real API request)
     try {
-      const response = await registerClub(); // Call API
-      console.log("Club registered successfully:", response);
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate delay
+      console.log("Form submitted:", formData);
 
-      // Clear sessionStorage for form-specific fields
-      sessionStorage.removeItem("clubLeadName");
-      sessionStorage.removeItem("clubLeadPhone");
-
-      // Navigate to dashboard after successful registration
-      navigateTo('/dashboard/events');
+      // Redirect to a confirmation page
+      router.push("/confirmation"); // Change to the desired route
     } catch (error) {
-      console.error("Failed to register club:", error);
-      alert("Registration failed. Please try again.");
+      console.error("Submission failed:", error);
     } finally {
-      setLoading(false); // Reset loading state
+      setLoading(false);
     }
   };
 
@@ -74,10 +67,10 @@ const FinalFill = () => {
       {/* Centered Form */}
       <div className="flex flex-grow items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm border-2 border-gray-700">
-          {/* Header */}
+          {/* Progress Indicator */}
           <div className="flex justify-center mb-4">
-            {Array(5).fill(0).map((_, i) => (
-              <div key={i} className="w-1/5 h-1 bg-teal-500 mx-1"></div>
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className={`w-1/5 h-1 mx-1 ${i < 4 ? "bg-teal-500" : "bg-gray-300"}`}></div>
             ))}
           </div>
 
@@ -118,7 +111,7 @@ const FinalFill = () => {
             <button
               type="submit"
               className="w-full bebas text-2xl h-12 bg-gray-700 text-white py-2 rounded-md hover:bg-gray-800 disabled:opacity-50"
-              disabled={loading} // Disable button when loading
+              disabled={loading}
             >
               {loading ? "Processing..." : "FINISH"}
             </button>

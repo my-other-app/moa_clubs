@@ -16,16 +16,20 @@ export default function CollegeDetails() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-white">
-         <button className="self-start text-gray-600">&larr; Back</button>
-      <div className="bg-white p-8 rounded-xl shadow-md border border-gray-300 w-96">
+    <div className="flex items-center justify-center min-h-screen bg-white relative">
+      {/* Back Button */}
+      <button className="absolute top-4 left-4 text-gray-600">
+        &larr; Back
+      </button>
+
+      <div className="bg-white p-8 rounded-xl shadow-md border-2 border-gray-700 w-96">
         {/* Progress Bar */}
         <div className="flex justify-center mb-4">
           <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
           <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
           <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
-          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
-          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
+          <div className="w-1/5 h-1 bg-gray-300 mx-1"></div>
+          <div className="w-1/5 h-1 bg-gray-300 mx-1"></div>
         </div>
 
         {/* Form Header */}
@@ -55,7 +59,7 @@ export default function CollegeDetails() {
           <button
             type="submit"
             onClick={() => navigateTo('/register/socialMediaDetails')}
-            className="w-full bg-gray-900 text-white p-2 rounded-lg font-semibold hover:bg-gray-700"
+            className="w-full bg-gray-700 h-12 text-2xl bebas text-white p-2 rounded-lg font-semibold hover:bg-gray-700"
           >
             CONTINUE
           </button>

@@ -22,7 +22,7 @@ export default function SocialMediaDetails() {
     <button className="text-gray-600 mt-4 ml-4">&larr; Back</button>
     <div className="min-h-screen flex justify-center items-center">
       
-      <div className="bg-white p-8 rounded-xl shadow-md border border-gray-300 w-96">
+      <div className="bg-white p-8 rounded-xl shadow-md border-2 border-gray-700 w-96">
         {/* Back Button */}
         
 
@@ -32,7 +32,7 @@ export default function SocialMediaDetails() {
           <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
           <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
           <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
-          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
+          <div className="w-1/5 h-1 bg-gray-300 mx-1"></div>
         </div>
 
         {/* Form Header */}
@@ -78,7 +78,7 @@ export default function SocialMediaDetails() {
           <button
             type="submit"
             onClick={() => navigateTo('/register/finalFill')}
-            className="w-full bg-gray-900 text-white p-2 rounded-lg font-semibold hover:bg-gray-700"
+            className="w-full bg-gray-700 h-12 bebas text-2xl text-white p-2 rounded-lg font-semibold hover:bg-gray-800"
           >
             CONTINUE
           </button>

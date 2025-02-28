@@ -29,8 +29,8 @@ const FinalFill = () => {
       </button>
 
       {/* Centered Form */}
-      <div className="flex flex-grow items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
+      <div className="flex flex-grow items-center justify-center p-4 ">
+        <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm border-2 border-gray-700">
           {/* Header */}
           <div className="flex justify-center mb-4">
             <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
@@ -77,7 +77,7 @@ const FinalFill = () => {
             <button
               type="submit"
               onClick={() => navigateTo('/dashboard/events')}
-              className="w-full bg-gray-900 text-white py-2 rounded-md hover:bg-gray-800"
+              className="w-full bebas text-2xl h-12 bg-gray-700 text-white py-2 rounded-md hover:bg-gray-800"
             >
               FINISH
             </button>

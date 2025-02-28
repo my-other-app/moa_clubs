@@ -1,57 +1,77 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import '@/styles/globals.css';
+import "@/styles/globals.css";
+import { registerClub } from "@/utils/clubregistration";
 
 const FinalFill = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  // State to store form data
   const [formData, setFormData] = useState({
     name: "",
-    phone: ""
+    phone: "",
   });
 
-  // Load stored session data (only on the client-side)
+  // 🔹 Load sessionStorage values
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setFormData({
-        name: sessionStorage.getItem("clubLeadName") || "",
-        phone: sessionStorage.getItem("clubLeadPhone") || ""
-      });
+      const storedName = sessionStorage.getItem("clubLeadName") || "";
+      const storedPhone = sessionStorage.getItem("clubLeadPhone") || "";
+
+      console.log("🔹 Loaded sessionStorage values:", { storedName, storedPhone });
+
+      setFormData({ name: storedName, phone: storedPhone });
     }
   }, []);
 
-  // Update form state and sessionStorage when user types
+  // 🔹 Handle input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const newFormData = { ...formData, [e.target.name]: e.target.value };
+    setFormData(newFormData);
 
     if (typeof window !== "undefined") {
-      sessionStorage.setItem(name === "name" ? "clubLeadName" : "clubLeadPhone", value);
+      sessionStorage.setItem(
+        e.target.name === "name" ? "clubLeadName" : "clubLeadPhone",
+        e.target.value
+      );
+      console.log(`ff✅ Updated sessionStorage: ${e.target.name} = ${e.target.value}`);
     }
   };
 
-  // Handle form submission
+  // 🔹 Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMessage("");
 
-    // Store in sessionStorage (redundant but ensures persistence)
-    if (typeof window !== "undefined") {
-      sessionStorage.setItem("clubLeadName", formData.name);
-      sessionStorage.setItem("clubLeadPhone", formData.phone);
-    }
+    console.log("ff📤 Sending Data for Registration:", formData);
 
-    // Simulate API call (replace with real API request)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate delay
-      console.log("Form submitted:", formData);
+      const response = await registerClub();
+      console.log("ff✅ Club registered successfully:", response);
 
-      // Redirect to a confirmation page
-      router.push("/confirmation"); // Change to the desired route
-    } catch (error) {
-      console.error("Submission failed:", error);
+      
+     // sessionStorage.clear();
+
+
+      router.push("/dashboard/events");
+    } catch (error: any) {
+      console.error("ff❌ Failed to register club:", error);
+
+      if (error.response) {
+        console.error("ff🔍 API Error Details:", {
+          status: error.response.status,
+          data: error.response.data,
+        });
+
+        // Set detailed error message
+        setErrorMessage(
+          error.response.data?.message || "Registration failed. Please try again."
+        );
+      } else {
+        setErrorMessage("Network error. Please check your connection.");
+      }
     } finally {
       setLoading(false);
     }
@@ -59,29 +79,32 @@ const FinalFill = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Back Button */}
-      <button onClick={() => router.back()} className="absolute top-4 left-4 text-gray-600 cursor-pointer">
+      <button
+        onClick={() => router.back()}
+        className="absolute top-4 left-4 text-gray-600 cursor-pointer"
+      >
         &larr; Back
       </button>
 
-      {/* Centered Form */}
       <div className="flex flex-grow items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm border-2 border-gray-700">
-          {/* Progress Indicator */}
           <div className="flex justify-center mb-4">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className={`w-1/5 h-1 mx-1 ${i < 4 ? "bg-teal-500" : "bg-gray-300"}`}></div>
-            ))}
+            {Array(5)
+              .fill(0)
+              .map((_, i) => (
+                <div key={i} className="w-1/5 h-1 bg-teal-500 mx-1"></div>
+              ))}
           </div>
 
-          {/* Title */}
-          <h2 className="text-lg font-bold text-center mb-4">DROP YOUR DETAILS IN!</h2>
+          <h2 className="text-lg font-bold text-center mb-4">
+            DROP YOUR DETAILS IN!
+          </h2>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
-            {/* Name Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">Club Lead Name</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Club Lead Name
+              </label>
               <input
                 type="text"
                 name="name"
@@ -90,12 +113,14 @@ const FinalFill = () => {
                 onChange={handleChange}
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 required
+                disabled={loading}
               />
             </div>
 
-            {/* Phone Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">Club Lead Contact Number</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Club Lead Contact Number
+              </label>
               <input
                 type="tel"
                 name="phone"
@@ -104,10 +129,14 @@ const FinalFill = () => {
                 onChange={handleChange}
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 required
+                disabled={loading}
               />
             </div>
 
-            {/* Submit Button */}
+            {errorMessage && (
+              <p className="text-red-500 text-sm">{errorMessage}</p>
+            )}
+
             <button
               type="submit"
               className="w-full bebas text-2xl h-12 bg-gray-700 text-white py-2 rounded-md hover:bg-gray-800 disabled:opacity-50"

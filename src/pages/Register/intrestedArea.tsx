@@ -33,16 +33,16 @@ export default function IntrestedArea() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-6">
+    <div className="flex flex-col items-center justify-center p-6 ">
       <button className="self-start text-gray-600">&larr; Back</button>
-      <div className="bg-white p-8 rounded-lg shadow-lg w-[50%] border border-gray-300">
+      <div className="bg-white p-8 rounded-lg shadow-lg w-[45%] border-2 border-gray-700">
         {/* Progress Bar */}
-        <div className="flex justify-center mb-4">
-          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
-          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
-          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
-          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
-          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
+        <div className="flex justify-center mb-2">
+          <div className="w-1/10 h-1 bg-teal-500 mx-1"></div>
+          <div className="w-1/10 h-1 bg-teal-500 mx-1"></div>
+          <div className="w-1/10 h-1 bg-gray-300 mx-1"></div>
+          <div className="w-1/10 h-1 bg-gray-300 mx-1"></div>
+          <div className="w-1/10 h-1 bg-gray-300 mx-1"></div>
         </div>
 
         <div className="space-y-4 p-5 rounded-xl flex flex-col items-center">
@@ -51,7 +51,7 @@ export default function IntrestedArea() {
             SELECT AREAS RELATED TO YOUR CLUB
           </h2>
 
-          <div className="space-y-4 bg-gray-100 p-5 rounded-xl">
+          <div className="space-y-4 bg-gray-100  p-5 rounded-xl">
             {categories.map(({ title, options }) => (
               <div key={title}>
                 <h3 className="font-semibold text-gray-700 mb-2">{title}</h3>
@@ -79,7 +79,7 @@ export default function IntrestedArea() {
           <button
             type="submit"
             onClick={() => navigateTo('/register/collegeDetails')}
-            className="w-full bg-gray-900 text-white p-2 rounded-lg font-semibold hover:bg-gray-800 mt-4"
+            className="w-64 h-15 bebas text-2xl bg-gray-700  text-white p-2 rounded-lg font-semibold hover:bg-gray-800 mt-4"
           >
             CONTINUE
           </button>

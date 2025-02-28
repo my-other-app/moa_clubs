@@ -1,4 +1,5 @@
 import { useState } from "react";
+import '@/styles/globals.css';
 import { useNavigate } from '@/utils/navigation';
 
 const categories = [
@@ -62,7 +63,7 @@ export default function IntrestedArea() {
                       aria-pressed={selected.includes(option)}
                       className={`px-3 py-1 rounded-full transition ${
                         selected.includes(option)
-                          ? "bg-gray-700 text-white"
+                          ? "border-green-600 border-2"
                           : "bg-white hover:bg-gray-300"
                       }`}
                     >
@@ -73,7 +74,7 @@ export default function IntrestedArea() {
               </div>
             ))}
           </div>
-
+ 
           {/* Continue Button */}
           <button
             type="submit"

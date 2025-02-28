@@ -1,5 +1,6 @@
 import { useRouter } from "next/router";
 import { useState } from "react";
+import '@/styles/globals.css';
 import { useNavigate } from '@/utils/navigation';
 
 const FinalFill = () => {

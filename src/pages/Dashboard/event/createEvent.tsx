@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { FiPlus } from "react-icons/fi";
+import '@/styles/globals.css';
 import Sidebar from "@/components/sidebar";
 
 type Volunteer = {

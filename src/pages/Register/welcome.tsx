@@ -44,7 +44,7 @@ export default function Welcome() {
           <button
             type="submit"
             onClick={() => navigateTo('/register/uploadImage')}
-            className="w-full bg-black text-white p-2 rounded-lg font-semibold hover:bg-gray-800"
+            className="w-full bg-gray-700 h-15 text-white p-2 rounded-lg font-semibold hover:bg-gray-800"
           >
             START THE JOURNEY
           </button>

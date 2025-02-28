@@ -2,6 +2,7 @@
 
 import Sidebar from "@/components/sidebar";
 import { ChevronLeft, ChevronDown, Circle } from "lucide-react";
+import '@/styles/globals.css';
 import { useState } from "react";
 
 const EditRegistrationForm = () => {

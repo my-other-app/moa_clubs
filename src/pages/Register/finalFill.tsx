@@ -1,36 +1,67 @@
 import { useRouter } from "next/router";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import '@/styles/globals.css';
 import { useNavigate } from '@/utils/navigation';
+import { registerClub } from '@/api/clubregistration';
 
 const FinalFill = () => {
   const { navigateTo } = useNavigate();
   const router = useRouter();
+  const [loading, setLoading] = useState(false); // Track API request status
 
-  const [formData, setFormData] = useState({ name: "", phone: "" });
+  // State to store form data
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: ""
+  });
 
-  // Load saved values from sessionStorage when the component mounts
+  // Load stored session data (only on the client-side)
   useEffect(() => {
-    const savedName = sessionStorage.getItem("clubLeadName");
-    const savedPhone = sessionStorage.getItem("clubLeadPhone");
-    
-    if (savedName) setFormData((prev) => ({ ...prev, name: savedName }));
-    if (savedPhone) setFormData((prev) => ({ ...prev, phone: savedPhone }));
+    if (typeof window !== "undefined") {
+      setFormData({
+        name: sessionStorage.getItem("clubLeadName") || "",
+        phone: sessionStorage.getItem("clubLeadPhone") || ""
+      });
+    }
   }, []);
 
+  // Update form state and sessionStorage when user types
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const newFormData = { ...formData, [e.target.name]: e.target.value };
+    setFormData(newFormData);
+
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(e.target.name === "name" ? "clubLeadName" : "clubLeadPhone", e.target.value);
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true); // Set loading state to true
 
-    // Save to sessionStorage
-    sessionStorage.setItem("clubLeadName", formData.name);
-    sessionStorage.setItem("clubLeadPhone", formData.phone);
+    // Ensure form data is stored in sessionStorage
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("clubLeadName", formData.name);
+      sessionStorage.setItem("clubLeadPhone", formData.phone);
+    }
 
-    // Navigate to the next page
-    navigateTo('/dashboard/events');
+    try {
+      const response = await registerClub(); // Call API
+      console.log("Club registered successfully:", response);
+
+      // Clear sessionStorage for form-specific fields
+      sessionStorage.removeItem("clubLeadName");
+      sessionStorage.removeItem("clubLeadPhone");
+
+      // Navigate to dashboard after successful registration
+      navigateTo('/dashboard/events');
+    } catch (error) {
+      console.error("Failed to register club:", error);
+      alert("Registration failed. Please try again.");
+    } finally {
+      setLoading(false); // Reset loading state
+    }
   };
 
   return (
@@ -43,14 +74,11 @@ const FinalFill = () => {
       {/* Centered Form */}
       <div className="flex flex-grow items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm border-2 border-gray-700">
-          
-          {/* Progress Bar */}
+          {/* Header */}
           <div className="flex justify-center mb-4">
-            <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
-            <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
-            <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
-            <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
-            <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
+            {Array(5).fill(0).map((_, i) => (
+              <div key={i} className="w-1/5 h-1 bg-teal-500 mx-1"></div>
+            ))}
           </div>
 
           {/* Title */}
@@ -89,9 +117,10 @@ const FinalFill = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full bebas text-2xl h-12 bg-gray-700 text-white py-2 rounded-md hover:bg-gray-800"
+              className="w-full bebas text-2xl h-12 bg-gray-700 text-white py-2 rounded-md hover:bg-gray-800 disabled:opacity-50"
+              disabled={loading} // Disable button when loading
             >
-              FINISH
+              {loading ? "Processing..." : "FINISH"}
             </button>
           </form>
         </div>

@@ -38,9 +38,11 @@ export default function EventsHeader() {
       </div>
 
       {/* Right Section */}
-      <button className="bg-gray-700 text-xl bebas text-white px-8 py-3 top-32 right-7 absolute rounded-md hover:bg-gray-800">
+      <a href="/dashboard/event/createEvent">
+      <button  className="bg-gray-700 text-xl bebas text-white px-8 py-3 top-32 right-7 absolute rounded-md hover:bg-gray-800">
         CREATE NEW EVENT
       </button>
+      </a>
     </div>
   );
 }

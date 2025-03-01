@@ -3,12 +3,14 @@
 import Sidebar from "@/components/sidebar";
 import { ChevronLeft, ChevronDown, Circle } from "lucide-react";
 import "@/styles/globals.css";
-import { SetStateAction, useState } from "react";
+import { SetStateAction, useState, useEffect } from "react";
+import axios from "axios";
 
 const EditRegistrationForm = () => {
-  const [options, setOptions] = useState(["Option 1"]);
+  const [options, setOptions] = useState([""]); // initialize with an empty option
   const [questionType, setQuestionType] = useState("");
   const [currentQuestion, setCurrentQuestion] = useState("");
+
   interface Question {
     type: string;
     text: string;
@@ -18,17 +20,15 @@ const EditRegistrationForm = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
 
   const addOption = () => {
-    setOptions([...options, `Option ${options.length + 1}`]);
+    setOptions([...options, ""]); // add an empty option
   };
 
-  const handleQuestionTypeChange = (e: {
-    target: { value: SetStateAction<string> };
-  }) => {
+  const handleQuestionTypeChange = (e: { target: { value: SetStateAction<string> } }) => {
     setQuestionType(e.target.value);
     setCurrentQuestion(""); // reset question text on type change
     // Reset options when switching types
     if (e.target.value === "multipleChoice") {
-      setOptions(["Option 1"]);
+      setOptions([""]); // start with an empty option
     } else {
       setOptions([]);
     }
@@ -36,18 +36,44 @@ const EditRegistrationForm = () => {
 
   const handleAddQuestion = () => {
     if (currentQuestion.trim() === "") return;
-
-    const newQuestion = {
+    const newQuestion: Question = {
       type: questionType,
       text: currentQuestion,
       options: questionType === "multipleChoice" ? options : []
     };
-
     setQuestions([...questions, newQuestion]);
     // Reset current fields after adding question
     setCurrentQuestion("");
     setQuestionType("");
-    setOptions(["Option 1"]);
+    setOptions([""]); // reset options to one empty field
+  };
+
+  // Send questions list to the events create endpoint using axios.
+  const handleContinue = async () => {
+    // Prepare FormData and append additional_details field
+    const formData = new FormData();
+    const additionalDetails = questions.length > 0 ? JSON.stringify(questions) : "";
+    formData.append("additional_details", additionalDetails);
+
+    // Retrieve access token from localStorage
+    const accessToken = localStorage.getItem("accessToken") || "";
+
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BASE_API_URL}/api/v1/events/create`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            // Axios will set the appropriate Content-Type header for FormData.
+          },
+        }
+      );
+      console.log("Event created successfully:", response.data);
+      // Optionally, navigate or update the UI upon success.
+    } catch (error: any) {
+      console.error("Error creating event:", error);
+    }
   };
 
   return (
@@ -64,7 +90,7 @@ const EditRegistrationForm = () => {
         <h1 className="text-3xl font-bold">EDIT REGISTRATION FORM</h1>
         <p className="text-gray-500">Add questions for the registration Form</p>
 
-        {/* Parent flex container with items-start to avoid stretching */}
+        {/* Main Content */}
         <div className="flex flex-row gap-12 items-start">
           {/* Left Side: Mandatory Information & Questions List */}
           <div className="mt-6 flex-1/2">
@@ -116,7 +142,7 @@ const EditRegistrationForm = () => {
                         <ul className="ml-4 mt-1 space-y-1">
                           {q.options.map((opt, i) => (
                             <li key={i} className="text-gray-600">
-                              {opt}
+                              {opt || `Option ${i + 1}`}
                             </li>
                           ))}
                         </ul>
@@ -128,7 +154,7 @@ const EditRegistrationForm = () => {
             </div>
           </div>
 
-          {/* Right Side: Create Question Section with Minimum Height */}
+          {/* Right Side: Create Question Section */}
           <div className="max-w-md mx-auto p-6 border rounded-lg shadow-md mt-6 min-h-[300px] flex-col flex-1/2">
             <h2 className="text-lg font-bold">CREATE A NEW QUESTION</h2>
             <div className="mt-4 space-y-4">
@@ -168,14 +194,12 @@ const EditRegistrationForm = () => {
                     <div>
                       {/* Options */}
                       {options.map((option, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center space-x-2 mt-2"
-                        >
+                        <div key={index} className="flex items-center space-x-2 mt-2">
                           <Circle className="text-gray-500 w-5 h-5" />
                           <input
                             type="text"
                             value={option}
+                            placeholder={`Option ${index + 1}`}
                             onChange={(e) => {
                               const newOptions = [...options];
                               newOptions[index] = e.target.value;
@@ -206,7 +230,11 @@ const EditRegistrationForm = () => {
             </div>
           </div>
         </div>
-        <button className="bottom-10 right-30 absolute w-48 bebas text-2xl self-end mt-4 px-4 py-2 bg-gray-900 text-white rounded-lg">
+        {/* Continue button triggers the event creation API call */}
+        <button
+          onClick={handleContinue}
+          className="bottom-10 right-30 absolute w-48 bebas text-2xl self-end mt-4 px-4 py-2 bg-gray-900 text-white rounded-lg"
+        >
           CONTINUE
         </button>
       </div>

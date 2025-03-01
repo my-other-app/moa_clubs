@@ -4,6 +4,7 @@ import Image from "next/image";
 
 import '@/styles/globals.css';
 import Sidebar from "@/components/sidebar";
+import { useNavigate } from "@/utils/navigation";
 
 type Category = {
   id: string;
@@ -11,6 +12,7 @@ type Category = {
 };
 
 export default function CreateEvent() {
+  const { navigateTo } = useNavigate();
   const [eventPoster, setEventPoster] = useState<File | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -41,6 +43,7 @@ export default function CreateEvent() {
         setCategories(response.data);
       } catch (error) {
         console.error("Error fetching categories:", error);
+        window.alert("Failed to fetch categories. Please try again later.");
       }
     };
 
@@ -56,6 +59,12 @@ export default function CreateEvent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!eventTitle || !eventPoster || !selectedCategory || !eventSeats || !eventDescription || !eventDate || !eventStartTime || !eventDuration || !eventRegistrationClosingDate || !eventRegistrationClosingTime) {
+      window.alert("Please fill in all required fields.");
+      return;
+    }
+
     const eventDatetime = `${eventRegistrationClosingDate}T${eventRegistrationClosingTime}:00`;
 
     const eventData = {
@@ -72,10 +81,10 @@ export default function CreateEvent() {
       url: eventMeetLink,
       reg_fee: eventFee,
       perks: eventPerks,
-      additional_details: eventGuidelines,
+      event_guidelines: eventGuidelines,
       poster: eventPoster,
       has_fee: true,
-      has_prize: false,
+      has_prize: true,
     };
 
     try {
@@ -85,9 +94,12 @@ export default function CreateEvent() {
       });
 
       console.log("Event created successfully:", response.data);
+      navigateTo('/dashboard/event/editEvent');
 
     } catch (error) {
       console.error("Error creating event:", error);
+      window.alert("Failed to create event"+error);
+      navigateTo('/dashboard/event/createEvent');
     }
   };
 
@@ -154,7 +166,7 @@ export default function CreateEvent() {
               <div className="flex flex-col items-center">
                 <label htmlFor="eventPoster" className="p-2 rounded cursor-pointer flex items-center justify-center">
                   {eventPoster ? (
-                    <Image src={URL.createObjectURL(eventPoster)} width={50} height={50} alt="Event Poster" className="w-full h-full object-cover rounded" />
+                    <Image src={URL.createObjectURL(eventPoster)} width={10} height={10} alt="Event Poster" className="w-50 aspect-square h-50 object-cover rounded" />
                   ) : (
                     <div>
                       <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -256,20 +268,30 @@ export default function CreateEvent() {
 
           <h2 className="text-lg font-semibold mt-6">PERKS AND FEE</h2>
           <div className="grid grid-cols-2 gap-4">
+               <div>
+               <h3>
+                Event Registration Fee
+                </h3>
             <input
               type="number"
               placeholder="Enter The Fee"
-              className="p-2 border rounded"
+              className="p-2 border rounded w-full"
               value={eventFee}
               onChange={(e) => setEventFee(parseInt(e.target.value, 10))}
             />
+                </div>
+                <div>
+                        <h3>
+                Prize Worth
+                </h3>
             <input
               type="text"
-              placeholder="Enter Event Perks"
-              className="p-2 border rounded"
+              placeholder="Enter The Prize Worth"
+              className="p-2 border rounded w-full"
               value={eventPerks}
               onChange={(e) => setEventPerks(e.target.value)}
             />
+            </div>
           </div>
 
           <textarea

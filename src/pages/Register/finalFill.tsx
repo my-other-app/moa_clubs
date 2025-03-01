@@ -2,6 +2,7 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import "@/styles/globals.css";
 import { registerClub } from "@/utils/clubregistration";
+import postSocial from "@/utils/socialsRegistration";
 
 const FinalFill = () => {
   const router = useRouter();
@@ -18,9 +19,7 @@ const FinalFill = () => {
     if (typeof window !== "undefined") {
       const storedName = sessionStorage.getItem("clubLeadName") || "";
       const storedPhone = sessionStorage.getItem("clubLeadPhone") || "";
-
       console.log("🔹 Loaded sessionStorage values:", { storedName, storedPhone });
-
       setFormData({ name: storedName, phone: storedPhone });
     }
   }, []);
@@ -39,7 +38,7 @@ const FinalFill = () => {
     }
   };
 
-  // 🔹 Handle form submission
+  // 🔹 Handle form submission concurrently
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -48,24 +47,25 @@ const FinalFill = () => {
     console.log("ff📤 Sending Data for Registration:", formData);
 
     try {
-      const response = await registerClub();
-      console.log("ff✅ Club registered successfully:", response);
-
+      // Run both API calls simultaneously
+      const [clubResponse, socialResponse] = await Promise.all([
+        registerClub(),
+        postSocial(),
+      ]);
+      console.log("ff✅ Club registered successfully:", clubResponse);
+      console.log("ff✅ Social media data saved successfully:", socialResponse);
       
-       sessionStorage.clear();
-
+      // Optionally clear sessionStorage if needed:
+      // sessionStorage.clear();
 
       router.push("/dashboard/events");
     } catch (error: any) {
       console.error("ff❌ Failed to register club:", error);
-
       if (error.response) {
         console.error("ff🔍 API Error Details:", {
           status: error.response.status,
           data: error.response.data,
         });
-
-        // Set detailed error message
         setErrorMessage(
           error.response.data?.message || "Registration failed. Please try again."
         );
@@ -85,7 +85,6 @@ const FinalFill = () => {
       >
         &larr; Back
       </button>
-
       <div className="flex flex-grow items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm border-2 border-gray-700">
           <div className="flex justify-center mb-4">
@@ -95,11 +94,9 @@ const FinalFill = () => {
                 <div key={i} className="w-1/5 h-1 bg-teal-500 mx-1"></div>
               ))}
           </div>
-
           <h2 className="text-lg font-bold text-center mb-4">
             DROP YOUR DETAILS IN!
           </h2>
-
           <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -116,7 +113,6 @@ const FinalFill = () => {
                 disabled={loading}
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Club Lead Contact Number
@@ -132,11 +128,9 @@ const FinalFill = () => {
                 disabled={loading}
               />
             </div>
-
             {errorMessage && (
               <p className="text-red-500 text-sm">{errorMessage}</p>
             )}
-
             <button
               type="submit"
               className="w-full bebas text-2xl h-12 bg-gray-700 text-white py-2 rounded-md hover:bg-gray-800 disabled:opacity-50"

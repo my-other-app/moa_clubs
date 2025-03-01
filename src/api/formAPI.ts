@@ -13,9 +13,9 @@ const formAPI = axios.create({
   withCredentials: true,
 });
 
-// 🔹 Fetch tokens dynamically
-const getToken = () => process.env.NEXT_PUBLIC_ACCESS_TOKEN;
-const getRefreshToken = () => process.env.NEXT_PUBLIC_REFRESH_TOKEN;
+// 🔹 Fetch tokens dynamically from localStorage
+const getToken = () => localStorage.getItem("accessToken");
+const getRefreshToken = () => localStorage.getItem("refreshToken");
 
 // 🔹 Subscribe to token refresh queue
 const subscribeTokenRefresh = (cb: (token: string) => void) => {
@@ -38,7 +38,7 @@ formAPI.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
       console.log("✅ Token Attached to Request");
     } else {
-      console.warn("❌ No Token Found! Check .env.local");
+      console.warn("❌ No Token Found! Redirecting to login...");
     }
 
     return config;
@@ -73,12 +73,13 @@ formAPI.interceptors.response.use(
 
         if (refreshToken) {
           const formdata = new FormData();
-          formdata.append("token", refreshToken); 
+          formdata.append("token", refreshToken);
+
           const { data } = await axios.post(`${API_BASE_URL}/api/v1/auth/refresh`, formdata);
 
-          // Store new tokens
-          process.env.NEXT_PUBLIC_ACCESS_TOKEN = data.access_token;
-          process.env.NEXT_PUBLIC_REFRESH_TOKEN = data.refresh_token;
+          // Store new tokens in localStorage
+          localStorage.setItem("accessToken", data.access_token);
+          localStorage.setItem("refreshToken", data.refresh_token);
 
           formAPI.defaults.headers.Authorization = `Bearer ${data.access_token}`;
           onRefreshed(data.access_token);
@@ -87,10 +88,13 @@ formAPI.interceptors.response.use(
           return axios(originalRequest);
         } else {
           console.warn("⚠️ No Refresh Token Found! Logging Out...");
+          // window.location.href = "/login"; // Redirect to login page
         }
       } catch (refreshError) {
         console.error("❌ Token Refresh Failed! Logging Out...", refreshError);
-        // window.location.href = "/login";
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        // window.location.href = "/login"; // Redirect user to login page
       } finally {
         isRefreshing = false;
       }

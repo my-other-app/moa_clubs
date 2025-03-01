@@ -20,7 +20,7 @@ const Sidebar = () => {
         className={`fixed top-0 left-0 h-screen bg-gray-900 text-white w-20 flex flex-col items-center justify-center py-4 space-y-6
           transition-transform duration-300 ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 lg:flex`}
       >
-        <Link href="/">
+        <Link href="/dashboard/events">
           <div className="cursor-pointer p-3 rounded-full bg-gray-800 hover:bg-gray-700">
             <FaTicketAlt size={24} />
           </div>

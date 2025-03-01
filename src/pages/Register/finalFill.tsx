@@ -52,7 +52,7 @@ const FinalFill = () => {
       console.log("ff✅ Club registered successfully:", response);
 
       
-     // sessionStorage.clear();
+       sessionStorage.clear();
 
 
       router.push("/dashboard/events");

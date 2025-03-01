@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import '@/styles/globals.css';
 import { useNavigate } from '@/utils/navigation';
+import { accessToken } from '@/api/accessTocken';
+
 
 export default function Welcome() {
   const { navigateTo } = useNavigate();
@@ -23,7 +25,7 @@ export default function Welcome() {
     // Save to sessionStorage
     sessionStorage.setItem('email', email);
     sessionStorage.setItem('password', password);
-
+    accessToken({ username: email, password });
     // Navigate to the next page
     navigateTo('/register/uploadImage');
   };
@@ -40,7 +42,7 @@ export default function Welcome() {
         <form onSubmit={handleSubmit}>
           <label className="block mb-2 font-medium text-gray-900">Email</label>
           <input
-            type="email"
+            type="text"
             placeholder="Enter Your Email"
             className="w-full p-2 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={email}

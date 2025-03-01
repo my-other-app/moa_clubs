@@ -8,11 +8,11 @@ export default function EventsHeader() {
     <div className="flex justify-between items-start p-6">
       {/* Left Section */}
       <div>
-        <h1 className="text-2xl font-bold">EVENTS</h1>
+        <h1 className="text-4xl font-bold bebas">EVENTS</h1>
         <div className="mt-4 flex space-x-2">
           <button
             className={`px-4 py-2 border rounded-md ${
-              activeTab === "live" ? "bg-gray-900 text-white" : "bg-white"
+              activeTab === "live" ? "border-1  text-gray-400" : "border-1  text-gray-300"
             }`}
             onClick={() => setActiveTab("live")}
           >
@@ -20,7 +20,7 @@ export default function EventsHeader() {
           </button>
           <button
             className={`px-4 py-2 border rounded-md ${
-              activeTab === "past" ? "bg-gray-900 text-white" : "bg-white"
+              activeTab === "past" ? "border-1  text-gray-400" : "border-1  text-gray-300"
             }`}
             onClick={() => setActiveTab("past")}
           >
@@ -28,7 +28,7 @@ export default function EventsHeader() {
           </button>
         </div>
         <div className="relative mt-4">
-          <FiSearch className="absolute left-3 top-3 text-gray-400" />
+          <FiSearch className="absolute left-3 top-3 text-gray-300" />
           <input
             type="text"
             placeholder="Search for events"

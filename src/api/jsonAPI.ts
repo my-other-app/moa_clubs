@@ -1,47 +1,45 @@
-import axios from 'axios';
+import axios from "axios";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-const ACCESS_TOKEN = process.env.NEXT_PUBLIC_ACCESS_TOKEN;
-const REFRESH_TOKEN = process.env.NEXT_PUBLIC_REFRESH_TOKEN;
 
 let isRefreshing = false;
 let refreshSubscribers: ((token: string) => void)[] = [];
 
+// 🔹 Create Axios Instance
 const jsonAPI = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${ACCESS_TOKEN}`, // Attach token from .env.local
+    "Content-Type": "application/json",
   },
   withCredentials: true, // Required if using httpOnly cookies
 });
 
-// 🔹 Debugging Logs
-console.log("✅ Loaded API Base URL:", API_BASE_URL);
-console.log("✅ Loaded Access Token:", ACCESS_TOKEN ? "Present ✅" : "Not Found ❌");
+// 🔹 Fetch tokens dynamically from localStorage
+const getAccessToken = () => localStorage.getItem("accessToken");
+const getRefreshToken = () => localStorage.getItem("refreshToken");
 
-// Subscribe to token refresh queue
+// 🔹 Subscribe to token refresh queue
 const subscribeTokenRefresh = (cb: (token: string) => void) => {
   refreshSubscribers.push(cb);
 };
 
-// Notify all subscribers when a new token is obtained
+// 🔹 Notify subscribers after token refresh
 const onRefreshed = (token: string) => {
   refreshSubscribers.forEach((cb) => cb(token));
   refreshSubscribers = [];
 };
 
-// Request Interceptor: Attach Token Dynamically
+// 🔹 Request Interceptor: Attach Token Dynamically
 jsonAPI.interceptors.request.use(
   (config) => {
     console.log("📤 Sending Request to:", config.url);
-    console.log("🔹 Request Headers Before:", config.headers);
-
-    if (ACCESS_TOKEN) {
-      config.headers.Authorization = `Bearer ${ACCESS_TOKEN}`;
-      console.log("✅ Token Found & Attached to Request");
+    
+    const accessToken = getAccessToken();
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+      console.log("✅ Token Attached to Request");
     } else {
-      console.warn("❌ No Token Found! Check .env.local");
+      console.warn("❌ No Token Found! Redirecting to login...");
     }
 
     return config;
@@ -52,7 +50,7 @@ jsonAPI.interceptors.request.use(
   }
 );
 
-// Response Interceptor: Handle Token Expiry and Refresh
+// 🔹 Response Interceptor: Handle Token Expiry & Refresh
 jsonAPI.interceptors.response.use(
   (response) => {
     console.log("✅ Response Received:", {
@@ -73,6 +71,8 @@ jsonAPI.interceptors.response.use(
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       console.warn("🔄 Token Expired! Attempting Refresh...");
+      originalRequest._retry = true;
+
       if (isRefreshing) {
         return new Promise((resolve) => {
           subscribeTokenRefresh((token) => {
@@ -82,17 +82,20 @@ jsonAPI.interceptors.response.use(
         });
       }
 
-      originalRequest._retry = true;
       isRefreshing = true;
 
       try {
-        console.log("🔹 Using Refresh Token from .env.local:", REFRESH_TOKEN ? "Present ✅" : "Not Found ❌");
+        const refreshToken = getRefreshToken();
+        console.log("🔹 Using Refresh Token:", refreshToken ? "Present ✅" : "Not Found ❌");
 
-        if (REFRESH_TOKEN) {
-          const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, { refresh_token: REFRESH_TOKEN });
+        if (refreshToken) {
+          const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, { refresh_token: refreshToken });
           console.log("✅ Token Refreshed:", data.access_token);
 
-          // Update headers with new token
+          // Update tokens in localStorage
+          localStorage.setItem("accessToken", data.access_token);
+          localStorage.setItem("refreshToken", data.refresh_token);
+
           jsonAPI.defaults.headers.Authorization = `Bearer ${data.access_token}`;
           onRefreshed(data.access_token);
 
@@ -100,10 +103,15 @@ jsonAPI.interceptors.response.use(
           return axios(originalRequest);
         } else {
           console.warn("⚠️ No Refresh Token Found! Logging Out...");
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          window.location.href = "/login"; // Redirect user to login page
         }
       } catch (refreshError) {
         console.error("❌ Token Refresh Failed! Logging Out...", refreshError);
-        window.location.href = "/login";
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        window.location.href = "/login"; // Redirect user to login page
       } finally {
         isRefreshing = false;
       }

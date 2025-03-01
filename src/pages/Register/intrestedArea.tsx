@@ -1,5 +1,5 @@
 'use client';
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import '@/styles/globals.css';
 import { useNavigate } from '@/utils/navigation';
@@ -50,11 +50,21 @@ export default function IntrestedArea() {
   const { navigateTo } = useNavigate();
   const [selected, setSelected] = useState<{ id: number; name: string }[]>([]);
   const router = useRouter();
+
   // Load saved interests from sessionStorage when the component mounts
   useEffect(() => {
-    const savedInterests = sessionStorage.getItem("selectedInterests");
-    if (savedInterests) {
-      setSelected(JSON.parse(savedInterests));
+    try {
+      const savedInterests = sessionStorage.getItem("selectedInterests");
+      if (savedInterests) {
+        const interestIds: number[] = JSON.parse(savedInterests); // Retrieve stored IDs
+        const selectedInterests = categories
+          .flatMap((category) => category.options)
+          .filter((option) => interestIds.includes(option.id)); // Map IDs back to full objects
+
+        setSelected(selectedInterests);
+      }
+    } catch (error) {
+      console.error("Error parsing saved interests:", error);
     }
   }, []);
 
@@ -62,9 +72,9 @@ export default function IntrestedArea() {
   const toggleSelection = (option: { id: number; name: string }) => {
     setSelected((prev) => {
       if (prev.some((item) => item.id === option.id)) {
-        return prev.filter((item) => item.id !== option.id);
+        return prev.filter((item) => item.id !== option.id); // Remove if already selected
       } else if (prev.length < 5) {
-        return [...prev, option];
+        return [...prev, option]; // Add new selection
       }
       return prev;
     });
@@ -77,8 +87,9 @@ export default function IntrestedArea() {
       return;
     }
 
-    // Store selected interests in sessionStorage (or global state)
-    sessionStorage.setItem("selectedInterests", JSON.stringify(selected));
+    // Extract only the IDs from selected interests and store them
+    const interestIds = selected.map((item) => item.id);
+    sessionStorage.setItem("selectedInterests", JSON.stringify(interestIds));
 
     // Navigate to the next page
     navigateTo('/register/collegeDetails');
@@ -86,10 +97,11 @@ export default function IntrestedArea() {
 
   return (
     <div className="flex flex-col items-center justify-center p-6">
-    {/* Back Button */}
-    <button onClick={() => router.back()} className="absolute top-4 left-4 text-gray-600 cursor-pointer">
+      {/* Back Button */}
+      <button onClick={() => router.back()} className="absolute top-4 left-4 text-gray-600 cursor-pointer">
         &larr; Back
       </button>
+
       <div className="bg-white p-8 rounded-lg shadow-lg w-[45%] border-2 border-gray-700">
         
         {/* Progress Bar */}

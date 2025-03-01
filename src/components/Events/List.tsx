@@ -42,7 +42,7 @@ export default function EventsList() {
          onClick={() => navigateTo('/dashboard/dashScreen')}
          >
         {dummyEvents.map((event) => (
-          <div key={event.id} className="flex justify-between items-center border p-4 rounded-lg shadow-sm">
+          <div key={event.id} className="flex justify-between items-center p-4 rounded-lg border-gray-300 border">
             <div className="flex items-center space-x-4">
               <Image src={event.image} alt={event.title} width={50} height={50} className=" rounded-md" />
               <div>
@@ -55,11 +55,9 @@ export default function EventsList() {
               <p className="text-gray-500 text-sm">Registration Count</p>
             </div>
             <div className="flex space-x-2">
-              <button className="p-2 bg-gray-200 rounded"><FaEdit /></button>
-              <button className="p-2 bg-gray-200 rounded"><FaTrash /></button>
-              <button
-             
-               className="p-2 bg-gray-200 rounded"><FaExternalLinkAlt /></button>
+              <button className="p-3 bg-gray-200 text-gray-400 rounded hover:bg-gray-300"><FaEdit /></button>
+              <button className="p-3 bg-gray-200 text-gray-400 rounded hover:bg-gray-300"><FaTrash /></button>
+              <button className="p-3 bg-gray-200 text-gray-400 rounded hover:bg-gray-300"><FaExternalLinkAlt /></button>
             </div>
           </div>
         ))}

@@ -12,7 +12,7 @@ export default function EventsHeader() {
         <div className="mt-4 flex space-x-2">
           <button
             className={`px-4 py-2 border rounded-md ${
-              activeTab === "live" ? "border-1  text-gray-400" : "border-1  text-gray-300"
+              activeTab === "live" ? "border-1  text-black border-black bg-[#F9FFA1]" : "border-1  text-gray-400"
             }`}
             onClick={() => setActiveTab("live")}
           >
@@ -20,7 +20,7 @@ export default function EventsHeader() {
           </button>
           <button
             className={`px-4 py-2 border rounded-md ${
-              activeTab === "past" ? "border-1  text-gray-400" : "border-1  text-gray-300"
+              activeTab === "past" ? "border-1  text-black border-black bg-[#F9FFA1]" : "border-1  text-gray-400"
             }`}
             onClick={() => setActiveTab("past")}
           >
@@ -28,17 +28,17 @@ export default function EventsHeader() {
           </button>
         </div>
         <div className="relative mt-4">
-          <FiSearch className="absolute left-3 top-3 text-gray-300" />
+          <FiSearch className="absolute left-3 top-3 text-gray-400" />
           <input
             type="text"
             placeholder="Search for events"
-            className="pl-10 pr-4 py-2 border rounded-md w-full"
+            className="pl-10 pr-4 py-2 border border-gray-400 rounded-md w-full"
           />
         </div>
       </div>
 
       {/* Right Section */}
-      <button className="bg-gray-900 text-white px-6 py-3 rounded-md">
+      <button className="bg-gray-700 text-xl bebas text-white px-8 py-3 top-32 right-7 absolute rounded-md hover:bg-gray-800">
         CREATE NEW EVENT
       </button>
     </div>

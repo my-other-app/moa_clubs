@@ -12,6 +12,7 @@ import {
   FaMapMarkerAlt,
 } from "react-icons/fa";
 import Sidebar from "@/components/sidebar";
+import Link from "next/link";
 
 interface ClubLogo {
   thumbnail: string;
@@ -161,9 +162,11 @@ export default function ClubProfile() {
 
             {/* Right: Buttons */}
             <div className="mt-4 sm:mt-0 flex gap-2">
+              <Link href="/dashboard/clubEdit">
               <button className="border bg-gray-700 rounded px-8 py-1 text-sm text-amber-50 font-medium hover:bg-gray-800">
                 EDIT PROFILE
               </button>
+              </Link>
               <button className="border border-gray-700 rounded px-4 py-1 text-sm font-medium hover:bg-gray-100">
                 CHANGE PASSWORD
               </button>

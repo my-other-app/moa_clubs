@@ -1,13 +1,75 @@
 import React, { useState, useEffect } from 'react';
 import type { NextPage } from 'next';
 import Image from 'next/image';
+import axios from 'axios';
 
 const EditClub: NextPage = () => {
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+
+  // Basic Club Information
+  const [clubName, setClubName] = useState('NexeraCET');
+  const [clubOrganization, setClubOrganization] = useState('');
+  const [clubLocation, setClubLocation] = useState('Trivandrum');
+  const [clubDescription, setClubDescription] = useState('');
+
+  // Social Links (disabled)
+  const [instagramLink, setInstagramLink] = useState('https://www.instagram.com/nexera.cet');
+  const [youtubeLink, setYoutubeLink] = useState('https://www.youtube.com/@collegeofengineeringtrivan1297');
+  const [linkedInLink, setLinkedInLink] = useState('');
+  const [websiteLink, setWebsiteLink] = useState('https://www.nexeracet.tech/');
+
+  // Contact Information
+  const [contactPhone, setContactPhone] = useState('9496225620');
+  // const [contactEmail, setContactEmail] = useState('nexra'); // Uncomment if needed
+
+  // Logo File & Preview
   const [clubLogo, setClubLogo] = useState<File | null>(null);
-  const [clubLogoPreview, setClubLogoPreview] = useState<string | null>(null);
-  const [selectedInterests, setSelectedInterests] = useState<number[]>([]);
+  const [clubLogoPreview, setClubLogoPreview] = useState<string | null>(
+    'https://mulearn-backend-test.s3.amazonaws.com/myotherapp-dev/clubs/logos/a6a77957-8201-4cda-bf95-3d70a568d788.medium.jpeg?AWSAccessKeyId=AKIAVS6FAG7XBZZSLLCS&Signature=myQS2bxz98cTllqXfAqoTvbpzlQ%3D&Expires=1740949144'
+  );
 
+  // Interests (list of IDs)
+  const [selectedInterests, setSelectedInterests] = useState<number[]>([9, 10, 11, 12, 14]);
 
+  // Fetch club data on mount and pre-fill form
+  useEffect(() => {
+    const fetchClubData = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/v1/clubs/info`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = response.data;
+        setClubName(data.name);
+        // Use data.org if available; otherwise empty string
+        setClubOrganization(data.org || '');
+        setClubLocation(data.location_name || '');
+        setClubDescription(data.about || '');
+        // Use the medium logo URL if available
+        if (data.logo && data.logo.medium) {
+          setClubLogoPreview(data.logo.medium);
+        }
+        // Set interests (assuming data.interests is an array of interest objects)
+        if (data.interests) {
+          setSelectedInterests(data.interests.map((interest: any) => interest.id));
+        }
+        // Set social links from data.socials object
+        if (data.socials) {
+          setInstagramLink(data.socials.instagram || '');
+          setYoutubeLink(data.socials.youtube || '');
+          setLinkedInLink(data.socials.linkedin || '');
+          setWebsiteLink(data.socials.website || '');
+        }
+        // Set contact information
+        setContactPhone(data.contact_phone || '');
+        // setContactEmail(data.contact_email || '');
+      } catch (error) {
+        console.error('Error fetching club data:', error);
+      }
+    };
+
+    fetchClubData();
+  }, [API_BASE_URL, token]);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -21,15 +83,47 @@ const EditClub: NextPage = () => {
 
   const handleInterestChange = (interestId: number) => {
     setSelectedInterests((prev) =>
-      prev.includes(interestId) ? prev.filter((id) => id !== interestId) : [...prev, interestId]
+      prev.includes(interestId)
+        ? prev.filter((id) => id !== interestId)
+        : [...prev, interestId]
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Build your club object here including selectedInterests array
-    console.log('Selected Interests:', selectedInterests);
-    // Submit your form data...
+    // Build FormData for update
+    const formData = new FormData();
+    formData.append('name', clubName);
+    formData.append('organization', clubOrganization);
+    formData.append('location', clubLocation);
+    formData.append('description', clubDescription);
+    if (clubLogo) {
+      formData.append('logo', clubLogo);
+    }
+    // Append interests as JSON string (or change as needed)
+    formData.append('interest_ids', JSON.stringify(selectedInterests));
+    // Append social links (they are disabled and not edited)
+    formData.append('instagramLink', instagramLink);
+    formData.append('youtubeLink', youtubeLink);
+    formData.append('linkedInLink', linkedInLink);
+    formData.append('websiteLink', websiteLink);
+    // Append contact information
+    formData.append('contact_phone', contactPhone);
+    // formData.append('contact_email', contactEmail); // Uncomment if needed
+
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+      const response = await axios.put(`${API_BASE_URL}/api/v1/clubs/update`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      console.log('Club updated:', response.data);
+      // Optionally, redirect or show a success message here.
+    } catch (error) {
+      console.error('Error updating club:', error);
+    }
   };
 
   return (
@@ -48,11 +142,13 @@ const EditClub: NextPage = () => {
                 Club Name
               </label>
               <input
-                type="text"
                 id="clubName"
                 name="clubName"
                 placeholder="Enter Club Name"
-                className="w-full rounded border border-gray-300 p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded border border-gray-300 p-2 text-sm bg-gray-100 text-gray-500 cursor-not-allowed focus:outline-none"
+                value={clubName}
+                onChange={(e) => setClubName(e.target.value)}
+                disabled
               />
             </div>
 
@@ -67,20 +163,24 @@ const EditClub: NextPage = () => {
                 name="clubOrganization"
                 placeholder="Enter Organization"
                 className="w-full rounded border border-gray-300 p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                value={clubOrganization}
+                onChange={(e) => setClubOrganization(e.target.value)}
               />
             </div>
 
             {/* Club Location */}
             <div>
               <label htmlFor="clubLocation" className="mb-1 block text-sm font-medium text-gray-700">
-                Choose Club Location
+                Club Location
               </label>
               <input
                 type="text"
                 id="clubLocation"
                 name="clubLocation"
-                placeholder="Choose Club Location"
+                placeholder="Enter Club Location"
                 className="w-full rounded border border-gray-300 p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                value={clubLocation}
+                onChange={(e) => setClubLocation(e.target.value)}
               />
             </div>
           </div>
@@ -98,6 +198,8 @@ const EditClub: NextPage = () => {
                 placeholder="Enter Club Description"
                 rows={5}
                 className="w-full resize-none rounded border border-gray-300 p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                value={clubDescription}
+                onChange={(e) => setClubDescription(e.target.value)}
               />
             </div>
 
@@ -114,15 +216,21 @@ const EditClub: NextPage = () => {
                       width={100}
                       height={100}
                       alt="Club Logo"
-                      className="rounded-full aspect-square "
+                      className="rounded-full aspect-square"
                     />
                   ) : (
                     <div>
-                      <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <svg
+                        width="100"
+                        height="100"
+                        viewBox="0 0 100 100"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
                         <rect x="0.25" y="0.25" width="99.5" height="99.5" rx="49.75" fill="#F3F3F3" />
                         <rect x="0.25" y="0.25" width="99.5" height="99.5" rx="49.75" stroke="#979797" strokeWidth="0.5" />
                         <path
-                          d="M51 32H41.6C38.2397 32 36.5595 32 35.2761 32.654C34.1471 33.2292 33.2292 34.1471 32.654 35.2761C32 36.5595 32 38.2397 32 41.6V58.4C32 61.7603 32 63.4405 32.654 64.7239C33.2292 65.8529 34.1471 66.7708 35.2761 67.346C36.5595 68 38.2397 68 41.6 68H60C61.8599 68 62.7899 68 63.5529 67.7956C65.6235 67.2408 67.2408 65.6235 67.7956 63.5529C68 62.7899 68 61.8599 68 60M64 42V30M58 36H70M47 43C47 45.2091 45.2091 47 43 47C40.7909 47 39 45.2091 39 43C39 40.7909 40.7909 39 43 39C45.2091 39 47 40.7909 47 43ZM55.9801 49.8363L39.0623 65.2161C38.1107 66.0812 37.6349 66.5137 37.5929 66.8884C37.5564 67.2132 37.6809 67.5353 37.9264 67.7511C38.2096 68 38.8526 68 40.1386 68H58.912C61.7903 68 63.2295 68 64.3598 67.5164C65.7789 66.9094 66.9094 65.7789 67.5164 64.3598C68 63.2295 68 61.7903 68 58.912C68 57.9435 68 57.4593 67.8941 57.0083C67.7611 56.4416 67.5059 55.9107 67.1465 55.4528C66.8605 55.0884 66.4824 54.7859 65.7261 54.1809L60.1317 49.7053C59.3748 49.0998 58.9963 48.7971 58.5796 48.6902C58.2123 48.596 57.8257 48.6082 57.4651 48.7254C57.0559 48.8583 56.6973 49.1843 55.9801 49.8363Z"
+                          d="M51 32H41.6C38.2397 32 36.5595 32 35.2761 32.654C34.1471 33.2292 33.2292 34.1471 32.654 35.2761C32 36.5595 32 38.2397 32 41.6V58.4C32 61.7603 32 63.4405 32.654 64.7239C33.2292 65.8529 34.1471 66.7708 35.2761 67.346C36.5595 68 38.2397 68 41.6 68H60C61.8599 68 62.7899 68 63.5529 67.7956C65.6235 67.2408 67.2408 65.6235 67.7956 63.5529C68 62.7899 68 61.8599 68 58.912C68 57.9435 68 57.4593 67.8941 57.0083C67.7611 56.4416 67.5059 55.9107 67.1465 55.4528C66.8605 55.0884 66.4824 54.7859 65.7261 54.1809L60.1317 49.7053C59.3748 49.0998 58.9963 48.7971 58.5796 48.6902C58.2123 48.596 57.8257 48.6082 57.4651 48.7254C57.0559 48.8583 56.6973 49.1843 55.9801 49.8363Z"
                           stroke="#979797"
                           strokeWidth="4"
                           strokeLinecap="round"
@@ -132,9 +240,16 @@ const EditClub: NextPage = () => {
                     </div>
                   )}
                 </label>
-                <input id="clubLogo" type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+                <input
+                  id="clubLogo"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleLogoUpload}
+                />
                 <p className="text-sm text-gray-600 mt-2">Add Club Logo</p>
               </div>
+              {/* (Optional) Interests selection UI can be added here */}
             </div>
           </div>
         </div>
@@ -152,7 +267,9 @@ const EditClub: NextPage = () => {
                 id="instagramLink"
                 name="instagramLink"
                 placeholder="Instagram Link"
-                className="w-full rounded border border-gray-300 p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded border border-gray-300 p-2 text-sm bg-gray-100 text-gray-500 cursor-not-allowed"
+                value={instagramLink}
+                disabled
               />
             </div>
             <div>
@@ -164,7 +281,9 @@ const EditClub: NextPage = () => {
                 id="youtubeLink"
                 name="youtubeLink"
                 placeholder="Youtube Link"
-                className="w-full rounded border border-gray-300 p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded border border-gray-300 p-2 text-sm bg-gray-100 text-gray-500 cursor-not-allowed"
+                value={youtubeLink}
+                disabled
               />
             </div>
             <div>
@@ -176,7 +295,9 @@ const EditClub: NextPage = () => {
                 id="linkedInLink"
                 name="linkedInLink"
                 placeholder="LinkedIn Link"
-                className="w-full rounded border border-gray-300 p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded border border-gray-300 p-2 text-sm bg-gray-100 text-gray-500 cursor-not-allowed"
+                value={linkedInLink}
+                disabled
               />
             </div>
             <div>
@@ -188,9 +309,47 @@ const EditClub: NextPage = () => {
                 id="websiteLink"
                 name="websiteLink"
                 placeholder="Website Link"
-                className="w-full rounded border border-gray-300 p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded border border-gray-300 p-2 text-sm bg-gray-100 text-gray-500 cursor-not-allowed"
+                value={websiteLink}
+                disabled
               />
             </div>
+          </div>
+        </div>
+
+        {/* Additional Contact Information */}
+        <div className="mb-6">
+          <h2 className="mb-4 text-xl font-semibold text-gray-800">CONTACT INFORMATION</h2>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div>
+              <label htmlFor="contactPhone" className="mb-1 block text-sm font-medium text-gray-700">
+                Contact Phone
+              </label>
+              <input
+                type="text"
+                id="contactPhone"
+                name="contactPhone"
+                placeholder="Enter Contact Phone"
+                className="w-full rounded border border-gray-300 p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+              />
+            </div>
+            {/* Uncomment if you wish to include Contact Email */}
+            {/* <div>
+              <label htmlFor="contactEmail" className="mb-1 block text-sm font-medium text-gray-700">
+                Contact Email
+              </label>
+              <input
+                type="email"
+                id="contactEmail"
+                name="contactEmail"
+                placeholder="Enter Contact Email"
+                className="w-full rounded border border-gray-300 p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+              />
+            </div> */}
           </div>
         </div>
 

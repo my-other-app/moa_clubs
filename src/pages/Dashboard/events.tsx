@@ -11,6 +11,8 @@ export default function Events() {
   useEffect(() => {
     const getEvents = async () => {
       const fetchedEvents = await fetchEvents();
+      // If API returns an object with items, use:
+      // setEvents(fetchedEvents.items);
       setEvents(fetchedEvents);
     };
     getEvents();

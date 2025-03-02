@@ -16,11 +16,12 @@ export const fetchEvents = async () => {
 
     const response = await axios.get(`${API_BASE_URL}/api/v1/clubs/events/list`, {
       headers: {
-        Authorization: `Bearer ${accessToken}`, // ✅ Attach token in headers
+        Authorization: `Bearer ${accessToken}`,
       },
     });
 
-    return response.data; // Assuming API returns an array of events
+    // Return the items array directly
+    return response.data.items;
   } catch (error) {
     console.error("❌ Error fetching events:", error);
     return [];

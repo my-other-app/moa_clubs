@@ -6,7 +6,7 @@ import { fetchEvents } from "@/utils/listEvents";
 
 export default function Events() {
   const [events, setEvents] = useState([]);
-  const id = 1;
+  
 
   useEffect(() => {
     const getEvents = async () => {
@@ -20,7 +20,7 @@ export default function Events() {
   return (
     <div className="pl-20">
       <Sidebar />
-      <EventsHeader id={id} />
+      <EventsHeader  />
       <EventsList events={events} /> 
     </div>
   );

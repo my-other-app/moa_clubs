@@ -1,11 +1,8 @@
-import { ReactNode, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { FiSearch } from "react-icons/fi";
-import Popup from "reactjs-popup";
-import "reactjs-popup/dist/index.css";
-import Volunteer from "@/components/dashboard/volunteer";
 
-export default function EventsHeader({ id }: { id: number }) {
+export default function EventsHeader() {
   const [activeTab, setActiveTab] = useState("live");
 
   return (
@@ -47,36 +44,9 @@ export default function EventsHeader({ id }: { id: number }) {
 
       {/* Right Section */}
       <div className="flex-col flex">
-        {/* Add Volunteers Popup */}
-        <Popup
-          trigger={
-            <button className="border-gray-700 border text-xl bebas text-black px-8 py-3 top-16 right-7 absolute rounded-md hover:bg-gray-200">
-              Add Volunteers
-            </button>
-          }
-          modal
-          nested
-        >
-          {
-            ((close: () => void) => (
-              <>
-                <div className="p-4">
-                  <button
-                    onClick={close}
-                    className="text-right w-full text-gray-500 mb-2"
-                  >
-                    X
-                  </button>
-                  <Volunteer eventId={id} />
-                </div>
-              </>
-            )) as unknown as ReactNode
-          }
-        </Popup>
-
         {/* Create New Event Button */}
         <Link href="/dashboard/event/createEvent">
-          <button className="bg-gray-700 text-xl bebas text-white px-8 py-3 top-32 right-7 absolute rounded-md hover:bg-gray-800">
+          <button className="bg-gray-700 text-xl bebas text-white px-8 py-3 top-16 right-7 absolute rounded-md hover:bg-gray-800">
             CREATE NEW EVENT
           </button>
         </Link>

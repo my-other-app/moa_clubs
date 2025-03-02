@@ -1,10 +1,8 @@
-// pages/create-event.tsx
 "use client";
 
 import { useState, useEffect, FormEvent, ChangeEvent } from "react";
-import axios from "axios";
 import Image from "next/image";
-import Sidebar from "@/components/sidebar"; // adjust path if needed
+import Sidebar from "@/components/sidebar";
 import { useRouter } from "next/router";
 import { useEvent, EventData } from "@/context/eventContext";
 
@@ -17,6 +15,7 @@ export default function CreateEvent() {
   const router = useRouter();
   const { setEventData } = useEvent();
 
+  // State for event details
   const [eventPoster, setEventPoster] = useState<File | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
@@ -35,23 +34,14 @@ export default function CreateEvent() {
   const [eventPerks, setEventPerks] = useState<number>(0);
   const [eventGuidelines, setEventGuidelines] = useState<string>("");
 
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
+  // Example: setting static categories; you can also fetch from an API.
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const token = localStorage.getItem("accessToken");
-        const response = await axios.get(`${API_BASE_URL}/api/v1/events/categories/list`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setCategories(response.data);
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-        window.alert("Failed to fetch categories. Please try again later.");
-      }
-    };
-    fetchCategories();
-  }, [API_BASE_URL]);
+    setCategories([
+      { id: "1", name: "Tech" },
+      { id: "2", name: "Arts" },
+      // Add more categories as needed
+    ]);
+  }, []);
 
   const handlePosterUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -62,6 +52,7 @@ export default function CreateEvent() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    // Validate required fields
     if (
       !eventTitle ||
       !eventPoster ||
@@ -77,8 +68,6 @@ export default function CreateEvent() {
       window.alert("Please fill in all required fields.");
       return;
     }
-    
-    
 
     const eventDatetime = `${eventRegistrationClosingDate}T${eventRegistrationClosingTime}:00`;
 
@@ -99,12 +88,16 @@ export default function CreateEvent() {
       has_fee: true,
       has_prize: true,
       reg_enddate: eventRegistrationClosingDate,
-    
+      additional_details: "[]",
+      reg_startdate: "",
+      contact_phone: null,
+      contact_email: null,
+      interest_ids: null,
+    //  club_id: null
     };
 
-    // Save event data in context
+    // Save event data in context and navigate to add questions
     setEventData(eventDataToPass);
-    // Navigate to the edit event page (which adds registration questions)
     router.push("/dashboard/event/addEvent");
   };
 
@@ -136,7 +129,7 @@ export default function CreateEvent() {
                 >
                   <option value="">Choose Event Category</option>
                   {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
+                    <option key={category.id} value={parseInt(category.id, 10)}>
                       {category.name}
                     </option>
                   ))}
@@ -146,7 +139,7 @@ export default function CreateEvent() {
                 <h3>Event Seats</h3>
                 <input
                   type="text"
-                  placeholder="Enter the available seats for the event"
+                  placeholder="Enter available seats for the event"
                   className="p-2 border rounded"
                   value={eventSeats}
                   onChange={(e) => setEventSeats(e.target.value)}
@@ -175,7 +168,6 @@ export default function CreateEvent() {
                     />
                   ) : (
                     <div>
-                      {/* SVG placeholder */}
                       <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect x="0.25" y="0.25" width="99.5" height="99.5" rx="49.75" fill="#F3F3F3" />
                         <rect x="0.25" y="0.25" width="99.5" height="99.5" rx="49.75" stroke="#979797" strokeWidth="0.5" />

@@ -61,7 +61,7 @@ const FinalFill = () => {
       console.log("ff✅ Social media data saved successfully:", socialResponse);
       
       // Optionally clear sessionStorage if needed:
-      // sessionStorage.clear();
+       sessionStorage.clear();
 
       router.push("/dashboard/events");
     } catch (error: unknown) {

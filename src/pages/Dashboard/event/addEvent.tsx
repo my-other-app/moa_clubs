@@ -1,13 +1,11 @@
-// pages/edit-event.tsx
 "use client";
 
 import { useState, ChangeEvent } from "react";
-import axios from "axios";
-import Sidebar from "@/components/sidebar"; // adjust path as needed
+import Sidebar from "@/components/sidebar";
 import { ChevronLeft, ChevronDown, Circle } from "lucide-react";
 import { useRouter } from "next/router";
 import { useEvent } from "@/context/eventContext";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 
 interface Question {
   type: string;
@@ -17,15 +15,12 @@ interface Question {
 
 export default function EditEvent() {
   const router = useRouter();
-  const { eventData } = useEvent();
+  const { eventData, setEventData, submitEvent } = useEvent();
   const [loading, setLoading] = useState<boolean>(false);
-  const uniqueEventKey = uuidv4();
   const [options, setOptions] = useState<string[]>([""]);
   const [questionType, setQuestionType] = useState<string>("");
   const [currentQuestion, setCurrentQuestion] = useState<string>("");
   const [questions, setQuestions] = useState<Question[]>([]);
-
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   const addOption = () => {
     setOptions([...options, ""]);
@@ -55,36 +50,32 @@ export default function EditEvent() {
   };
 
   const handleContinue = async () => {
-    const formData = new FormData();
-    if (eventData) {
-      Object.entries(eventData).forEach(([key, value]) => {
-        formData.append(key, value as string);
-      });
-    }
-    // const additionalDetails = questions.length > 0 ? JSON.stringify(questions) : "";
-    // formData.append("additional_details", additionalDetails);
-    // if (eventData) {
-    //   Object.entries(eventData).forEach(([key, value]) => {
-    //     formData.append(key, value as string);
-    //   });
-    // }
-    
-    const generateUniqueKey = () => `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
-    const uniqueEventKey = generateUniqueKey();
-    formData.append("key", uniqueEventKey);
+    // Convert questions into the required format with unique keys.
+    const additionalDetails = JSON.stringify(
+      questions.map((q) => ({
+        key: uuidv4(),
+        label: q.text,
+        field_type: q.type === "multipleChoice" ? "select" : "shortAnswer",
+        options: q.type === "multipleChoice" ? q.options : [],
+        required: true,
+      }))
+    );
 
-    const accessToken = localStorage.getItem("accessToken") || "";
+    // Update event data with additional_details.
+    if (eventData) {
+      setEventData({ ...eventData, additional_details: additionalDetails });
+    } else {
+      console.error("No event data found in context");
+      return;
+    }
+
     setLoading(true);
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/v1/events/create`,formData, {
-        headers: { Authorization: `Bearer ${accessToken}`,
-          "content-type": "multipart/form-data",
-         },
-      });
-      console.log("Event created successfully:", response.data);
+      const result = await submitEvent();
+      console.log("Event created:", result);
       router.push("/dashboard/events");
-    } catch (error: unknown) {
-      console.error("Error creating event:", error);
+    } catch (error) {
+      console.error("Error submitting event:", error);
     } finally {
       setLoading(false);
     }
@@ -99,7 +90,7 @@ export default function EditEvent() {
           Back
         </button>
         <h1 className="text-3xl font-bold">EDIT REGISTRATION FORM</h1>
-        <p className="text-gray-500">Add questions for the registration Form</p>
+        <p className="text-gray-500">Add questions for the registration form</p>
         <div className="flex flex-row gap-12 items-start">
           <div className="mt-6 flex-1/2">
             <h2 className="font-bold text-lg">MANDATORY INFORMATION</h2>

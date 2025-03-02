@@ -51,7 +51,7 @@ const EditClub: NextPage = () => {
         }
         // Set interests (assuming data.interests is an array of interest objects)
         if (data.interests) {
-          setSelectedInterests(data.interests.map((interest: any) => interest.id));
+          setSelectedInterests(data.interests.map((interest: { id: number }) => interest.id));
         }
         // Set social links from data.socials object
         if (data.socials) {
@@ -81,13 +81,13 @@ const EditClub: NextPage = () => {
     }
   };
 
-  const handleInterestChange = (interestId: number) => {
-    setSelectedInterests((prev) =>
-      prev.includes(interestId)
-        ? prev.filter((id) => id !== interestId)
-        : [...prev, interestId]
-    );
-  };
+//   const handleInterestChange = (interestId: number) => {
+//     setSelectedInterests((prev) =>
+//       prev.includes(interestId)
+//         ? prev.filter((id) => id !== interestId)
+//         : [...prev, interestId]
+//     );
+//   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

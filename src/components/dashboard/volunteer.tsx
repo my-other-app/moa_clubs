@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from "react";
+"use client";
+
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 
 interface Volunteer {
@@ -25,8 +27,8 @@ export default function Volunteer({ eventId }: VolunteerProps) {
   // Define API base URL
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-  // Fetch volunteer list from API
-  const fetchVolunteers = async () => {
+  // Wrap fetchVolunteers in useCallback so it becomes a stable dependency
+  const fetchVolunteers = useCallback(async () => {
     try {
       const response = await axios.get(
         `${API_BASE_URL}/api/v1/events/volunteer/list/${eventId}`,
@@ -39,13 +41,13 @@ export default function Volunteer({ eventId }: VolunteerProps) {
     } catch (error) {
       console.error("Error fetching volunteers:", error);
     }
-  };
+  }, [API_BASE_URL, eventId, token]);
 
   useEffect(() => {
     if (eventId) {
       fetchVolunteers();
     }
-  }, [eventId]);
+  }, [eventId, fetchVolunteers]);
 
   // Add a volunteer using the POST endpoint
   const addVolunteer = async () => {
@@ -58,9 +60,13 @@ export default function Volunteer({ eventId }: VolunteerProps) {
           phone: volunteerPhone,
         };
 
-        await axios.post(`${API_BASE_URL}/api/v1/events/volunteer/add`, payload, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await axios.post(
+          `${API_BASE_URL}/api/v1/events/volunteer/add`,
+          payload,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         // Refresh the list after successful add
         fetchVolunteers();
         // Clear input fields

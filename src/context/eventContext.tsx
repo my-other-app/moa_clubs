@@ -28,7 +28,7 @@ export type EventData = {
 type EventContextType = {
   eventData: EventData | null;
   setEventData: (data: EventData) => void;
-  submitEvent: () => Promise<any>;
+  submitEvent: () => Promise<unknown>;
 };
 
 const EventContext = createContext<EventContextType | undefined>(undefined);

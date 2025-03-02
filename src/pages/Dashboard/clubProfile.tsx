@@ -29,7 +29,12 @@ interface Interest {
 }
 
 interface Club {
-  socials: any;
+  socials: {
+    instagram?: string;
+    youtube?: string;
+    linkedin?: string;
+    website?: string;
+  };
   id: number;
   name: string;
   description?: string;

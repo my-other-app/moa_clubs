@@ -25,7 +25,7 @@ export default function CreateEvent() {
   const [eventDescription, setEventDescription] = useState<string>("");
   const [eventDate, setEventDate] = useState<string>("");
   const [eventStartTime, setEventStartTime] = useState<string>("");
-  const [eventDuration, setEventDuration] = useState<number>(0);
+  const [eventDuration, setEventDuration] = useState<number | null>(null);
   const [eventRegistrationClosingDate, setEventRegistrationClosingDate] = useState<string>("");
   const [eventRegistrationClosingTime, setEventRegistrationClosingTime] = useState<string>("");
   const [eventMode, setEventMode] = useState<boolean>(false);
@@ -70,13 +70,15 @@ export default function CreateEvent() {
       !eventDescription ||
       !eventDate ||
       !eventStartTime ||
-      !eventDuration ||
+      eventDuration === null ||
       !eventRegistrationClosingDate ||
       !eventRegistrationClosingTime
     ) {
       window.alert("Please fill in all required fields.");
       return;
     }
+    
+    
 
     const eventDatetime = `${eventRegistrationClosingDate}T${eventRegistrationClosingTime}:00`;
 
@@ -205,7 +207,14 @@ export default function CreateEvent() {
             </div>
             <div className="flex flex-col">
               <h3>Event Duration</h3>
-              <input type="number" placeholder="Choose Event Duration Hours" className="p-2 border rounded" value={eventDuration} onChange={(e) => setEventDuration(parseInt(e.target.value, 10))} />
+              <input
+                type="number"
+                placeholder="Choose Event Duration Hours"
+                className="p-2 border rounded"
+                value={eventDuration || ""}
+                onChange={(e) => setEventDuration(parseInt(e.target.value, 10))}
+                required
+              />
             </div>
             <div className="flex flex-col">
               <h3>Event Registration Closing Date</h3>

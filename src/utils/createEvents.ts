@@ -26,7 +26,7 @@ interface EventData {
   additional_details?: string | null;
 }
 
-export const createEvent = async (eventData: EventData): Promise<any> => {
+export const createEvent = async (eventData: EventData): Promise<unknown> => {
   try {
     const formData = new FormData();
 

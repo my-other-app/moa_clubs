@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import '@/styles/globals.css';
 import { FaEdit, FaTrash, FaCog, FaDownload, FaClipboardList } from 'react-icons/fa';
 import Sidebar from '@/components/sidebar';
 

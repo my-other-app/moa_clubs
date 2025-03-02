@@ -1,4 +1,5 @@
 import formAPI from "@/api/formAPI";
+import axios from "axios";
 
 interface ClubRegistrationData {
   email: string;
@@ -31,7 +32,7 @@ const getAccessToken = (): string => {
   return "";
 };
 
-export const registerClub = async (): Promise<any> => {
+export const registerClub = async (): Promise<unknown> => {
   const accessToken = getAccessToken();
   if (!accessToken) {
     console.warn("⚠️ No access token found! User might be logged out.");
@@ -77,7 +78,7 @@ export const registerClub = async (): Promise<any> => {
   });
 
   console.log("📤 Final FormData Before Sending (Club Update):");
-  for (let [key, value] of formData.entries()) {
+  for (const [key, value] of formData.entries()) {
     console.log(`${key}:`, value);
   }
 
@@ -90,8 +91,12 @@ export const registerClub = async (): Promise<any> => {
     });
     console.log("✅ Club Update Success:", response.data);
     return response.data;
-  } catch (error: any) {
-    console.error("❌ Club Update API Error:", error.response?.status, error.response?.data);
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error) && error.response) {
+      console.error("❌ Club Update API Error:", error.response.status, error.response.data);
+    } else {
+      console.error("❌ Club Update API Error:", error);
+    }
     throw error;
   }
 };

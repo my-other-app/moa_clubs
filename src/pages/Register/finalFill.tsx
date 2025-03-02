@@ -1,15 +1,20 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import "@/styles/globals.css";
 import { registerClub } from "@/utils/clubregistration";
 import postSocial from "@/utils/socialsRegistration";
+import { AxiosError } from "axios";
+
+interface FormData {
+  name: string;
+  phone: string;
+}
 
 const FinalFill = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     name: "",
     phone: "",
   });
@@ -59,16 +64,19 @@ const FinalFill = () => {
       // sessionStorage.clear();
 
       router.push("/dashboard/events");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("ff❌ Failed to register club:", error);
-      if (error.response) {
+      if (error instanceof AxiosError) {
         console.error("ff🔍 API Error Details:", {
-          status: error.response.status,
-          data: error.response.data,
+          status: error.response?.status,
+          data: error.response?.data,
         });
         setErrorMessage(
-          error.response.data?.message || "Registration failed. Please try again."
+          (error.response?.data as { message?: string })?.message ||
+          "Registration failed. Please try again."
         );
+      } else if (error instanceof Error) {
+        setErrorMessage(error.message);
       } else {
         setErrorMessage("Network error. Please check your connection.");
       }

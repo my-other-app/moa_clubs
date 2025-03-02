@@ -2,7 +2,6 @@ import EventsHeader from "@/components/Events/Header";
 import EventsList from "@/components/Events/List";
 import Sidebar from "@/components/sidebar";
 import React, { useEffect, useState } from "react";
-import "@/styles/globals.css";
 import { fetchEvents } from "@/utils/listEvents";
 
 export default function Events() {

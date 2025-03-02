@@ -1,12 +1,11 @@
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
 import { FaTicketAlt, FaPen, FaBell, FaBuilding, FaBars, FaTimes } from "react-icons/fa";
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeLink, setActiveLink] = useState<string | null>(null);
-  const router = useRouter();
+  
 
   // Handle Link Click
   const handleLinkClick = (path: string) => {

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import '@/styles/globals.css';
 import { useNavigate } from '@/utils/navigation';
 import { accessToken } from '@/api/accessTocken';
 

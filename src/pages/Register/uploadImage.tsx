@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import '@/styles/globals.css';
 import { useNavigate } from '@/utils/navigation';
+import Image from 'next/image';
 
 export default function UploadImage() {
   const { navigateTo } = useNavigate();
   const [clubLogo, setClubLogo] = useState<File | null>(null);
   const [clubLogoPreview, setClubLogoPreview] = useState<string | null>(null);
-
+  console.log(clubLogo);
   // Load image from sessionStorage when the component mounts
   useEffect(() => {
     const savedLogo = sessionStorage.getItem('clubLogo');
@@ -58,7 +58,13 @@ export default function UploadImage() {
             className="w-24 h-24 border-2 border-dashed border-gray-400 flex items-center justify-center rounded-full cursor-pointer"
           >
             {clubLogoPreview ? (
-              <img src={clubLogoPreview} alt="Club Logo" className="w-full h-full rounded-full object-cover" />
+               <Image
+               src={clubLogoPreview} 
+                                    width={100}
+                                    height={100}
+                                    alt="Event Poster"
+                                    className="w-50 aspect-square h-50 object-cover rounded"
+                                  />
             ) : (
               <div>
                 <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useState } from "react";
 import { FiSearch } from "react-icons/fi";
 
@@ -38,11 +39,11 @@ export default function EventsHeader() {
       </div>
 
       {/* Right Section */}
-      <a href="/dashboard/event/createEvent">
+      <Link  href="/dashboard/event/createEvent">
       <button  className="bg-gray-700 text-xl bebas text-white px-8 py-3 top-32 right-7 absolute rounded-md hover:bg-gray-800">
         CREATE NEW EVENT
       </button>
-      </a>
+      </Link >
     </div>
   );
 }

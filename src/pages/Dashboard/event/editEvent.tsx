@@ -57,7 +57,7 @@ export default function EditEvent() {
     const formData = new FormData();
     if (eventData) {
       Object.entries(eventData).forEach(([key, value]) => {
-        formData.append(key, value as any);
+        formData.append(key, value as string);
       });
     }
     const additionalDetails = questions.length > 0 ? JSON.stringify(questions) : "";
@@ -71,7 +71,7 @@ export default function EditEvent() {
       });
       console.log("Event created successfully:", response.data);
       router.push("/dashboard/events");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error creating event:", error);
     } finally {
       setLoading(false);

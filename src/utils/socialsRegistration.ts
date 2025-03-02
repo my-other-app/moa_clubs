@@ -23,7 +23,7 @@ const getAccessToken = (): string => {
   return "";
 };
 
-const postSocial = async (): Promise<any> => {
+const postSocial = async (): Promise<unknown> => {
   const accessToken = getAccessToken();
   if (!accessToken) {
     throw new Error("Authentication error: Access token missing");
@@ -53,8 +53,10 @@ const postSocial = async (): Promise<any> => {
     });
     console.log("✅ Social Media Success:", response.data);
     return response.data;
-  } catch (error: any) {
-    console.error("❌ Social Media API Error:", error.response?.status, error.response?.data);
+  } catch (error: unknown) {
+    // Assert the error type so we can access response properties
+    const err = error as { response?: { status?: number; data?: unknown } };
+    console.error("❌ Social Media API Error:", err.response?.status, err.response?.data);
     throw error;
   }
 };

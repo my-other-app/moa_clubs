@@ -7,6 +7,7 @@ import Sidebar from "@/components/sidebar"; // adjust path as needed
 import { ChevronLeft, ChevronDown, Circle } from "lucide-react";
 import { useRouter } from "next/router";
 import { useEvent } from "@/context/eventContext";
+import { v4 as uuidv4 } from 'uuid';
 
 interface Question {
   type: string;
@@ -18,7 +19,7 @@ export default function EditEvent() {
   const router = useRouter();
   const { eventData } = useEvent();
   const [loading, setLoading] = useState<boolean>(false);
-
+  const uniqueEventKey = uuidv4();
   const [options, setOptions] = useState<string[]>([""]);
   const [questionType, setQuestionType] = useState<string>("");
   const [currentQuestion, setCurrentQuestion] = useState<string>("");
@@ -60,14 +61,25 @@ export default function EditEvent() {
         formData.append(key, value as string);
       });
     }
-    const additionalDetails = questions.length > 0 ? JSON.stringify(questions) : "";
-    formData.append("additional_details", additionalDetails);
+    // const additionalDetails = questions.length > 0 ? JSON.stringify(questions) : "";
+    // formData.append("additional_details", additionalDetails);
+    // if (eventData) {
+    //   Object.entries(eventData).forEach(([key, value]) => {
+    //     formData.append(key, value as string);
+    //   });
+    // }
+    
+    const generateUniqueKey = () => `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+    const uniqueEventKey = generateUniqueKey();
+    formData.append("key", uniqueEventKey);
 
     const accessToken = localStorage.getItem("accessToken") || "";
     setLoading(true);
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/v1/events/categories/list`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
+      const response = await axios.post(`${API_BASE_URL}/api/v1/events/create`,formData, {
+        headers: { Authorization: `Bearer ${accessToken}`,
+          "content-type": "multipart/form-data",
+         },
       });
       console.log("Event created successfully:", response.data);
       router.push("/dashboard/events");

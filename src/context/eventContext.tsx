@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, ReactNode } from "react";
 
 export interface EventData {
   name: string;
-  category_id: string;
+  category_id: number;
   max_participants: number;
   about: string;
   duration: number;

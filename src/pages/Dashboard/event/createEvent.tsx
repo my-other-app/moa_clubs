@@ -19,7 +19,7 @@ export default function CreateEvent() {
 
   const [eventPoster, setEventPoster] = useState<File | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [eventTitle, setEventTitle] = useState<string>("");
   const [eventSeats, setEventSeats] = useState<string>("");
   const [eventDescription, setEventDescription] = useState<string>("");
@@ -32,7 +32,7 @@ export default function CreateEvent() {
   const [eventLocation, setEventLocation] = useState<string>("");
   const [eventMeetLink, setEventMeetLink] = useState<string>("");
   const [eventFee, setEventFee] = useState<number>(0);
-  const [eventPerks, setEventPerks] = useState<string>("");
+  const [eventPerks, setEventPerks] = useState<number>(0);
   const [eventGuidelines, setEventGuidelines] = useState<string>("");
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -93,7 +93,7 @@ export default function CreateEvent() {
       location_name: eventLocation,
       url: eventMeetLink,
       reg_fee: eventFee,
-      prize_amount: parseInt(eventPerks, 10),
+      prize_amount: eventPerks,
       event_guidelines: eventGuidelines,
       poster: eventPoster,
       has_fee: true,
@@ -105,7 +105,7 @@ export default function CreateEvent() {
     // Save event data in context
     setEventData(eventDataToPass);
     // Navigate to the edit event page (which adds registration questions)
-    router.push("/dashboard/event/editEvent");
+    router.push("/dashboard/event/addEvent");
   };
 
   return (
@@ -131,8 +131,8 @@ export default function CreateEvent() {
                 <h3>Event Category</h3>
                 <select
                   className="p-2 border rounded"
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  value={selectedCategory ?? ""}
+                  onChange={(e) => setSelectedCategory(parseInt(e.target.value, 10))}
                 >
                   <option value="">Choose Event Category</option>
                   {categories.map((category) => (
@@ -243,7 +243,7 @@ export default function CreateEvent() {
             </div>
             <div>
               <h3>Prize Worth</h3>
-              <input type="text" placeholder="Enter The Prize Worth" className="p-2 border rounded w-full" value={eventPerks} onChange={(e) => setEventPerks(e.target.value)} />
+              <input type="text" placeholder="Enter The Prize Worth" className="p-2 border rounded w-full" value={eventPerks} onChange={(e) => setEventPerks(parseInt(e.target.value, 10))} />
             </div>
           </div>
           <textarea placeholder="Enter Event Guidelines" className="w-full p-2 border rounded mt-4" value={eventGuidelines} onChange={(e) => setEventGuidelines(e.target.value)}></textarea>

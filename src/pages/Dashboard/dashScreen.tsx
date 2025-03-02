@@ -39,7 +39,7 @@ export default function DashScreen() {
         {/* Event Info */}
         <div className="flex flex-wrap lg:flex-nowrap gap-4 items-center justify-center text-center">
           <Image 
-            src="https://images.pexels.com/photos/3680219/pexels-photo-3680219.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500" 
+            src="https://mulearn-backend-test.s3.amazonaws.com/myotherapp-dev/clubs/logos/687f2105-25c4-465c-b495-ec626e6336f9.large.jpeg?AWSAccessKeyId=AKIAVS6FAG7XBZZSLLCS&Signature=El0rskbWj8%2BYzxYS%2BF1i2BNTb2w%3D&Expires=1740926835" 
             alt="logo" 
             width={300} 
             height={300} 

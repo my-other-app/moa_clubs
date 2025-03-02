@@ -5,7 +5,7 @@ import Popup from "reactjs-popup";
 import "reactjs-popup/dist/index.css";
 import Volunteer from "@/components/dashboard/volunteer";
 
-export default function EventsHeader() {
+export default function EventsHeader({ id }: { id: number }) {
   const [activeTab, setActiveTab] = useState("live");
 
   return (
@@ -67,7 +67,7 @@ export default function EventsHeader() {
                   >
                     X
                   </button>
-                  <Volunteer />
+                  <Volunteer eventId={id} />
                 </div>
               </>
             )) as unknown as ReactNode

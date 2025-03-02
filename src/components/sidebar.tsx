@@ -1,22 +1,38 @@
 import { useState } from "react";
 import Link from "next/link";
-import { FaTicketAlt, FaPen, FaBell, FaBuilding, FaBars, FaTimes } from "react-icons/fa";
+import { useRouter } from "next/router";
+import {
+  FaTicketAlt,
+  FaPen,
+  FaBell,
+  FaBuilding,
+  FaBars,
+  FaTimes,
+  FaSignOutAlt,
+} from "react-icons/fa";
 
 const Sidebar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [activeLink, setActiveLink] = useState<string | null>(null);
-  
+  const router = useRouter();
+  const { color } = router.query; // Read URL query parameter "color"
+  const currentPath = router.pathname; // Current path
 
-  // Handle Link Click
-  const handleLinkClick = (path: string) => {
-    setActiveLink(path);
-    setIsOpen(false); // Close sidebar on mobile after clicking
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Define active background based on the URL parameter.
+  // You can extend this mapping as needed.
+  const activeBg =
+    color === "red" ? "bg-red-500 text-white" : "bg-[#F9FFA1] text-black";
+
+  // Handle Logout (replace with your actual logout logic)
+  const handleLogout = () => {
+    // localStorage.removeItem("userToken");
+    // router.push("/");
   };
 
   return (
     <>
       {/* Sidebar Toggle Button - Only visible on small screens */}
-      <button 
+      <button
         className="lg:hidden fixed top-4 left-4 z-50 p-3 bg-gray-800 text-white rounded-full"
         onClick={() => setIsOpen(!isOpen)}
       >
@@ -26,14 +42,17 @@ const Sidebar = () => {
       {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 h-screen bg-gray-700 text-white w-20 flex flex-col items-center justify-center py-4 space-y-6
-          transition-transform duration-300 ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 lg:flex`}
+          transition-transform duration-300 ${
+            isOpen ? "translate-x-0" : "-translate-x-full"
+          } lg:translate-x-0`}
       >
         <Link href="/dashboard/events">
           <div
             className={`cursor-pointer p-3 rounded-full ${
-              activeLink === "/dashboard/events" ? "bg-[#F9FFA1] text-black" : "bg-gray-400 hover:bg-gray-500"
+              currentPath === "/dashboard/events"
+                ? activeBg
+                : "bg-gray-400 hover:bg-gray-500"
             }`}
-            onClick={() => handleLinkClick("/dashboard/events")}
           >
             <FaTicketAlt size={24} />
           </div>
@@ -42,9 +61,10 @@ const Sidebar = () => {
         <Link href="/events">
           <div
             className={`cursor-pointer p-3 rounded-full ${
-              activeLink === "/events" ? "bg-[#F9FFA1] text-black" : "bg-gray-400 hover:bg-gray-500"
+              currentPath === "/events"
+                ? activeBg
+                : "bg-gray-400 hover:bg-gray-500"
             }`}
-            onClick={() => handleLinkClick("/events")}
           >
             <FaPen size={24} />
           </div>
@@ -53,9 +73,10 @@ const Sidebar = () => {
         <Link href="/notifications">
           <div
             className={`cursor-pointer p-3 rounded-full ${
-              activeLink === "/notifications" ? "bg-[#F9FFA1] text-black" : "bg-gray-400 hover:bg-gray-500"
+              currentPath === "/notifications"
+                ? activeBg
+                : "bg-gray-400 hover:bg-gray-500"
             }`}
-            onClick={() => handleLinkClick("/notifications")}
           >
             <FaBell size={24} />
           </div>
@@ -64,13 +85,22 @@ const Sidebar = () => {
         <Link href="/dashboard/clubProfile">
           <div
             className={`cursor-pointer p-3 rounded-full ${
-              activeLink === "/dashboard/clubProfile" ? "bg-[#F9FFA1] text-black" : "bg-gray-400 hover:bg-gray-500"
+              currentPath === "/dashboard/clubProfile"
+                ? activeBg
+                : "bg-gray-400 hover:bg-gray-500"
             }`}
-            onClick={() => handleLinkClick("/dashboard/clubProfile")}
           >
             <FaBuilding size={24} />
           </div>
         </Link>
+
+        {/* Logout Button */}
+        <div
+          className="cursor-pointer p-3 rounded-full bg-gray-400 hover:bg-gray-500"
+          onClick={handleLogout}
+        >
+          <FaSignOutAlt size={24} />
+        </div>
       </aside>
 
       {/* Overlay (for closing sidebar on mobile) */}

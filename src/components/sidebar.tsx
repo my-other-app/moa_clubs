@@ -61,12 +61,12 @@ const Sidebar = () => {
           </div>
         </Link>
 
-        <Link href="/company">
+        <Link href="/dashboard/clubProfile">
           <div
             className={`cursor-pointer p-3 rounded-full ${
-              activeLink === "/company" ? "bg-[#F9FFA1] text-black" : "bg-gray-400 hover:bg-gray-500"
+              activeLink === "/dashboard/clubProfile" ? "bg-[#F9FFA1] text-black" : "bg-gray-400 hover:bg-gray-500"
             }`}
-            onClick={() => handleLinkClick("/company")}
+            onClick={() => handleLinkClick("/dashboard/clubProfile")}
           >
             <FaBuilding size={24} />
           </div>

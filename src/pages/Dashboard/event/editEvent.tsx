@@ -1,34 +1,40 @@
+// pages/edit-event.tsx
 "use client";
 
-import Sidebar from "@/components/sidebar";
-import { ChevronLeft, ChevronDown, Circle } from "lucide-react";
-import "@/styles/globals.css";
-import { SetStateAction, useState, useEffect } from "react";
+import { useState, ChangeEvent } from "react";
 import axios from "axios";
+import Sidebar from "@/components/sidebar"; // adjust path as needed
+import { ChevronLeft, ChevronDown, Circle } from "lucide-react";
+import { useRouter } from "next/router";
+import { useEvent } from "@/context/eventContext";
 
-const EditRegistrationForm = () => {
-  const [options, setOptions] = useState([""]); // initialize with an empty option
-  const [questionType, setQuestionType] = useState("");
-  const [currentQuestion, setCurrentQuestion] = useState("");
+interface Question {
+  type: string;
+  text: string;
+  options: string[];
+}
 
-  interface Question {
-    type: string;
-    text: string;
-    options: string[];
-  }
+export default function EditEvent() {
+  const router = useRouter();
+  const { eventData } = useEvent();
+  const [loading, setLoading] = useState<boolean>(false);
 
+  const [options, setOptions] = useState<string[]>([""]);
+  const [questionType, setQuestionType] = useState<string>("");
+  const [currentQuestion, setCurrentQuestion] = useState<string>("");
   const [questions, setQuestions] = useState<Question[]>([]);
 
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
   const addOption = () => {
-    setOptions([...options, ""]); // add an empty option
+    setOptions([...options, ""]);
   };
 
-  const handleQuestionTypeChange = (e: { target: { value: SetStateAction<string> } }) => {
+  const handleQuestionTypeChange = (e: ChangeEvent<HTMLSelectElement>) => {
     setQuestionType(e.target.value);
-    setCurrentQuestion(""); // reset question text on type change
-    // Reset options when switching types
+    setCurrentQuestion("");
     if (e.target.value === "multipleChoice") {
-      setOptions([""]); // start with an empty option
+      setOptions([""]);
     } else {
       setOptions([]);
     }
@@ -39,40 +45,36 @@ const EditRegistrationForm = () => {
     const newQuestion: Question = {
       type: questionType,
       text: currentQuestion,
-      options: questionType === "multipleChoice" ? options : []
+      options: questionType === "multipleChoice" ? options : [],
     };
     setQuestions([...questions, newQuestion]);
-    // Reset current fields after adding question
     setCurrentQuestion("");
     setQuestionType("");
-    setOptions([""]); // reset options to one empty field
+    setOptions([""]);
   };
 
-  // Send questions list to the events create endpoint using axios.
   const handleContinue = async () => {
-    // Prepare FormData and append additional_details field
     const formData = new FormData();
+    if (eventData) {
+      Object.entries(eventData).forEach(([key, value]) => {
+        formData.append(key, value as any);
+      });
+    }
     const additionalDetails = questions.length > 0 ? JSON.stringify(questions) : "";
     formData.append("additional_details", additionalDetails);
 
-    // Retrieve access token from localStorage
     const accessToken = localStorage.getItem("accessToken") || "";
-
+    setLoading(true);
     try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BASE_API_URL}/api/v1/events/create`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            // Axios will set the appropriate Content-Type header for FormData.
-          },
-        }
-      );
+      const response = await axios.get(`${API_BASE_URL}/api/v1/events/categories/list`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
       console.log("Event created successfully:", response.data);
-      // Optionally, navigate or update the UI upon success.
+      router.push("/dashboard/events");
     } catch (error: any) {
       console.error("Error creating event:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -80,23 +82,16 @@ const EditRegistrationForm = () => {
     <>
       <Sidebar />
       <div className="px-32 mx-auto p-6">
-        {/* Back Button */}
-        <button className="flex items-center text-gray-600 hover:text-black mb-4">
+        <button onClick={() => router.back()} className="flex items-center text-gray-600 hover:text-black mb-4">
           <ChevronLeft className="w-5 h-5 mr-1" />
           Back
         </button>
-
-        {/* Title */}
         <h1 className="text-3xl font-bold">EDIT REGISTRATION FORM</h1>
         <p className="text-gray-500">Add questions for the registration Form</p>
-
-        {/* Main Content */}
         <div className="flex flex-row gap-12 items-start">
-          {/* Left Side: Mandatory Information & Questions List */}
           <div className="mt-6 flex-1/2">
             <h2 className="font-bold text-lg">MANDATORY INFORMATION</h2>
             <div className="mt-4 space-y-4">
-              {/* Participant Name */}
               <div>
                 <label className="block font-medium">Participant Name</label>
                 <input
@@ -105,8 +100,6 @@ const EditRegistrationForm = () => {
                   className="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
                 />
               </div>
-
-              {/* Participant Email */}
               <div>
                 <label className="block font-medium">Participant Email</label>
                 <input
@@ -115,8 +108,6 @@ const EditRegistrationForm = () => {
                   className="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
                 />
               </div>
-
-              {/* Participant Number */}
               <div>
                 <label className="block font-medium">Participant Number</label>
                 <input
@@ -126,8 +117,6 @@ const EditRegistrationForm = () => {
                 />
               </div>
             </div>
-
-            {/* Questions List */}
             <div className="mt-6">
               <h2 className="font-bold text-lg">QUESTIONS</h2>
               {questions.length === 0 ? (
@@ -153,12 +142,9 @@ const EditRegistrationForm = () => {
               )}
             </div>
           </div>
-
-          {/* Right Side: Create Question Section */}
           <div className="max-w-md mx-auto p-6 border rounded-lg shadow-md mt-6 min-h-[300px] flex-col flex-1/2">
             <h2 className="text-lg font-bold">CREATE A NEW QUESTION</h2>
             <div className="mt-4 space-y-4">
-              {/* Question Type */}
               <div>
                 <label className="block font-medium">Question Type</label>
                 <div className="relative">
@@ -174,11 +160,8 @@ const EditRegistrationForm = () => {
                   <ChevronDown className="absolute top-3 right-3 text-gray-500" />
                 </div>
               </div>
-
-              {/* Conditional Rendering based on Question Type */}
               {questionType && (
                 <div>
-                  {/* Question Input */}
                   <div>
                     <label className="block font-medium">Question</label>
                     <input
@@ -189,10 +172,8 @@ const EditRegistrationForm = () => {
                       className="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
                     />
                   </div>
-
                   {questionType === "multipleChoice" && (
                     <div>
-                      {/* Options */}
                       {options.map((option, index) => (
                         <div key={index} className="flex items-center space-x-2 mt-2">
                           <Circle className="text-gray-500 w-5 h-5" />
@@ -209,37 +190,27 @@ const EditRegistrationForm = () => {
                           />
                         </div>
                       ))}
-                      <button
-                        onClick={addOption}
-                        className="mt-2 text-gray-600 font-medium hover:underline"
-                      >
+                      <button onClick={addOption} className="mt-2 text-gray-600 font-medium hover:underline">
                         Add another option
                       </button>
                     </div>
                   )}
                 </div>
               )}
-
-              {/* Add Question Button */}
-              <button
-                onClick={handleAddQuestion}
-                className="w-full px-4 py-2 mt-4 text-lg font-bold border rounded-lg hover:bg-gray-100"
-              >
+              <button onClick={handleAddQuestion} className="w-full px-4 py-2 mt-4 text-lg font-bold border rounded-lg hover:bg-gray-100">
                 ADD QUESTION
               </button>
             </div>
           </div>
         </div>
-        {/* Continue button triggers the event creation API call */}
         <button
           onClick={handleContinue}
+          disabled={loading}
           className="bottom-10 right-30 absolute w-48 bebas text-2xl self-end mt-4 px-4 py-2 bg-gray-900 text-white rounded-lg"
         >
-          CONTINUE
+          {loading ? "Processing..." : "FINISH"}
         </button>
       </div>
     </>
   );
-};
-
-export default EditRegistrationForm;
+}

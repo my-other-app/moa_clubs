@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+// pages/create-event.tsx
+"use client";
+
+import { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import axios from "axios";
 import Image from "next/image";
-
-import '@/styles/globals.css';
-import Sidebar from "@/components/sidebar";
-import { useNavigate } from "@/utils/navigation";
+import Sidebar from "@/components/sidebar"; // adjust path if needed
+import { useRouter } from "next/router";
+import { useEvent, EventData } from "@/context/eventContext";
 
 type Category = {
   id: string;
@@ -12,7 +14,9 @@ type Category = {
 };
 
 export default function CreateEvent() {
-  const { navigateTo } = useNavigate();
+  const router = useRouter();
+  const { setEventData } = useEvent();
+
   const [eventPoster, setEventPoster] = useState<File | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -46,61 +50,60 @@ export default function CreateEvent() {
         window.alert("Failed to fetch categories. Please try again later.");
       }
     };
-
     fetchCategories();
-  }, []);
+  }, [API_BASE_URL]);
 
-  const handlePosterUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePosterUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setEventPoster(file);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-
-    if (!eventTitle || !eventPoster || !selectedCategory || !eventSeats || !eventDescription || !eventDate || !eventStartTime || !eventDuration || !eventRegistrationClosingDate || !eventRegistrationClosingTime) {
+    if (
+      !eventTitle ||
+      !eventPoster ||
+      !selectedCategory ||
+      !eventSeats ||
+      !eventDescription ||
+      !eventDate ||
+      !eventStartTime ||
+      !eventDuration ||
+      !eventRegistrationClosingDate ||
+      !eventRegistrationClosingTime
+    ) {
       window.alert("Please fill in all required fields.");
       return;
     }
 
     const eventDatetime = `${eventRegistrationClosingDate}T${eventRegistrationClosingTime}:00`;
 
-    const eventData = {
+    const eventDataToPass: EventData = {
       name: eventTitle,
       category_id: selectedCategory,
-      seats: parseInt(eventSeats, 10),
-      description: eventDescription,
-      date: eventDate,
-      startTime: eventStartTime,
+      max_participants: parseInt(eventSeats, 10),
+      about: eventDescription,
       duration: eventDuration,
-      event_datetime: eventDatetime, 
+      event_datetime: eventDatetime,
       is_online: eventMode,
       location_name: eventLocation,
       url: eventMeetLink,
       reg_fee: eventFee,
-      perks: eventPerks,
+      prize_amount: parseInt(eventPerks, 10),
       event_guidelines: eventGuidelines,
       poster: eventPoster,
       has_fee: true,
       has_prize: true,
+      reg_enddate: eventRegistrationClosingDate,
+    
     };
 
-    try {
-      const token = localStorage.getItem("accessToken");
-      const response = await axios.post(`${API_BASE_URL}/api/v1/events/create`, eventData, {
-        headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${token}` },
-      });
-
-      console.log("Event created successfully:", response.data);
-      navigateTo('/dashboard/event/editEvent');
-
-    } catch (error) {
-      console.error("Error creating event:", error);
-      window.alert("Failed to create event"+error);
-      navigateTo('/dashboard/event/createEvent');
-    }
+    // Save event data in context
+    setEventData(eventDataToPass);
+    // Navigate to the edit event page (which adds registration questions)
+    router.push("/dashboard/event/editEvent");
   };
 
   return (
@@ -108,7 +111,6 @@ export default function CreateEvent() {
       <Sidebar />
       <div className="max-w-4xl mx-auto p-6 rounded-lg font-sans">
         <h1 className="text-3xl font-bold mb-6">CREATE NEW EVENT</h1>
-
         <form onSubmit={handleSubmit}>
           <h2 className="text-lg font-semibold">BASIC INFORMATION</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -123,7 +125,6 @@ export default function CreateEvent() {
                   onChange={(e) => setEventTitle(e.target.value)}
                 />
               </div>
-
               <div className="flex flex-col">
                 <h3>Event Category</h3>
                 <select
@@ -139,7 +140,6 @@ export default function CreateEvent() {
                   ))}
                 </select>
               </div>
-
               <div className="flex flex-col">
                 <h3>Event Seats</h3>
                 <input
@@ -151,7 +151,6 @@ export default function CreateEvent() {
                 />
               </div>
             </div>
-
             <div>
               <div className="flex flex-col">
                 <h3>Event Description</h3>
@@ -162,13 +161,19 @@ export default function CreateEvent() {
                   onChange={(e) => setEventDescription(e.target.value)}
                 ></textarea>
               </div>
-
               <div className="flex flex-col items-center">
                 <label htmlFor="eventPoster" className="p-2 rounded cursor-pointer flex items-center justify-center">
                   {eventPoster ? (
-                    <Image src={URL.createObjectURL(eventPoster)} width={10} height={10} alt="Event Poster" className="w-50 aspect-square h-50 object-cover rounded" />
+                    <Image
+                      src={URL.createObjectURL(eventPoster)}
+                      width={100}
+                      height={100}
+                      alt="Event Poster"
+                      className="w-50 aspect-square h-50 object-cover rounded"
+                    />
                   ) : (
                     <div>
+                      {/* SVG placeholder */}
                       <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect x="0.25" y="0.25" width="99.5" height="99.5" rx="49.75" fill="#F3F3F3" />
                         <rect x="0.25" y="0.25" width="99.5" height="99.5" rx="49.75" stroke="#979797" strokeWidth="0.5" />
@@ -182,125 +187,57 @@ export default function CreateEvent() {
                       </svg>
                     </div>
                   )}
-                  <input id="eventPoster" type="file" accept="image/*"  className="hidden" onChange={handlePosterUpload} />
+                  <input id="eventPoster" type="file" accept="image/*" className="hidden" onChange={handlePosterUpload} />
                 </label>
                 <h3>Add Event Poster</h3>
               </div>
             </div>
           </div>
-
           <h2 className="text-lg font-semibold mt-6">DATE AND TIME</h2>
           <div className="grid grid-cols-3 gap-4">
             <div className="flex flex-col">
               <h3>Event date</h3>
-              <input
-                type="date"
-                className="p-2 border rounded"
-                value={eventDate}
-                onChange={(e) => setEventDate(e.target.value)}
-              />
+              <input type="date" className="p-2 border rounded" value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
             </div>
             <div className="flex flex-col">
               <h3>Event Start Time</h3>
-              <input
-                type="time"
-                className="p-2 border rounded"
-                value={eventStartTime}
-                onChange={(e) => setEventStartTime(e.target.value)}
-              />
+              <input type="time" className="p-2 border rounded" value={eventStartTime} onChange={(e) => setEventStartTime(e.target.value)} />
             </div>
             <div className="flex flex-col">
               <h3>Event Duration</h3>
-              <input
-                type="number"
-                placeholder="Choose Event Duration Hours"
-                className="p-2 border rounded"
-                value={eventDuration}
-                onChange={(e) => setEventDuration(parseInt(e.target.value, 10))}
-              />
+              <input type="number" placeholder="Choose Event Duration Hours" className="p-2 border rounded" value={eventDuration} onChange={(e) => setEventDuration(parseInt(e.target.value, 10))} />
             </div>
             <div className="flex flex-col">
               <h3>Event Registration Closing Date</h3>
-              <input
-                type="date"
-                className="p-2 border rounded"
-                value={eventRegistrationClosingDate}
-                onChange={(e) => setEventRegistrationClosingDate(e.target.value)}
-              />
+              <input type="date" className="p-2 border rounded" value={eventRegistrationClosingDate} onChange={(e) => setEventRegistrationClosingDate(e.target.value)} />
             </div>
             <div className="flex flex-col">
               <h3>Event Registration Closing Time</h3>
-              <input
-                type="time"
-                className="p-2 border rounded"
-                value={eventRegistrationClosingTime}
-                onChange={(e) => setEventRegistrationClosingTime(e.target.value)}
-              />
+              <input type="time" className="p-2 border rounded" value={eventRegistrationClosingTime} onChange={(e) => setEventRegistrationClosingTime(e.target.value)} />
             </div>
           </div>
-
           <h2 className="text-lg font-semibold mt-6">LOCATION AND MODE</h2>
           <div className="grid grid-cols-3 gap-4">
-            <select
-              className="p-2 border rounded"
-              value={eventMode.toString()}
-              onChange={(e) => setEventMode(e.target.value === "true")}
-            >
+            <select className="p-2 border rounded" value={eventMode.toString()} onChange={(e) => setEventMode(e.target.value === "true")}>
               <option value="">Online/Offline</option>
               <option value="true">Online</option>
-              <option value="flase">Offline</option>
+              <option value="false">Offline</option>
             </select>
-            <input
-              type="text"
-              placeholder="Choose Event Location"
-              className="p-2 border rounded"
-              value={eventLocation}
-              onChange={(e) => setEventLocation(e.target.value)}
-            />
-            <input
-              type="url"
-              placeholder="Enter Meet Link"
-              className="p-2 border rounded"
-              value={eventMeetLink}
-              onChange={(e) => setEventMeetLink(e.target.value)}
-            />
+            <input type="text" placeholder="Choose Event Location" className="p-2 border rounded" value={eventLocation} onChange={(e) => setEventLocation(e.target.value)} />
+            <input type="url" placeholder="Enter Meet Link" className="p-2 border rounded" value={eventMeetLink} onChange={(e) => setEventMeetLink(e.target.value)} />
           </div>
-
           <h2 className="text-lg font-semibold mt-6">PERKS AND FEE</h2>
           <div className="grid grid-cols-2 gap-4">
-               <div>
-               <h3>
-                Event Registration Fee
-                </h3>
-            <input
-              type="number"
-              placeholder="Enter The Fee"
-              className="p-2 border rounded w-full"
-              value={eventFee}
-              onChange={(e) => setEventFee(parseInt(e.target.value, 10))}
-            />
-                </div>
-                <div>
-                        <h3>
-                Prize Worth
-                </h3>
-            <input
-              type="text"
-              placeholder="Enter The Prize Worth"
-              className="p-2 border rounded w-full"
-              value={eventPerks}
-              onChange={(e) => setEventPerks(e.target.value)}
-            />
+            <div>
+              <h3>Event Registration Fee</h3>
+              <input type="number" placeholder="Enter The Fee" className="p-2 border rounded w-full" value={eventFee} onChange={(e) => setEventFee(parseInt(e.target.value, 10))} />
+            </div>
+            <div>
+              <h3>Prize Worth</h3>
+              <input type="text" placeholder="Enter The Prize Worth" className="p-2 border rounded w-full" value={eventPerks} onChange={(e) => setEventPerks(e.target.value)} />
             </div>
           </div>
-
-          <textarea
-            placeholder="Enter Event Guidelines"
-            className="w-full p-2 border rounded mt-4"
-            value={eventGuidelines}
-            onChange={(e) => setEventGuidelines(e.target.value)}
-          ></textarea>
-
+          <textarea placeholder="Enter Event Guidelines" className="w-full p-2 border rounded mt-4" value={eventGuidelines} onChange={(e) => setEventGuidelines(e.target.value)}></textarea>
           <button type="submit" className="mt-4 w-full py-2 bg-black text-white rounded">
             CONTINUE
           </button>

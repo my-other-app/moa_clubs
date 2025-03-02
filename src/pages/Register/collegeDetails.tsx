@@ -50,10 +50,11 @@ export default function CollegeDetails() {
         <h2 className="text-center text-xl font-bold mb-4">DROP YOUR DETAILS IN!</h2>
 
         <form onSubmit={handleSubmit}>
-          <label className="block text-gray-700 font-medium">College Name</label>
+          <label className="block text-gray-700 font-medium">
+          Organization Name</label>
           <input
             type="text"
-            placeholder="Enter Your College"
+            placeholder="Enter Your Organization"
             className="w-full p-2 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={college}
             onChange={(e) => setCollege(e.target.value)}

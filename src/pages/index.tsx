@@ -39,10 +39,10 @@ export default function Home() {
           We provide you with the end-to-end solution for managing events
         </p>
         <form onSubmit={handleSubmit}>
-          <label className="block mb-2 font-medium text-gray-900">Email</label>
+          <label className="block mb-2 font-medium text-gray-900">Username</label>
           <input
             type="text"
-            placeholder="Enter Your Email"
+            placeholder="Enter Your username"
             className="w-full p-2 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={email}
             onChange={(e) => setEmail(e.target.value)}

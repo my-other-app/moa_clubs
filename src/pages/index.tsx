@@ -1,6 +1,6 @@
 'use client';
 
-import Welcome from '@/pages/register/welcome';
+import Welcome from './register/welcome';
 
 export default function Home() {
   return (

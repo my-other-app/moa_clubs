@@ -3,7 +3,7 @@
 import { useState, ChangeEvent } from "react";
 import Sidebar from "@/app/components/sidebar";
 import { ChevronLeft, ChevronDown, Circle } from "lucide-react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { useEvent } from "@/app/context/eventContext";
 import { v4 as uuidv4 } from "uuid";
 
@@ -214,6 +214,6 @@ export default function EditEvent() {
           {loading ? "Processing..." : "FINISH"}
         </button>
       </div>
-    </>
+      </>
   );
 }

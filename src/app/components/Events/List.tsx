@@ -1,12 +1,14 @@
 import Image from "next/image";
 import { FaEdit, FaTrash, FaExternalLinkAlt } from "react-icons/fa";
-import { useNavigate } from "@/utils/navigation";
+import { useNavigate } from "@/app/utils/navigation";
 import { StaticImport } from "next/dist/shared/lib/get-img-props";
 import { Key, ReactNode } from "react";
 
 // Define Props Type
 interface Event {
-  category: any;
+  category: {
+    name: string;
+  } | null;
   poster: {
     thumbnail?: string;
     // ...any other poster properties you need

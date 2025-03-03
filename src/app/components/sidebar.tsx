@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { usePathname, useSearchParams } from "next/navigation";
+
 import {
   FaTicketAlt,
   FaPen,
@@ -12,9 +13,10 @@ import {
 } from "react-icons/fa";
 
 const Sidebar = () => {
-  const router = useRouter();
-  const { color } = router.query; // Read URL query parameter "color"
-  const currentPath = router.pathname; // Current path
+
+  const searchParams = useSearchParams();
+  const color = searchParams.get("color"); // Read URL query parameter "color"
+  const currentPath = usePathname(); // Current path
 
   const [isOpen, setIsOpen] = useState(false);
 

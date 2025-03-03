@@ -7,8 +7,8 @@ import Sidebar from "@/app/components/sidebar";
 import Popup from "reactjs-popup";
 import "reactjs-popup/dist/index.css";
 import Volunteer from "@/app/components/dashboard/volunteer";
-import { fetchEvents } from "@/app/utils/listEvents";
-import { useRouter } from "next/router";
+import { useSearchParams } from "next/navigation";
+
 
 const registrations = Array(7).fill({
   id: "NEX25AA001",
@@ -28,16 +28,13 @@ export default function DashScreen() {
     };
   }
 
-  const [events, setEvents] = useState<Event[]>([]);
-  const router = useRouter();
-  const { event_id } = router.query;
+  const [events] = useState<Event[]>([]);
+  const searchParams = useSearchParams();
+  const event_id = searchParams.get("event_id");
 
   // Fetch events once the component mounts
   useEffect(() => {
     const getEvents = async () => {
-  const currentEvent: Event | undefined = events.find(
-    (event) => event.id === (Array.isArray(event_id) ? parseInt(event_id[0], 10) : parseInt(event_id as string, 10))
-  );
     await getEvents();
   };
   getEvents();

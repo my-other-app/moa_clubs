@@ -1,4 +1,5 @@
-import { useRouter } from "next/router";
+"use client"
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { registerClub } from "@/app/utils/clubregistration";
 import postSocial from "@/app/utils/socialsRegistration";

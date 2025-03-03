@@ -2,9 +2,10 @@
 
 import { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import Image from "next/image";
-import Sidebar from "@/components/sidebar";
-import { useRouter } from "next/router";
-import { useEvent, EventData } from "@/context/eventContext";
+import Sidebar from "@/app/components/sidebar";
+import { useRouter } from "next/navigation";
+
+import { useEvent, EventData } from "@/app/context/eventContext";
 import axios from "axios";
 
 type Category = {

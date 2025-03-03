@@ -1,19 +1,26 @@
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import "@/app/styles/globals.css"
+import Providers from "./providers";
+import { Suspense } from "react";
 
-const geistSans = Geist({ subsets: ["latin"] });
-const geistMono = Geist_Mono({ subsets: ["latin"] });
+export const metadata = {
+  title: "My Other App",
+  description: "Nextjs + TypeScript MyOtherAPP",
+};
 
-const Layout = ({ children }: { children: React.ReactNode }) => {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.className} ${geistMono.className} antialiased`}
-      >
-        {children}
+      <body>
+        <Providers>
+        <Suspense fallback={<div>Loading...</div>}>
+          {children}
+        </Suspense>
+        </Providers>
       </body>
     </html>
   );
-};
-
-export default Layout;
+}

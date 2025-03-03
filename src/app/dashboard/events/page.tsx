@@ -1,8 +1,9 @@
-import EventsHeader from "@/components/Events/Header";
-import EventsList from "@/components/Events/List";
-import Sidebar from "@/components/sidebar";
+"use client"
+import EventsHeader from "@/app/components/Events/Header";
+import EventsList from "@/app/components/Events/List";
+import Sidebar from "@/app/components/sidebar";
 import React, { useEffect, useState } from "react";
-import { fetchEvents } from "@/utils/listEvents";
+import { fetchEvents } from "@/app/utils/listEvents";
 
 export default function Events() {
   const [events, setEvents] = useState([]);

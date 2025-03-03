@@ -1,3 +1,4 @@
+//layout.tsx
 import "@/app/styles/globals.css"
 import Providers from "./providers";
 import { Suspense } from "react";
@@ -15,11 +16,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+      <Suspense fallback={<div>Loading...</div>}>
         <Providers>
-        <Suspense fallback={<div>Loading...</div>}>
+        
           {children}
-        </Suspense>
+        
         </Providers>
+        </Suspense>
       </body>
     </html>
   );

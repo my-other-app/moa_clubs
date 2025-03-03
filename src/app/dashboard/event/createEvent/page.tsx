@@ -29,7 +29,9 @@ export default function CreateEvent() {
   const [eventDuration, setEventDuration] = useState<number | null>(null);
   const [eventRegistrationClosingDate, setEventRegistrationClosingDate] = useState<string>("");
   const [eventRegistrationClosingTime, setEventRegistrationClosingTime] = useState<string>("");
-  const [eventMode, setEventMode] = useState<boolean>(false);
+
+  // Change eventMode type to boolean or empty string to handle not-selected state.
+  const [eventMode, setEventMode] = useState<boolean | "">("");
   const [eventLocation, setEventLocation] = useState<string>("");
   const [eventMeetLink, setEventMeetLink] = useState<string>("");
   const [eventFee, setEventFee] = useState<number>(0);
@@ -89,7 +91,7 @@ export default function CreateEvent() {
       about: eventDescription,
       duration: eventDuration,
       event_datetime: eventDatetime,
-      is_online: eventMode,
+      is_online: eventMode === true, // Ensures a boolean value
       location_name: eventLocation,
       url: eventMeetLink,
       reg_fee: eventFee,
@@ -104,7 +106,7 @@ export default function CreateEvent() {
       contact_phone: null,
       contact_email: null,
       interest_ids: null,
-    //  club_id: null
+      // club_id: null
     };
 
     // Save event data in context and navigate to add questions
@@ -230,26 +232,90 @@ export default function CreateEvent() {
           </div>
           <h2 className="text-lg font-semibold mt-6">LOCATION AND MODE</h2>
           <div className="grid grid-cols-3 gap-4">
-            <select className="p-2 border rounded" value={eventMode.toString()} onChange={(e) => setEventMode(e.target.value === "true")}>
+            <select
+              className="p-2 border rounded"
+              value={eventMode === true ? "true" : eventMode === false ? "false" : ""}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === "true") setEventMode(true);
+                else if (value === "false") setEventMode(false);
+                else setEventMode("");
+              }}
+            >
               <option value="">Online/Offline</option>
               <option value="true">Online</option>
               <option value="false">Offline</option>
             </select>
-            <input type="text" placeholder="Choose Event Location" className="p-2 border rounded" value={eventLocation} onChange={(e) => setEventLocation(e.target.value)} />
-            <input type="url" placeholder="Enter Meet Link" className="p-2 border rounded" value={eventMeetLink} onChange={(e) => setEventMeetLink(e.target.value)} />
+            {eventMode === true ? (
+              <>
+                <input
+                  type="text"
+                  placeholder="Entre Event Platform"
+                  className="p-2 border rounded"
+                  value={eventLocation}
+                  onChange={(e) => setEventLocation(e.target.value)}
+                />
+                <input
+                  type="url"
+                  placeholder="Entre Meet Link"
+                  className="p-2 border rounded"
+                  value={eventMeetLink}
+                  onChange={(e) => setEventMeetLink(e.target.value)}
+                />
+              </>
+            ) : eventMode === false ? (
+              <>
+                <input
+                  type="text"
+                  placeholder="Entre Event Location"
+                  className="p-2 border rounded"
+                  value={eventLocation}
+                  onChange={(e) => setEventLocation(e.target.value)}
+                />
+                <input
+                  type="url"
+                  placeholder="Google Map Link"
+                  className="p-2 border rounded"
+                  value={eventMeetLink}
+                  onChange={(e) => setEventMeetLink(e.target.value)}
+                />
+              </>
+            ) : (
+              <>
+                <input type="text" placeholder="Choose Event Mode" className="p-2 border rounded" value={eventLocation} onChange={(e) => setEventLocation(e.target.value)} disabled />
+                <input type="url" placeholder="Choose Event Mode" className="p-2 border rounded" value={eventMeetLink} onChange={(e) => setEventMeetLink(e.target.value)} disabled />
+              </>
+            )}
           </div>
           <h2 className="text-lg font-semibold mt-6">PERKS AND FEE</h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <h3>Event Registration Fee</h3>
-              <input type="number" placeholder="Enter The Fee" className="p-2 border rounded w-full" value={eventFee} onChange={(e) => setEventFee(parseInt(e.target.value, 10))} />
+              <input
+                type="number"
+                placeholder="Enter The Fee"
+                className="p-2 border rounded w-full"
+                value={eventFee}
+                onChange={(e) => setEventFee(parseInt(e.target.value, 10))}
+              />
             </div>
             <div>
               <h3>Prize Worth</h3>
-              <input type="text" placeholder="Enter The Prize Worth" className="p-2 border rounded w-full" value={eventPerks} onChange={(e) => setEventPerks(e.target.value)} />
+              <input
+                type="text"
+                placeholder="Enter The Prize Worth"
+                className="p-2 border rounded w-full"
+                value={eventPerks}
+                onChange={(e) => setEventPerks(e.target.value)}
+              />
             </div>
           </div>
-          <textarea placeholder="Enter Event Guidelines" className="w-full p-2 border rounded mt-4" value={eventGuidelines} onChange={(e) => setEventGuidelines(e.target.value)}></textarea>
+          <textarea
+            placeholder="Enter Event Guidelines"
+            className="w-full p-2 border rounded mt-4"
+            value={eventGuidelines}
+            onChange={(e) => setEventGuidelines(e.target.value)}
+          ></textarea>
           <button type="submit" className="mt-4 w-full py-2 bg-black text-white rounded">
             CONTINUE
           </button>

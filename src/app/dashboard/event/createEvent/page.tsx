@@ -35,7 +35,7 @@ export default function CreateEvent() {
   const [eventLocation, setEventLocation] = useState<string>("");
   const [eventMeetLink, setEventMeetLink] = useState<string>("");
   const [eventFee, setEventFee] = useState<number>(0);
-  const [eventPerks, setEventPerks] = useState<string>("");
+  const [eventPerks, setEventPerks] = useState<number>(0);
   const [eventGuidelines, setEventGuidelines] = useState<string>("");
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -95,13 +95,13 @@ export default function CreateEvent() {
       location_name: eventLocation,
       url: eventMeetLink,
       reg_fee: eventFee,
-      prize_amount: parseInt(eventPerks, 10),
+      prize_amount:eventPerks,
       event_guidelines: eventGuidelines,
       poster: eventPoster,
       has_fee: true,
       has_prize: true,
       reg_enddate: eventRegistrationClosingDate,
-      additional_details: "[]",
+      additional_details: [],
       reg_startdate: "",
       contact_phone: null,
       contact_email: null,
@@ -302,11 +302,11 @@ export default function CreateEvent() {
             <div>
               <h3>Prize Worth</h3>
               <input
-                type="text"
+                type="number"
                 placeholder="Enter The Prize Worth"
                 className="p-2 border rounded w-full"
                 value={eventPerks}
-                onChange={(e) => setEventPerks(e.target.value)}
+                onChange={(e) => setEventPerks(parseInt(e.target.value, 10))}
               />
             </div>
           </div>

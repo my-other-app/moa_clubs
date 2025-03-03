@@ -11,6 +11,7 @@ interface Question {
   type: string;
   text: string;
   options: string[];
+  required: boolean;
 }
 
 export default function EditEvent() {
@@ -20,6 +21,7 @@ export default function EditEvent() {
   const [options, setOptions] = useState<string[]>([""]);
   const [questionType, setQuestionType] = useState<string>("");
   const [currentQuestion, setCurrentQuestion] = useState<string>("");
+  const [questionRequired, setQuestionRequired] = useState<boolean>(true);
   const [questions, setQuestions] = useState<Question[]>([]);
 
   const addOption = () => {
@@ -27,9 +29,11 @@ export default function EditEvent() {
   };
 
   const handleQuestionTypeChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    setQuestionType(e.target.value);
+    const selectedType = e.target.value;
+    setQuestionType(selectedType);
     setCurrentQuestion("");
-    if (e.target.value === "multipleChoice") {
+    setQuestionRequired(true);
+    if (selectedType === "multipleChoice") {
       setOptions([""]);
     } else {
       setOptions([]);
@@ -41,37 +45,49 @@ export default function EditEvent() {
     const newQuestion: Question = {
       type: questionType,
       text: currentQuestion,
-      options: questionType === "multipleChoice" ? ["radio"] : [],
+      options: questionType === "multipleChoice" ? options : [],
+      required: questionRequired,
     };
     setQuestions([...questions, newQuestion]);
+    console.log("Added Question:", newQuestion);
+    // Reset input fields
     setCurrentQuestion("");
     setQuestionType("");
     setOptions([""]);
+    setQuestionRequired(true);
   };
 
   const handleContinue = async () => {
-    // Convert questions into the required format with unique keys.
-    const additionalDetails = JSON.stringify(
-      questions.map((q) => ({
-        key: uuidv4(),
-        label: q.text,
-        field_type: q.type === "multipleChoice" ? "select" : "shortAnswer",
-        options: q.type === "multipleChoice" ? q.options : [],
-        required: true,
-      }))
-    );
+    // Map questions to the required format with unique keys
+    const additionalDetailsArray = questions.map((q) => ({
+      key: uuidv4(),
+      label: q.text,
+      field_type: q.type === "multipleChoice" ? "select" : "text",
+      options: q.type === "multipleChoice" ? q.options : [],
+      required: q.required,
+    }));
 
-    // Update event data with additional_details.
-    if (eventData) {
-      setEventData({ ...eventData, additional_details: additionalDetails });
-    } else {
+    console.log("Questions Array:", questions);
+    console.log("Additional Details Array:", additionalDetailsArray);
+
+    if (!eventData) {
       console.error("No event data found in context");
       return;
     }
 
+    // Create an updated event data object with additional_details as an array.
+    const updatedEventData = {
+      ...eventData,
+      additional_details: additionalDetailsArray,
+    };
+
+    console.log("Updated Event Data:", updatedEventData);
+
+    // Update context and submit the event
+    setEventData(updatedEventData);
     setLoading(true);
     try {
-      const result = await submitEvent();
+      const result = await submitEvent(updatedEventData);
       console.log("Event created:", result);
       router.push("/dashboard/events");
     } catch (error) {
@@ -130,6 +146,7 @@ export default function EditEvent() {
                     <li key={index} className="p-2 border rounded">
                       <div className="font-medium">{q.text}</div>
                       <div className="text-sm text-gray-500">Type: {q.type}</div>
+                      <div className="text-sm text-gray-500">Required: {q.required ? "Yes" : "No"}</div>
                       {q.type === "multipleChoice" && (
                         <ul className="ml-4 mt-1 space-y-1">
                           {q.options.map((opt, i) => (
@@ -164,7 +181,7 @@ export default function EditEvent() {
                 </div>
               </div>
               {questionType && (
-                <div>
+                <>
                   <div>
                     <label className="block font-medium">Question</label>
                     <input
@@ -174,6 +191,15 @@ export default function EditEvent() {
                       onChange={(e) => setCurrentQuestion(e.target.value)}
                       className="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
                     />
+                  </div>
+                  <div className="mt-4 flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={questionRequired}
+                      onChange={(e) => setQuestionRequired(e.target.checked)}
+                      className="mr-2"
+                    />
+                    <label className="font-medium">Is this question required?</label>
                   </div>
                   {questionType === "multipleChoice" && (
                     <div>
@@ -198,9 +224,12 @@ export default function EditEvent() {
                       </button>
                     </div>
                   )}
-                </div>
+                </>
               )}
-              <button onClick={handleAddQuestion} className="w-full px-4 py-2 mt-4 text-lg font-bold border rounded-lg hover:bg-gray-100">
+              <button
+                onClick={handleAddQuestion}
+                className="w-full px-4 py-2 mt-4 text-lg font-bold border rounded-lg hover:bg-gray-100"
+              >
                 ADD QUESTION
               </button>
             </div>
@@ -214,6 +243,6 @@ export default function EditEvent() {
           {loading ? "Processing..." : "FINISH"}
         </button>
       </div>
-      </>
+    </>
   );
 }

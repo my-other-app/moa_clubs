@@ -6,6 +6,7 @@ import { Key, ReactNode } from "react";
 
 // Define Props Type
 interface Event {
+  category: any;
   poster: {
     thumbnail?: string;
     // ...any other poster properties you need
@@ -34,7 +35,6 @@ export default function EventsList({ events }: EventsListProps) {
             <div
               key={event.id}
               className="grid grid-cols-3 items-center p-4 rounded-lg border border-gray-300"
-              onClick={() => navigateTo("/dashboard/dashScreen")}
             >
               {/* Left Column: Event Details */}
               <div className="flex items-center space-x-4">
@@ -47,6 +47,7 @@ export default function EventsList({ events }: EventsListProps) {
                 />
                 <div>
                   <h2 className="text-lg font-semibold">{event.name}</h2>
+                  <h2 className="text-md font-semibold">{event.category?.name}</h2>
                   <span className="text-green-600 text-sm">● Live</span>
                 </div>
               </div>
@@ -59,9 +60,13 @@ export default function EventsList({ events }: EventsListProps) {
 
               {/* Right Column: Action Buttons */}
               <div className="flex justify-end space-x-2">
-                <button className="p-3 bg-gray-200 text-gray-400 rounded hover:bg-gray-300">
-                  <FaEdit />
-                </button>
+              <button
+                    onClick={() => navigateTo(`/dashboard/dashScreen?eventId=${event.id}`)}
+                    className="p-3 bg-gray-200 text-gray-400 rounded hover:bg-gray-300"
+                  >
+                    <FaEdit />
+                  </button>
+
                 <button className="p-3 bg-gray-200 text-gray-400 rounded hover:bg-gray-300">
                   <FaTrash />
                 </button>

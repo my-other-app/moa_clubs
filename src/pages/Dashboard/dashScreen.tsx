@@ -1,14 +1,14 @@
 "use client";
 
-import { MouseEventHandler, ReactNode, useState } from "react";
+import { MouseEventHandler, ReactNode, useEffect, useState } from "react";
 import Image from "next/image";
 import { FaEdit, FaTrash, FaCog, FaDownload, FaClipboardList } from "react-icons/fa";
 import Sidebar from "@/components/sidebar";
-
-/** NEW IMPORTS for Volunteers Popup **/
 import Popup from "reactjs-popup";
 import "reactjs-popup/dist/index.css";
 import Volunteer from "@/components/dashboard/volunteer";
+import { fetchEvents } from "@/utils/listEvents";
+import { useRouter } from "next/router";
 
 const registrations = Array(7).fill({
   id: "NEX25AA001",
@@ -20,9 +20,34 @@ const registrations = Array(7).fill({
 
 export default function DashScreen() {
   const [message, setMessage] = useState("");
+  interface Event {
+    id: number;
+    name: string;
+    poster?: {
+      original: string;
+    };
+  }
 
-  // If you have an event ID from props or router, you can replace `1` with that.
-  const eventId = 1;
+  const [events, setEvents] = useState<Event[]>([]);
+  const router = useRouter();
+  const { event_id } = router.query;
+
+  // Fetch events once the component mounts
+  useEffect(() => {
+    const getEvents = async () => {
+  const currentEvent: Event | undefined = events.find(
+    (event) => event.id === (Array.isArray(event_id) ? parseInt(event_id[0], 10) : parseInt(event_id as string, 10))
+  );
+    await getEvents();
+  };
+  getEvents();
+  }, [event_id]);
+
+  // Find the event matching the event_id
+  // Convert event_id to a number if needed; also handle when event_id is undefined
+  const currentEvent = events.find(
+    (event) => event.id === (Array.isArray(event_id) ? parseInt(event_id[0], 10) : parseInt(event_id as string, 10))
+  );
 
   return (
     <>
@@ -32,7 +57,7 @@ export default function DashScreen() {
           {/* Header */}
           <div className="flex flex-wrap justify-between items-center">
             <h1 className="text-2xl font-bold text-center sm:text-left w-full sm:w-auto">
-              SF SEA HACKATHON
+              {currentEvent ? currentEvent.name : "Event Details"}
             </h1>
             <div className="flex gap-2 mt-2 sm:mt-0">
               <button className="p-2 bg-gray-200 rounded-full">
@@ -50,8 +75,8 @@ export default function DashScreen() {
           {/* Event Info */}
           <div className="flex flex-wrap lg:flex-nowrap gap-4 items-center justify-center text-center">
             <Image
-              src="https://mulearn-backend-test.s3.amazonaws.com/myotherapp-dev/clubs/logos/687f2105-25c4-465c-b495-ec626e6336f9.large.jpeg"
-              alt="logo"
+              src={currentEvent?.poster?.original || "/placeholder.png"}
+              alt="Event poster"
               width={300}
               height={300}
               className="rounded-lg"
@@ -118,20 +143,24 @@ export default function DashScreen() {
                 modal
                 nested
               >
-                {
-                  ((close: MouseEventHandler<HTMLButtonElement> | undefined) => (
-                    <div className="p-4">
-                      <button
-                        onClick={close}
-                        className="text-right w-full text-gray-500 mb-2"
-                      >
-                        X
-                      </button>
-                      {/* Volunteer component with the relevant eventId */}
-                      <Volunteer eventId={eventId} />
-                    </div>
-                  )) as unknown as ReactNode
-                }
+                {((close: MouseEventHandler<HTMLButtonElement> | undefined) => (
+                  <div className="p-4">
+                    <button
+                      onClick={close}
+                      className="text-right w-full text-gray-500 mb-2"
+                    >
+                      X
+                    </button>
+                    {/* Volunteer component with the relevant eventId */}
+                    <Volunteer
+                      eventId={
+                        Array.isArray(event_id)
+                          ? parseInt(event_id[0], 10)
+                          : parseInt(event_id as string, 10)
+                      }
+                    />
+                  </div>
+                )) as unknown as ReactNode}
               </Popup>
             </div>
 

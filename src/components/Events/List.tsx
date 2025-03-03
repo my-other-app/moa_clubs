@@ -61,7 +61,6 @@ export default function EventsList({ events }: EventsListProps) {
               {/* Right Column: Action Buttons */}
               <div className="flex justify-end space-x-2">
               <button
-                    onClick={() => navigateTo(`/dashboard/dashScreen?eventId=${event.id}`)}
                     className="p-3 bg-gray-200 text-gray-400 rounded hover:bg-gray-300"
                   >
                     <FaEdit />
@@ -70,7 +69,7 @@ export default function EventsList({ events }: EventsListProps) {
                 <button className="p-3 bg-gray-200 text-gray-400 rounded hover:bg-gray-300">
                   <FaTrash />
                 </button>
-                <button className="p-3 bg-gray-200 text-gray-400 rounded hover:bg-gray-300">
+                <button onClick={() => navigateTo(`/dashboard/dashScreen?event_id=${event.id}`)}className="p-3 bg-gray-200 text-gray-400 rounded hover:bg-gray-300">
                   <FaExternalLinkAlt />
                 </button>
               </div>

@@ -5,6 +5,7 @@ import Image from "next/image";
 import Sidebar from "@/components/sidebar";
 import { useRouter } from "next/router";
 import { useEvent, EventData } from "@/context/eventContext";
+import axios from "axios";
 
 type Category = {
   id: string;
@@ -34,14 +35,23 @@ export default function CreateEvent() {
   const [eventPerks, setEventPerks] = useState<string>("");
   const [eventGuidelines, setEventGuidelines] = useState<string>("");
 
-  // Example: setting static categories; you can also fetch from an API.
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
   useEffect(() => {
-    setCategories([
-      { id: "1", name: "Tech" },
-      { id: "2", name: "Arts" },
-      // Add more categories as needed
-    ]);
-  }, []);
+    const fetchCategories = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        const response = await axios.get(`${API_BASE_URL}/api/v1/events/categories/list`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setCategories(response.data);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        window.alert("Failed to fetch categories. Please try again later.");
+      }
+    };
+    fetchCategories();
+  }, [API_BASE_URL]);
 
   const handlePosterUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

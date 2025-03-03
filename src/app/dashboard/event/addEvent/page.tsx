@@ -105,7 +105,7 @@ export default function EditEvent() {
           <ChevronLeft className="w-5 h-5 mr-1" />
           Back
         </button>
-        <h1 className="text-3xl font-bold">EDIT REGISTRATION FORM</h1>
+        <h1 className="text-3xl font-bold">Add Additional Details</h1>
         <p className="text-gray-500">Add questions for the registration form</p>
         <div className="flex flex-row gap-12 items-start">
           <div className="mt-6 flex-1/2">

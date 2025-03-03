@@ -1,7 +1,7 @@
 'use client';
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { useNavigate } from '@/utils/navigation';
+import { useNavigate } from '@/app/utils/navigation';
 
 // Categories with unique IDs
 const categories = [

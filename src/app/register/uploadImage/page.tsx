@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from '@/utils/navigation';
+import { useNavigate } from '@/app/utils/navigation';
 import Image from 'next/image';
 
 export default function UploadImage() {

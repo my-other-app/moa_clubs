@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from '@/utils/navigation';
-import { accessToken } from '@/api/accessTocken';
+import { useNavigate } from '@/app/utils/navigation';
+import { accessToken } from '@/app/api/accessTocken';
 
 
 export default function Welcome() {

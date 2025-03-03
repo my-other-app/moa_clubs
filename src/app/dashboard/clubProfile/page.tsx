@@ -11,7 +11,7 @@ import {
   FaUniversity,
   FaMapMarkerAlt,
 } from "react-icons/fa";
-import Sidebar from "@/components/sidebar";
+import Sidebar from "@/app/components/sidebar";
 import Link from "next/link";
 
 interface ClubLogo {

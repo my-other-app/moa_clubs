@@ -1,4 +1,4 @@
-import jsonAPI from "@/api/jsonAPI";
+import jsonAPI from "@/app/api/jsonAPI";
 
 interface SocialRegistrationData {
   instagram?: string;

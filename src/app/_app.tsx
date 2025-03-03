@@ -1,6 +1,6 @@
 // pages/_app.tsx
 import type { AppProps } from "next/app";
-import { EventProvider } from "@/context/eventContext";
+import { EventProvider } from "@/app/context/eventContext";
 import "@/styles/globals.css";
 
 function MyApp({ Component, pageProps }: AppProps) {

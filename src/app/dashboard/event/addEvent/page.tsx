@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, ChangeEvent } from "react";
-import Sidebar from "@/components/sidebar";
+import Sidebar from "@/app/components/sidebar";
 import { ChevronLeft, ChevronDown, Circle } from "lucide-react";
 import { useRouter } from "next/router";
-import { useEvent } from "@/context/eventContext";
+import { useEvent } from "@/app/context/eventContext";
 import { v4 as uuidv4 } from "uuid";
 
 interface Question {

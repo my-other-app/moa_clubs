@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { NextPage } from 'next';
 import Image from 'next/image';
 import axios from 'axios';
-import Sidebar from '@/components/sidebar';
+import Sidebar from '@/app/components/sidebar';
 
 const EditClub: NextPage = () => {
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;

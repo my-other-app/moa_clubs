@@ -1,7 +1,7 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { registerClub } from "@/utils/clubregistration";
-import postSocial from "@/utils/socialsRegistration";
+import { registerClub } from "@/app/utils/clubregistration";
+import postSocial from "@/app/utils/socialsRegistration";
 import { AxiosError } from "axios";
 
 interface FormData {

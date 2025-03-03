@@ -1,4 +1,4 @@
-import formAPI from "@/api/formAPI";
+import formAPI from "@/app/api/formAPI";
 import axios from "axios";
 
 interface ClubRegistrationData {

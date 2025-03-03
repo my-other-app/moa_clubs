@@ -3,11 +3,11 @@
 import { MouseEventHandler, ReactNode, useEffect, useState } from "react";
 import Image from "next/image";
 import { FaEdit, FaTrash, FaCog, FaDownload, FaClipboardList } from "react-icons/fa";
-import Sidebar from "@/components/sidebar";
+import Sidebar from "@/app/components/sidebar";
 import Popup from "reactjs-popup";
 import "reactjs-popup/dist/index.css";
-import Volunteer from "@/components/dashboard/volunteer";
-import { fetchEvents } from "@/utils/listEvents";
+import Volunteer from "@/app/components/dashboard/volunteer";
+import { fetchEvents } from "@/app/utils/listEvents";
 import { useRouter } from "next/router";
 
 const registrations = Array(7).fill({

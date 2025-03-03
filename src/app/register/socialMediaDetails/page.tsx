@@ -1,7 +1,7 @@
 'use client';
 import { useRouter } from "next/router";
 import { useState, useEffect } from 'react';
-import { useNavigate } from '@/utils/navigation';
+import { useNavigate } from '@/app/utils/navigation';
 
 export default function SocialMediaDetails() {
   const { navigateTo } = useNavigate();

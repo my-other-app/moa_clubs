@@ -1,20 +1,20 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, ReactNode } from "react";
 import axios from "axios";
 
 interface Volunteer {
+  user_id: string;
+  email: string;
+  full_name: string;
   event_id: number;
-  name: string;
-  email_id: string;
-  phone: string;
 }
 
 interface VolunteerProps {
-  eventId: number;
+  event_id: number;
 }
 
-export default function Volunteer({ eventId }: VolunteerProps) {
+export default function Volunteer({ event_id }: VolunteerProps) {
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
   const [volunteerName, setVolunteerName] = useState("");
   const [volunteerEmail, setVolunteerEmail] = useState("");
@@ -27,11 +27,11 @@ export default function Volunteer({ eventId }: VolunteerProps) {
   // Define API base URL
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-  // Wrap fetchVolunteers in useCallback so it becomes a stable dependency
+  // Fetch volunteers for the current event
   const fetchVolunteers = useCallback(async () => {
     try {
       const response = await axios.get(
-        `${API_BASE_URL}/api/v1/events/volunteer/list/${eventId}`,
+        `${API_BASE_URL}/api/v1/events/volunteer/list/${event_id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -41,23 +41,23 @@ export default function Volunteer({ eventId }: VolunteerProps) {
     } catch (error) {
       console.error("Error fetching volunteers:", error);
     }
-  }, [API_BASE_URL, eventId, token]);
+  }, [API_BASE_URL, event_id, token]);
 
   useEffect(() => {
-    if (eventId) {
+    if (event_id) {
       fetchVolunteers();
     }
-  }, [eventId, fetchVolunteers]);
+  }, [event_id, fetchVolunteers]);
 
   // Add a volunteer using the POST endpoint
   const addVolunteer = async () => {
     if (volunteerName && volunteerEmail && volunteerPhone) {
       try {
         const payload = {
-          event_id: eventId,
-          name: volunteerName,
+          event_id: event_id,
+          full_name: volunteerName,
           email_id: volunteerEmail,
-          phone: volunteerPhone,
+          user_id: volunteerPhone,
         };
 
         await axios.post(
@@ -79,12 +79,12 @@ export default function Volunteer({ eventId }: VolunteerProps) {
     }
   };
 
-  // Remove a volunteer using the DELETE endpoint
-  const deleteVolunteer = async (volunteerId: number) => {
+  // Remove a volunteer using the DELETE endpoint by using their email as the unique identifier
+  const deleteVolunteer = async (email: string) => {
     try {
       await axios.delete(`${API_BASE_URL}/api/v1/events/volunteer/remove`, {
         headers: { Authorization: `Bearer ${token}` },
-        data: { event_id: eventId, volunteer_id: volunteerId },
+        data: { event_id: event_id, email_id: email },
       });
       // Refresh the volunteer list after removal
       fetchVolunteers();
@@ -98,7 +98,7 @@ export default function Volunteer({ eventId }: VolunteerProps) {
       <h2 className="text-lg font-semibold mt-6">VOLUNTEERS AND GUIDELINES</h2>
       <div className="flex justify-between">
         {/* Volunteer Form */}
-        <div className="flex flex-col gap-4 items-center w-full p-3">
+        <div className="flex flex-col gap-4 items-center w-full p-3 flex-1/2">
           <input
             type="text"
             value={volunteerName}
@@ -131,25 +131,25 @@ export default function Volunteer({ eventId }: VolunteerProps) {
           </button>
         </div>
         {/* Volunteer List (scrollable) */}
-        <div className="mt-4 flex flex-col gap-1 overflow-y-auto max-h-52">
-          {volunteers.map((v) => (
+        <div className="mt-4 flex flex-col gap-1 overflow-y-auto max-h-52 flex-1/2">
+          {volunteers.map((v, index) => (
             <div
-              key={v.event_id}
+              key={v.email || index} // using email as a unique key
               className="h-24 p-4 bg-teal-600 rounded-lg flex items-center gap-3.5"
             >
               <div className="w-64 flex flex-col gap-1">
                 <div className="text-white text-base font-light font-['DM Sans']">
-                  {v.name}
+                  {v.full_name}
                 </div>
                 <div className="text-white text-base font-light font-['DM Sans']">
-                  {v.email_id}
+                  {v.email}
                 </div>
                 <div className="text-white text-base font-light font-['DM Sans']">
-                  {v.phone}
+                  {v.user_id}
                 </div>
               </div>
               <div
-                onClick={() => deleteVolunteer(v.event_id)}
+                onClick={() => deleteVolunteer(v.email)}
                 className="cursor-pointer"
               >
                 <svg

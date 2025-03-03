@@ -24,7 +24,7 @@ export default function DashScreen() {
     id: number;
     name: string;
     poster?: {
-      original: string;
+      medium: string;
     };
   }
 
@@ -75,7 +75,7 @@ export default function DashScreen() {
           {/* Event Info */}
           <div className="flex flex-wrap lg:flex-nowrap gap-4 items-center justify-center text-center">
             <Image
-              src={currentEvent?.poster?.original || "/placeholder.png"}
+              src={currentEvent?.poster?.medium || "/placeholder.png"}
               alt="Event poster"
               width={300}
               height={300}
@@ -153,11 +153,7 @@ export default function DashScreen() {
                     </button>
                     {/* Volunteer component with the relevant eventId */}
                     <Volunteer
-                      eventId={
-                        Array.isArray(event_id)
-                          ? parseInt(event_id[0], 10)
-                          : parseInt(event_id as string, 10)
-                      }
+                     event_id={Array.isArray(event_id) ? parseInt(event_id[0], 10) : parseInt(event_id as string, 10)}
                     />
                   </div>
                 )) as unknown as ReactNode}

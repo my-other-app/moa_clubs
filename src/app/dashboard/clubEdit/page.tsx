@@ -1,34 +1,36 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import type { NextPage } from 'next';
-import Image from 'next/image';
-import axios from 'axios';
-import Sidebar from '@/app/components/sidebar';
+import React, { useState, useEffect } from "react";
+import Image from "next/image";
+import axios from "axios";
+import Sidebar from "@/app/components/sidebar";
+import { useRouter } from "next/navigation";
+import type { NextPage } from "next";
 
 const EditClub: NextPage = () => {
+  const router = useRouter();
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+  const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
 
   // Basic Club Information
-  const [clubName, setClubName] = useState('');
-  const [clubOrganization, setClubOrganization] = useState('');
-  const [clubLocation, setClubLocation] = useState('');
-  const [clubDescription, setClubDescription] = useState('');
+  const [clubName, setClubName] = useState("");
+  const [clubOrganization, setClubOrganization] = useState(0);
+  const [clubLocation, setClubLocation] = useState("");
+  const [clubDescription, setClubDescription] = useState("");
 
   // Social Links (disabled)
-  const [instagramLink, setInstagramLink] = useState('');
-  const [youtubeLink, setYoutubeLink] = useState('');
-  const [linkedInLink, setLinkedInLink] = useState('');
-  const [websiteLink, setWebsiteLink] = useState('');
+  const [instagramLink, setInstagramLink] = useState("");
+  const [youtubeLink, setYoutubeLink] = useState("");
+  const [linkedInLink, setLinkedInLink] = useState("");
+  const [websiteLink, setWebsiteLink] = useState("");
 
   // Contact Information
-  const [contactPhone, setContactPhone] = useState('');
-  // const [contactEmail, setContactEmail] = useState('nexra'); // Uncomment if needed
+  const [contactPhone, setContactPhone] = useState("");
+  // const [contactEmail, setContactEmail] = useState(""); // Uncomment if needed
 
   // Logo File & Preview
   const [clubLogo, setClubLogo] = useState<File | null>(null);
-  const [clubLogoPreview, setClubLogoPreview] = useState<string | null>('');
+  const [clubLogoPreview, setClubLogoPreview] = useState<string | null>("");
 
   // Interests (list of IDs)
   const [selectedInterests, setSelectedInterests] = useState<number[]>([]);
@@ -37,35 +39,33 @@ const EditClub: NextPage = () => {
   useEffect(() => {
     const fetchClubData = async () => {
       try {
+        if (!API_BASE_URL || !token) {
+          console.error("Missing API_BASE_URL or access token.");
+          return;
+        }
         const response = await axios.get(`${API_BASE_URL}/api/v1/clubs/info`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = response.data;
-        setClubName(data.name);
-        // Use data.org if available; otherwise empty string
-        setClubOrganization(data.org || '');
-        setClubLocation(data.location_name || '');
-        setClubDescription(data.about || '');
-        // Use the medium logo URL if available
+        setClubName(data.name || "");
+        // Set org_id as a string (will be converted on submit)
+        setClubOrganization(data.org ? Number(data.org) : 0);
+        setClubLocation(data.location_name || "");
+        setClubDescription(data.about || "");
         if (data.logo && data.logo.medium) {
           setClubLogoPreview(data.logo.medium);
         }
-        // Set interests (assuming data.interests is an array of interest objects)
         if (data.interests) {
           setSelectedInterests(data.interests.map((interest: { id: number }) => interest.id));
         }
-        // Set social links from data.socials object
-        if (data.socials) {
-          setInstagramLink(data.socials.instagram || '');
-          setYoutubeLink(data.socials.youtube || '');
-          setLinkedInLink(data.socials.linkedin || '');
-          setWebsiteLink(data.socials.website || '');
-        }
-        // Set contact information
-        setContactPhone(data.contact_phone || '');
-        // setContactEmail(data.contact_email || '');
+        setInstagramLink(data.socials?.instagram || "");
+        setYoutubeLink(data.socials?.youtube || "");
+        setLinkedInLink(data.socials?.linkedin || "");
+        setWebsiteLink(data.socials?.website || "");
+        setContactPhone(data.contact_phone || "");
+        // setContactEmail(data.contact_email || "");
       } catch (error) {
-        console.error('Error fetching club data:', error);
+        console.error("Error fetching club data:", error);
       }
     };
 
@@ -78,61 +78,67 @@ const EditClub: NextPage = () => {
       setClubLogo(file);
       const previewURL = URL.createObjectURL(file);
       setClubLogoPreview(previewURL);
-      sessionStorage.setItem('clubLogo', previewURL);
+      sessionStorage.setItem("clubLogo", previewURL);
     }
   };
 
-//   const handleInterestChange = (interestId: number) => {
-//     setSelectedInterests((prev) =>
-//       prev.includes(interestId)
-//         ? prev.filter((id) => id !== interestId)
-//         : [...prev, interestId]
-//     );
-//   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Build FormData for update
-    const formData = new FormData();
-    formData.append('name', clubName);
-    formData.append('organization', clubOrganization);
-    formData.append('location', clubLocation);
-    formData.append('description', clubDescription);
-    if (clubLogo) {
-      formData.append('logo', clubLogo);
+    if (!API_BASE_URL) {
+      console.error("API_BASE_URL is not defined.");
+      return;
     }
-    // Append interests as JSON string (or change as needed)
-    formData.append('interest_ids', JSON.stringify(selectedInterests));
-    // Append social links (they are disabled and not edited)
-    formData.append('instagramLink', instagramLink);
-    formData.append('youtubeLink', youtubeLink);
-    formData.append('linkedInLink', linkedInLink);
-    formData.append('websiteLink', websiteLink);
-    // Append contact information
-    formData.append('contact_phone', contactPhone);
-    // formData.append('contact_email', contactEmail); // Uncomment if needed
+
+    // Build FormData according to the API documentation:
+    // - name: string (3-20 chars)
+    // - org_id: integer (clubOrganization converted to number)
+    // - location_name: string
+    // - location_link: string (we send empty if not available)
+    // - about: string (clubDescription)
+    // - logo: file (clubLogo)
+    // - contact_phone: string
+    // - contact_email: string (if needed)
+    // - interest_ids: string (we send as JSON string)
+    const formData = new FormData();
+    formData.append("name", clubName);
+formData.append("org_id", clubOrganization.toString());
+    formData.append("location_name", clubLocation);
+    formData.append("location_link", ""); // Send empty if no link provided
+    formData.append("about", clubDescription);
+    if (clubLogo) {
+      formData.append("logo", clubLogo);
+    }
+    formData.append("contact_phone", contactPhone);
+    // formData.append("contact_email", contactEmail); // Uncomment if needed
+    formData.append("interest_ids", JSON.stringify(selectedInterests));
 
     try {
-      const accessToken = localStorage.getItem('accessToken');
+      const accessToken = localStorage.getItem("accessToken");
+      if (!accessToken) {
+        console.error("No access token found in localStorage.");
+        return;
+      }
+
       const response = await axios.put(`${API_BASE_URL}/api/v1/clubs/update`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${accessToken}`,
         },
       });
-      console.log('Club updated:', response.data);
-      // Optionally, redirect or show a success message here.
+
+      console.log("Club updated:", response.data);
+      // Navigate after successful submit
+      router.push("/dashboard/clubEdit");
     } catch (error) {
-      console.error('Error updating club:', error);
+      console.error("Error updating club:", error);
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 p-8 mx-20">
-    <Sidebar/>
+      <Sidebar />
       {/* Page Title */}
       <h1 className="mb-6 text-2xl font-bold text-gray-800">EDIT CLUB PROFILE</h1>
-
       <form className="mx-auto max-w-5xl space-y-8" onSubmit={handleSubmit}>
         {/* BASIC INFORMATION */}
         <div>
@@ -141,35 +147,18 @@ const EditClub: NextPage = () => {
             {/* Club Name */}
             <div>
               <label htmlFor="clubName" className="mb-1 block text-sm font-medium text-gray-700">
-                Club Name
+                Club Name *
               </label>
               <input
                 id="clubName"
                 name="clubName"
-                placeholder="Enter Club Name"
-                className="w-full rounded border border-gray-300 p-2 text-sm bg-gray-100 text-gray-500 cursor-not-allowed focus:outline-none"
+                placeholder="Enter Club Name (3-20 characters)"
+                className="w-full rounded border text-gray-500 cursor-not-allowed border-gray-300 p-2 text-sm focus:outline-none focus:ring-1 "
                 value={clubName}
                 onChange={(e) => setClubName(e.target.value)}
                 disabled
               />
             </div>
-
-            {/* Club Organization */}
-            <div>
-              <label htmlFor="clubOrganization" className="mb-1 block text-sm font-medium text-gray-700">
-                Club Organization
-              </label>
-              <input
-                type="text"
-                id="clubOrganization"
-                name="clubOrganization"
-                placeholder="Enter Organization"
-                className="w-full rounded border border-gray-300 p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                value={clubOrganization}
-                onChange={(e) => setClubOrganization(e.target.value)}
-              />
-            </div>
-
             {/* Club Location */}
             <div>
               <label htmlFor="clubLocation" className="mb-1 block text-sm font-medium text-gray-700">
@@ -180,7 +169,7 @@ const EditClub: NextPage = () => {
                 id="clubLocation"
                 name="clubLocation"
                 placeholder="Enter Club Location"
-                className="w-full rounded border border-gray-300 p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded border border-gray-300 p-2 text-sm focus:outline-none focus:ring-1 "
                 value={clubLocation}
                 onChange={(e) => setClubLocation(e.target.value)}
               />
@@ -204,8 +193,7 @@ const EditClub: NextPage = () => {
                 onChange={(e) => setClubDescription(e.target.value)}
               />
             </div>
-
-            {/* Logo Upload and Interests Section */}
+            {/* Logo Upload */}
             <div className="flex flex-col items-center justify-center">
               <div className="flex flex-col items-center mb-4">
                 <label
@@ -242,21 +230,14 @@ const EditClub: NextPage = () => {
                     </div>
                   )}
                 </label>
-                <input
-                  id="clubLogo"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleLogoUpload}
-                />
+                <input id="clubLogo" type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
                 <p className="text-sm text-gray-600 mt-2">Add Club Logo</p>
               </div>
-              {/* (Optional) Interests selection UI can be added here */}
             </div>
           </div>
         </div>
 
-        {/* LINKS TO CONNECT */}
+        {/* LINKS TO CONNECT (disabled fields) */}
         <div>
           <h2 className="mb-4 text-xl font-semibold text-gray-800">LINKS TO CONNECT</h2>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -319,7 +300,7 @@ const EditClub: NextPage = () => {
           </div>
         </div>
 
-        {/* Additional Contact Information */}
+        {/* CONTACT INFORMATION */}
         <div className="mb-6">
           <h2 className="mb-4 text-xl font-semibold text-gray-800">CONTACT INFORMATION</h2>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -355,12 +336,9 @@ const EditClub: NextPage = () => {
           </div>
         </div>
 
-        {/* CONTINUE BUTTON */}
+        {/* SUBMIT BUTTON */}
         <div className="pt-4">
-          <button
-            type="submit"
-            className="rounded bg-gray-700 px-6 py-2 text-white hover:bg-gray-80"
-          >
+          <button type="submit" className="rounded bg-gray-700 px-6 py-2 text-white hover:bg-gray-800">
             CONTINUE
           </button>
         </div>

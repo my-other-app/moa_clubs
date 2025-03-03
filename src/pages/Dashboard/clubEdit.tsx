@@ -2,35 +2,34 @@ import React, { useState, useEffect } from 'react';
 import type { NextPage } from 'next';
 import Image from 'next/image';
 import axios from 'axios';
+import Sidebar from '@/components/sidebar';
 
 const EditClub: NextPage = () => {
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
 
   // Basic Club Information
-  const [clubName, setClubName] = useState('NexeraCET');
+  const [clubName, setClubName] = useState('');
   const [clubOrganization, setClubOrganization] = useState('');
-  const [clubLocation, setClubLocation] = useState('Trivandrum');
+  const [clubLocation, setClubLocation] = useState('');
   const [clubDescription, setClubDescription] = useState('');
 
   // Social Links (disabled)
-  const [instagramLink, setInstagramLink] = useState('https://www.instagram.com/nexera.cet');
-  const [youtubeLink, setYoutubeLink] = useState('https://www.youtube.com/@collegeofengineeringtrivan1297');
+  const [instagramLink, setInstagramLink] = useState('');
+  const [youtubeLink, setYoutubeLink] = useState('');
   const [linkedInLink, setLinkedInLink] = useState('');
-  const [websiteLink, setWebsiteLink] = useState('https://www.nexeracet.tech/');
+  const [websiteLink, setWebsiteLink] = useState('');
 
   // Contact Information
-  const [contactPhone, setContactPhone] = useState('9496225620');
+  const [contactPhone, setContactPhone] = useState('');
   // const [contactEmail, setContactEmail] = useState('nexra'); // Uncomment if needed
 
   // Logo File & Preview
   const [clubLogo, setClubLogo] = useState<File | null>(null);
-  const [clubLogoPreview, setClubLogoPreview] = useState<string | null>(
-    'https://mulearn-backend-test.s3.amazonaws.com/myotherapp-dev/clubs/logos/a6a77957-8201-4cda-bf95-3d70a568d788.medium.jpeg?AWSAccessKeyId=AKIAVS6FAG7XBZZSLLCS&Signature=myQS2bxz98cTllqXfAqoTvbpzlQ%3D&Expires=1740949144'
-  );
+  const [clubLogoPreview, setClubLogoPreview] = useState<string | null>('');
 
   // Interests (list of IDs)
-  const [selectedInterests, setSelectedInterests] = useState<number[]>([9, 10, 11, 12, 14]);
+  const [selectedInterests, setSelectedInterests] = useState<number[]>([]);
 
   // Fetch club data on mount and pre-fill form
   useEffect(() => {
@@ -127,7 +126,8 @@ const EditClub: NextPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-50 p-8 mx-20">
+    <Sidebar/>
       {/* Page Title */}
       <h1 className="mb-6 text-2xl font-bold text-gray-800">EDIT CLUB PROFILE</h1>
 

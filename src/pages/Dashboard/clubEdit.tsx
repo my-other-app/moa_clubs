@@ -88,45 +88,43 @@ const EditClub: NextPage = () => {
 //     );
 //   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // Build FormData for update
-    const formData = new FormData();
-    formData.append('name', clubName);
-    formData.append('organization', clubOrganization);
-    formData.append('location', clubLocation);
-    formData.append('description', clubDescription);
-    if (clubLogo) {
-      formData.append('logo', clubLogo);
-    }
-    // Append interests as JSON string (or change as needed)
-    formData.append('interest_ids', JSON.stringify(selectedInterests));
-    // Append social links (they are disabled and not edited)
-    formData.append('instagramLink', instagramLink);
-    formData.append('youtubeLink', youtubeLink);
-    formData.append('linkedInLink', linkedInLink);
-    formData.append('websiteLink', websiteLink);
-    // Append contact information
-    formData.append('contact_phone', contactPhone);
-    // formData.append('contact_email', contactEmail); // Uncomment if needed
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  const formData = new FormData();
 
-    try {
-      const accessToken = localStorage.getItem('accessToken');
-      const response = await axios.put(`${API_BASE_URL}/api/v1/clubs/update`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      console.log('Club updated:', response.data);
-      // Optionally, redirect or show a success message here.
-    } catch (error) {
-      console.error('Error updating club:', error);
-    }
-  };
+  formData.append('name', clubName);
+  formData.append('org_id', clubOrganization); // Ensure this is an integer or convert it if needed
+  formData.append('location_name', clubLocation);
+  // Append location_link if available:
+  // formData.append('location_link', clubLocationLink);
+  formData.append('about', clubDescription);
+
+  if (clubLogo) {
+    formData.append('logo', clubLogo);
+  }
+  formData.append('interest_ids', JSON.stringify(selectedInterests));
+  formData.append('contact_phone', contactPhone);
+  // Append contact_email if needed:
+  // formData.append('contact_email', contactEmail);
+
+  try {
+    const accessToken = localStorage.getItem('accessToken');
+    const response = await axios.put(`${API_BASE_URL}/api/v1/clubs/update`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    console.log('Club updated:', response.data);
+    // Optionally, redirect or show a success message.
+  } catch (error) {
+    console.error('Error updating club:', error);
+  }
+};
+
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8 mx-20">
+    <div className="min-h-screen bg-gray-50 p-8 mx-">
     <Sidebar/>
       {/* Page Title */}
       <h1 className="mb-6 text-2xl font-bold text-gray-800">EDIT CLUB PROFILE</h1>

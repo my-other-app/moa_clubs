@@ -31,7 +31,7 @@ export default function CreateEvent() {
   const [eventLocation, setEventLocation] = useState<string>("");
   const [eventMeetLink, setEventMeetLink] = useState<string>("");
   const [eventFee, setEventFee] = useState<number>(0);
-  const [eventPerks, setEventPerks] = useState<number>(0);
+  const [eventPerks, setEventPerks] = useState<string>("");
   const [eventGuidelines, setEventGuidelines] = useState<string>("");
 
   // Example: setting static categories; you can also fetch from an API.
@@ -82,7 +82,7 @@ export default function CreateEvent() {
       location_name: eventLocation,
       url: eventMeetLink,
       reg_fee: eventFee,
-      prize_amount: eventPerks,
+      prize_amount: parseInt(eventPerks, 10),
       event_guidelines: eventGuidelines,
       poster: eventPoster,
       has_fee: true,
@@ -235,7 +235,7 @@ export default function CreateEvent() {
             </div>
             <div>
               <h3>Prize Worth</h3>
-              <input type="text" placeholder="Enter The Prize Worth" className="p-2 border rounded w-full" value={eventPerks} onChange={(e) => setEventPerks(parseInt(e.target.value, 10))} />
+              <input type="text" placeholder="Enter The Prize Worth" className="p-2 border rounded w-full" value={eventPerks} onChange={(e) => setEventPerks(e.target.value)} />
             </div>
           </div>
           <textarea placeholder="Enter Event Guidelines" className="w-full p-2 border rounded mt-4" value={eventGuidelines} onChange={(e) => setEventGuidelines(e.target.value)}></textarea>

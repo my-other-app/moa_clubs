@@ -41,7 +41,7 @@ export default function EditEvent() {
     const newQuestion: Question = {
       type: questionType,
       text: currentQuestion,
-      options: questionType === "multipleChoice" ? options : [],
+      options: questionType === "multipleChoice" ? ["radio"] : [],
     };
     setQuestions([...questions, newQuestion]);
     setCurrentQuestion("");

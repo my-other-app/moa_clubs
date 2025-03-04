@@ -11,9 +11,10 @@ import {
   FaTimes,
   FaSignOutAlt,
 } from "react-icons/fa";
+import {  useRouter } from "next/router";
 
 const Sidebar = () => {
-
+const router = useRouter();
   const searchParams = useSearchParams();
   const color = searchParams.get("color"); // Read URL query parameter "color"
   const currentPath = usePathname(); // Current path
@@ -27,8 +28,10 @@ const Sidebar = () => {
 
   // Handle Logout (replace with your actual logout logic)
   const handleLogout = () => {
-    // localStorage.removeItem("userToken");
-    // router.push("/");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    router.push("/");
+    
   };
 
   return (
@@ -60,7 +63,7 @@ const Sidebar = () => {
           </div>
         </Link>
 
-        <Link href="/events">
+        <Link href="/dashboard/events">
           <div
             className={`cursor-pointer p-3 rounded-full ${
               currentPath === "/events"
@@ -72,7 +75,7 @@ const Sidebar = () => {
           </div>
         </Link>
 
-        <Link href="/notifications">
+        <Link href="/dashboard/events">
           <div
             className={`cursor-pointer p-3 rounded-full ${
               currentPath === "/notifications"

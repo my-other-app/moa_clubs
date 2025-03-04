@@ -11,11 +11,11 @@ import { useSearchParams } from "next/navigation";
 
 
 const registrations = Array(7).fill({
-  id: "NEX25AA001",
-  name: "Edwin Emmanuel Roy",
-  email: "emmanuelroy162@gmail.com",
-  phone: "8113859251",
-  institution: "College of Engineering Tr",
+  id: "",
+  name: "",
+  email: "",
+  phone: "",
+  institution: "",
 });
 
 export default function DashScreen() {

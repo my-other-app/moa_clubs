@@ -4,15 +4,10 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from '@/app/utils/navigation';
 
-//
-// 1) Set your API base URL. You can hardcode this or load it from .env
-//
+// 1) Set your API base URL (from .env or hardcode)
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
 
-//
-// 2) accessToken function: logs in with username/password and returns the access token.
-//    Note the use of URLSearchParams for x-www-form-urlencoded.
-//
+// 2) accessToken function: logs in with username/password, returns the access token string
 export async function accessToken({
   username,
   password,
@@ -22,12 +17,11 @@ export async function accessToken({
 }): Promise<string> {
   // Construct form data for "application/x-www-form-urlencoded"
   const formData = new URLSearchParams();
-  formData.append('grant_type', 'password');
   formData.append('username', username);
   formData.append('password', password);
 
   try {
-    // POST to /api/v1/oauth/token with the correct headers
+    // POST to /api/v1/auth/token with the correct headers
     const response = await axios.post(`${API_BASE_URL}/api/v1/auth/token`, formData, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -38,40 +32,36 @@ export async function accessToken({
     return response.data.access_token;
   } catch (error) {
     console.error('Error fetching access token:', error);
-    // Decide how you want to handle the error. For now, return an empty string.
+    // Return an empty string or handle the error differently as needed
     return '';
   }
 }
 
-//
 // 3) fetchClub function: uses the token to fetch the club info
-//
 async function fetchClub(token: string) {
   try {
     const response = await axios.get(`${API_BASE_URL}/api/v1/clubs/info`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    // Adjust as needed if the club data is nested
-    return response.data;
+    return response.data; // Adjust if your API structure is different
   } catch (error) {
     console.error('Error fetching club:', error);
     return null;
   }
 }
 
-//
-// 4) The main Welcome component with the form
+// 4) Main Welcome component
 //    - Saves username/password in sessionStorage
 //    - Retrieves an access token
-//    - Fetches the club
-//    - Navigates based on whether club has a "name"
-//
+//    - Stores token in localStorage
+//    - Fetches club data
+//    - Navigates based on whether the club has a "name"
 export default function Welcome() {
   const { navigateTo } = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // Load saved values from sessionStorage on mount
+  // Load saved values from sessionStorage when the component mounts
   useEffect(() => {
     const savedEmail = sessionStorage.getItem('email');
     const savedPassword = sessionStorage.getItem('password');
@@ -88,12 +78,19 @@ export default function Welcome() {
 
     // 1) Get the access token
     const token = await accessToken({ username: email, password });
+    if (!token) {
+      alert('Error: Could not retrieve access token.');
+      return;
+    }
 
-    // 2) Fetch club data using the token
+    // 2) Store token in localStorage
+    localStorage.setItem('accessToken', token);
+
+    // 3) Fetch club data using the token
     const clubData = await fetchClub(token);
 
-    // 3) Navigate based on whether the club data has a name
-    if (clubData && clubData.name) {
+    // 4) Navigate based on whether clubData has a "name"
+    if (clubData && clubData.logo) {
       navigateTo('/dashboard/events');
     } else {
       navigateTo('/register/uploadImage');

@@ -167,7 +167,7 @@ export default function ClubProfile() {
 
             {/* Right: Buttons */}
             <div className="mt-4 sm:mt-0 flex gap-2">
-              <Link href="/dashboard/clubEdit">
+              <Link href="/register/uploadImage">
               <button className="border bg-gray-700 rounded px-8 py-1 text-sm text-amber-50 font-medium hover:bg-gray-800">
                 EDIT PROFILE
               </button>

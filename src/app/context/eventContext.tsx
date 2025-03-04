@@ -2,7 +2,7 @@ import { createContext, useContext, useState, ReactNode } from "react";
 
 export type EventData = {
   name: string;
-  poster: File;
+  poster: File | string;
   event_datetime: string;
   has_fee: boolean;
   reg_fee: number | null;

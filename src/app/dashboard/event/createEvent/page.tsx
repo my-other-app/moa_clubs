@@ -3,7 +3,7 @@
 import { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import Image from "next/image";
 import Sidebar from "@/app/components/sidebar";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { useEvent, EventData } from "@/app/context/eventContext";
 import axios from "axios";
@@ -15,6 +15,8 @@ type Category = {
 
 export default function CreateEvent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const eventId = searchParams.get("event_id");
   const { setEventData } = useEvent();
 
   // State for event details
@@ -40,6 +42,7 @@ export default function CreateEvent() {
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
+  // Fetch categories for the dropdown
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -55,6 +58,52 @@ export default function CreateEvent() {
     };
     fetchCategories();
   }, [API_BASE_URL]);
+
+  // Fetch event details from /api/v1/events/info/{event_id} and prepopulate the form
+  useEffect(() => {
+    if (!eventId) return;
+    const fetchEventDetails = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+          console.error("Access token not found");
+          return;
+        }
+        const response = await axios.get(`${API_BASE_URL}/api/v1/events/info/${eventId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = response.data;
+        // Populate form fields with the fetched data
+        setEventTitle(data.name || "");
+        setEventDescription(data.about || "");
+        setSelectedCategory(data.category ? parseInt(data.category.id, 10) : null);
+        setEventSeats(data.max_participants ? data.max_participants.toString() : "");
+        if (data.event_datetime) {
+          const [datePart, timePart] = data.event_datetime.split("T");
+          setEventDate(datePart);
+          setEventStartTime(timePart.substring(0, 5));
+        }
+        setEventDuration(data.duration || null);
+        if (data.reg_enddate) {
+          const [regDate, regTime] = data.reg_enddate.split("T");
+          setEventRegistrationClosingDate(regDate);
+          setEventRegistrationClosingTime(regTime.substring(0, 5));
+        }
+        setEventMode(data.is_online);
+        setEventLocation(data.location_name || "");
+        // Prefer location_link if available; otherwise, use url
+        setEventMeetLink(data.location_link || data.url || "");
+        setEventFee(data.reg_fee || 0);
+        setEventPerks(data.prize_amount || 0);
+        setEventGuidelines(data.event_guidelines || "");
+        // Optionally, handle poster preview if your API returns an image URL
+      } catch (error) {
+        console.error("Error fetching event details:", error);
+        window.alert("Failed to fetch event details. Please try again later.");
+      }
+    };
+    fetchEventDetails();
+  }, [API_BASE_URL, eventId]);
 
   const handlePosterUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -95,7 +144,7 @@ export default function CreateEvent() {
       location_name: eventLocation,
       url: eventMeetLink,
       reg_fee: eventFee,
-      prize_amount:eventPerks,
+      prize_amount: eventPerks,
       event_guidelines: eventGuidelines,
       poster: eventPoster,
       has_fee: true,
@@ -106,12 +155,11 @@ export default function CreateEvent() {
       contact_phone: null,
       contact_email: null,
       interest_ids: null,
-      // club_id: null
     };
 
     // Save event data in context and navigate to add questions
     setEventData(eventDataToPass);
-    router.push("/dashboard/event/addEvent");
+    router.push(`/dashboard/event/addEvent?event_id=${eventId}`);
   };
 
   return (
@@ -124,7 +172,7 @@ export default function CreateEvent() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-4">
               <div className="flex flex-col">
-                <h3>Event Title</h3>
+                <h3>Event Title {eventId}</h3>
                 <input
                   type="text"
                   placeholder="Enter Your Event Title"

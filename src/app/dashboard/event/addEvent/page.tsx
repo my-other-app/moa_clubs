@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, ChangeEvent } from "react";
+import { useState, useEffect, ChangeEvent } from "react";
 import Sidebar from "@/app/components/sidebar";
 import { ChevronLeft, ChevronDown, Circle } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEvent } from "@/app/context/eventContext";
+import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 
 interface Question {
@@ -16,13 +17,73 @@ interface Question {
 
 export default function EditEvent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const eventId = searchParams.get("event_id");
   const { eventData, setEventData, submitEvent } = useEvent();
+
   const [loading, setLoading] = useState<boolean>(false);
   const [options, setOptions] = useState<string[]>([""]);
   const [questionType, setQuestionType] = useState<string>("");
   const [currentQuestion, setCurrentQuestion] = useState<string>("");
   const [questionRequired, setQuestionRequired] = useState<boolean>(true);
   const [questions, setQuestions] = useState<Question[]>([]);
+
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+  // Fetch event details from /api/v1/events/info/{event_id} if not already loaded.
+  useEffect(() => {
+    if (!eventId) return;
+    // Only fetch if there is no eventData or if you want to re-fetch.
+    if (!eventData) {
+      const fetchEventDetails = async () => {
+        try {
+          const token = localStorage.getItem("accessToken");
+          if (!token) {
+            console.error("Access token not found");
+            return;
+          }
+          const response = await axios.get(
+            `${API_BASE_URL}/api/v1/events/info/${eventId}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          const fetchedData = response.data;
+          // Store the fetched data in context
+          setEventData(fetchedData);
+          // Prepopulate questions from additional_details if available.
+          if (
+            fetchedData.additional_details &&
+            Array.isArray(fetchedData.additional_details) &&
+            fetchedData.additional_details.length > 0
+          ) {
+            const existingQuestions = fetchedData.additional_details.map((detail: any) => ({
+              type: detail.field_type === "select" ? "multipleChoice" : "shortAnswer",
+              text: detail.label,
+              options: detail.field_type === "select" ? detail.options : [],
+              required: detail.required,
+            }));
+            setQuestions(existingQuestions);
+          }
+        } catch (error) {
+          console.error("Error fetching event details:", error);
+          window.alert("Failed to fetch event details. Please try again later.");
+        }
+      };
+      fetchEventDetails();
+    } else {
+      // If eventData is already available, prepopulate questions from additional_details.
+      if (eventData.additional_details && eventData.additional_details.length) {
+        const existingQuestions = eventData.additional_details.map((detail: any) => ({
+          type: detail.field_type === "select" ? "multipleChoice" : "shortAnswer",
+          text: detail.label,
+          options: detail.field_type === "select" ? detail.options : [],
+          required: detail.required,
+        }));
+        setQuestions(existingQuestions);
+      }
+    }
+  }, [API_BASE_URL, eventId, eventData, setEventData]);
 
   const addOption = () => {
     setOptions([...options, ""]);
@@ -88,7 +149,7 @@ export default function EditEvent() {
     setLoading(true);
     try {
       const result = await submitEvent(updatedEventData);
-      console.log("Event created:", result);
+      console.log("Event updated:", result);
       router.push("/dashboard/events");
     } catch (error) {
       console.error("Error submitting event:", error);
@@ -109,33 +170,6 @@ export default function EditEvent() {
         <p className="text-gray-500">Add questions for the registration form</p>
         <div className="flex flex-row gap-12 items-start">
           <div className="mt-6 flex-1/2">
-            <h2 className="font-bold text-lg">MANDATORY INFORMATION</h2>
-            <div className="mt-4 space-y-4">
-              <div>
-                <label className="block font-medium">Participant Name</label>
-                <input
-                  type="text"
-                  placeholder="Enter Your Name"
-                  className="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
-                />
-              </div>
-              <div>
-                <label className="block font-medium">Participant Email</label>
-                <input
-                  type="email"
-                  placeholder="Enter Your Email"
-                  className="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
-                />
-              </div>
-              <div>
-                <label className="block font-medium">Participant Number</label>
-                <input
-                  type="tel"
-                  placeholder="Enter Your Number"
-                  className="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
-                />
-              </div>
-            </div>
             <div className="mt-6">
               <h2 className="font-bold text-lg">QUESTIONS</h2>
               {questions.length === 0 ? (

@@ -45,7 +45,7 @@ export default function EventsList({ events }: EventsListProps) {
   
       if (response.ok) {
         console.log("Event deleted successfully");
-        navigateTo("/dashboard/events");
+        window.location.reload();
       } else {
         const data = await response.json();
         alert(data.message || "Failed to delete the event");

@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from '@/app/utils/navigation';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 export default function UploadImage() {
+  const router = useRouter();
   const { navigateTo } = useNavigate();
   const [clubLogo, setClubLogo] = useState<File | null>(null);
   const [clubLogoPreview, setClubLogoPreview] = useState<string | null>(null);
@@ -38,6 +40,9 @@ export default function UploadImage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <button onClick={() => router.back()} className="absolute top-4 left-4 text-gray-600 cursor-pointer">
+        &larr; Back
+      </button>
       <div className="bg-white p-8 rounded-lg shadow-lg w-96 border-gray-700 border-2">
         
         {/* Progress Indicator */}

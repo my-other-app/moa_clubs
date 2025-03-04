@@ -23,7 +23,6 @@ export default function EditEvent() {
   const [currentQuestion, setCurrentQuestion] = useState<string>("");
   const [questionRequired, setQuestionRequired] = useState<boolean>(true);
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [warningMessage, setWarningMessage] = useState<string>("");
 
   const addOption = () => {
     setOptions([...options, ""]);
@@ -59,14 +58,6 @@ export default function EditEvent() {
   };
 
   const handleContinue = async () => {
-    // Check if at least one question is added; if not, display a warning message.
-    if (questions.length === 0) {
-      setWarningMessage("Please add at least one question.");
-      return;
-    }
-    // Clear warning message if validation passes.
-    setWarningMessage("");
-
     // Map questions to the required format with unique keys
     const additionalDetailsArray = questions.map((q) => ({
       key: uuidv4(),
@@ -116,7 +107,7 @@ export default function EditEvent() {
           <ChevronLeft className="w-5 h-5 mr-1" />
           Back
         </button>
-        <h1 className="text-3xl font-bold">Add Additional Details</h1>
+        <h1 className="text-3xl font-bold">EDIT REGISTRATION FORM</h1>
         <p className="text-gray-500">Add questions for the registration form</p>
         <div className="flex flex-row gap-12 items-start">
           <div className="mt-6 flex-1/2">
@@ -125,8 +116,8 @@ export default function EditEvent() {
               <div>
                 <label className="block font-medium">Participant Name<span className="text-red-500">*</span></label>
                 <input
+                required
                   type="text"
-                  required
                   placeholder="Enter Your Name"
                   className="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
                 />
@@ -135,8 +126,8 @@ export default function EditEvent() {
                 <label className="block font-medium">Participant Email<span className="text-red-500">*</span></label>
                 <input
                   type="email"
-                  placeholder="Enter Your Email"
                   required
+                  placeholder="Enter Your Email"
                   className="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
                 />
               </div>
@@ -144,8 +135,8 @@ export default function EditEvent() {
                 <label className="block font-medium">Participant Number<span className="text-red-500">*</span></label>
                 <input
                   type="tel"
-                  placeholder="Enter Your Number"
                   required
+                  placeholder="Enter Your Number"
                   className="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
                 />
               </div>
@@ -249,9 +240,6 @@ export default function EditEvent() {
             </div>
           </div>
         </div>
-        {warningMessage && (
-          <div className="text-red-500 mt-4 text-center">{warningMessage}</div>
-        )}
         <button
           onClick={handleContinue}
           disabled={loading}

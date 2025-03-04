@@ -1,5 +1,6 @@
 "use client";
 
+import axios from "axios";
 import { MouseEventHandler, ReactNode, useEffect, useState } from "react";
 import Image from "next/image";
 import { FaEdit, FaTrash, FaCog, FaDownload, FaClipboardList } from "react-icons/fa";
@@ -9,6 +10,8 @@ import "reactjs-popup/dist/index.css";
 import Volunteer from "@/app/components/dashboard/volunteer";
 import { useSearchParams } from "next/navigation";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const getAccessToken = () => localStorage.getItem("accessToken");
 
 const registrations = Array(7).fill({
   id: "",
@@ -24,26 +27,54 @@ export default function DashScreen() {
     id: number;
     name: string;
     poster?: {
-      medium: string;
+      // Now using logo instead of medium directly on poster
+      logo?: {
+        medium: string;
+      };
+      medium?: string;
     };
   }
 
-  const [events] = useState<Event[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
   const searchParams = useSearchParams();
   const event_id = searchParams.get("event_id");
 
+  // Function to fetch events from API
+  const getEvents = async () => {
+    try {
+      const accessToken = getAccessToken();
+
+      if (!accessToken) {
+        console.warn("⚠️ No access token found! User might be logged out.");
+        return [];
+      }
+
+      const response = await axios.get(`${API_BASE_URL}/api/v1/clubs/events/list`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      // Set events state with items from the API response
+      setEvents(response.data.items);
+      return response.data.items;
+    } catch (error) {
+      console.error("❌ Error fetching events:", error);
+      return [];
+    }
+  };
+
   // Fetch events once the component mounts
   useEffect(() => {
-    const getEvents = async () => {
-    await getEvents();
-  };
-  getEvents();
+    getEvents();
   }, [event_id]);
 
   // Find the event matching the event_id
-  // Convert event_id to a number if needed; also handle when event_id is undefined
   const currentEvent = events.find(
-    (event) => event.id === (Array.isArray(event_id) ? parseInt(event_id[0], 10) : parseInt(event_id as string, 10))
+    (event) =>
+      event.id === (Array.isArray(event_id)
+        ? parseInt(event_id[0], 10)
+        : parseInt(event_id as string, 10))
   );
 
   return (
@@ -72,7 +103,11 @@ export default function DashScreen() {
           {/* Event Info */}
           <div className="flex flex-wrap lg:flex-nowrap gap-4 items-center justify-center text-center">
             <Image
-              src={currentEvent?.poster?.medium || "/placeholder.png"}
+              src={
+                currentEvent?.poster?.logo?.medium ||
+                currentEvent?.poster?.medium ||
+                "/placeholder.png"
+              }
               alt="Event poster"
               width={300}
               height={300}
@@ -87,15 +122,15 @@ export default function DashScreen() {
                   </span>
                 </div>
                 <div className="p-4 bg-purple-200 text-purple-800 rounded flex flex-col items-center justify-center">
-                  <span className="text-xl font-bold">24</span>
+                  <span className="text-xl font-bold">0</span>
                   <span>Total Registration Count</span>
                 </div>
                 <div className="p-4 bg-blue-200 text-blue-800 rounded flex flex-col items-center justify-center">
-                  <span className="text-xl font-bold">234</span>
+                  <span className="text-xl font-bold">0</span>
                   <span>Event Visitors</span>
                 </div>
                 <div className="p-4 bg-red-200 text-red-800 rounded flex flex-col items-center justify-center">
-                  <span className="text-xl font-bold">2</span>
+                  <span className="text-xl font-bold">0</span>
                   <span>Institutions</span>
                 </div>
               </div>
@@ -150,7 +185,11 @@ export default function DashScreen() {
                     </button>
                     {/* Volunteer component with the relevant eventId */}
                     <Volunteer
-                     event_id={Array.isArray(event_id) ? parseInt(event_id[0], 10) : parseInt(event_id as string, 10)}
+                      event_id={
+                        Array.isArray(event_id)
+                          ? parseInt(event_id[0], 10)
+                          : parseInt(event_id as string, 10)
+                      }
                     />
                   </div>
                 )) as unknown as ReactNode}

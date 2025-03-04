@@ -4,7 +4,7 @@ import { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import Image from "next/image";
 import Sidebar from "@/app/components/sidebar";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEvent, EventData } from "@/app/context/eventContext";
+import { useEvent } from "@/app/context/eventContext";
 import axios from "axios";
 
 type Category = {
@@ -41,6 +41,11 @@ export default function CreateEvent() {
   const [eventPerks, setEventPerks] = useState<number>(0);
   const [eventGuidelines, setEventGuidelines] = useState<string>("");
 
+  // Manage interests data (fetched from /api/v1/interests/list)
+  const [interestsData, setInterestsData] = useState<any[]>([]);
+  // Store selected interest IDs in an array of numbers
+  const [selectedInterestIds, setSelectedInterestIds] = useState<number[]>([]);
+
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   // Fetch categories for the dropdown
@@ -60,7 +65,7 @@ export default function CreateEvent() {
     fetchCategories();
   }, [API_BASE_URL]);
 
-  // Fetch event details from /api/v1/events/info/{event_id} and prepopulate the form
+  // Fetch event details and prepopulate the form
   useEffect(() => {
     if (!eventId) return;
     const fetchEventDetails = async () => {
@@ -109,6 +114,22 @@ export default function CreateEvent() {
     fetchEventDetails();
   }, [API_BASE_URL, eventId]);
 
+  // Fetch interests from the API
+  useEffect(() => {
+    const fetchInterests = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        const response = await axios.get(`${API_BASE_URL}/api/v1/interests/list`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setInterestsData(response.data);
+      } catch (error) {
+        console.error("Error fetching interests:", error);
+      }
+    };
+    fetchInterests();
+  }, [API_BASE_URL]);
+
   const handlePosterUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -116,8 +137,10 @@ export default function CreateEvent() {
     }
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  // Updated handleSubmit using multipart/form-data and appending selected interest IDs
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+
     // Validate required fields
     if (
       !eventTitle ||
@@ -135,36 +158,64 @@ export default function CreateEvent() {
       return;
     }
 
-    const eventDatetime = `${eventRegistrationClosingDate}T${eventRegistrationClosingTime}:00`;
+    // Combine date and time values for event_datetime and registration end date
+    const eventDatetime = `${eventDate}T${eventStartTime}:00`;
+    const regEndDateTime = `${eventRegistrationClosingDate}T${eventRegistrationClosingTime}:00`;
 
-    const eventDataToPass: EventData = {
-      name: eventTitle,
-      category_id: selectedCategory,
-      max_participants: parseInt(eventSeats, 10),
-      about: eventDescription,
-      duration: eventDuration,
-      event_datetime: eventDatetime,
-      is_online: eventMode === true,
-      location_name: eventLocation,
-      url: eventMeetLink,
-      reg_fee: eventFee,
-      prize_amount: eventPerks,
-      event_guidelines: eventGuidelines,
-      // Use the newly uploaded file if available; otherwise, use the existing poster URL.
-      poster: eventPoster || existingPosterUrl,
-      has_fee: true,
-      has_prize: true,
-      reg_enddate: eventRegistrationClosingDate,
-      additional_details: [],
-      reg_startdate: "",
-      contact_phone: null,
-      contact_email: null,
-      interest_ids: null,
-    };
+    // Create FormData and append fields
+    const formData = new FormData();
+    formData.append("name", eventTitle);
+    formData.append("category_id", selectedCategory.toString());
+    formData.append("max_participants", eventSeats);
+    formData.append("about", eventDescription);
+    formData.append("duration", eventDuration.toString());
+    formData.append("event_datetime", eventDatetime);
+    formData.append("reg_enddate", regEndDateTime);
+    formData.append("is_online", eventMode.toString());
+    formData.append("location_name", eventLocation);
+    formData.append("url", eventMeetLink);
+    formData.append("reg_fee", eventFee.toString());
+    formData.append("prize_amount", eventPerks.toString());
+    formData.append("event_guidelines", eventGuidelines);
 
-    // Save event data in context and navigate to add questions.
-    setEventData(eventDataToPass);
-    router.push(`/dashboard/event/addEvent?event_id=${eventId}`);
+    // Format selectedInterestIds as a comma separated list of integers
+    const formattedInterestIds = selectedInterestIds.join(",");
+    if (formattedInterestIds) {
+      formData.append("interest_ids", formattedInterestIds);
+    }
+
+    // Append poster (file if new upload, or existing URL)
+    if (eventPoster) {
+      formData.append("poster", eventPoster);
+    } else if (existingPosterUrl) {
+      formData.append("poster", existingPosterUrl);
+    }
+
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        window.alert("Access token not found. Please log in again.");
+        return;
+      }
+
+      // Send the update request with multipart/form-data
+      await axios.put(
+        `${API_BASE_URL}/api/v1/events/update/${eventId}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      // Optionally update the context if needed, then navigate
+      router.push(`/dashboard/eventEachEdit/editAddEvent?event_id=${eventId}`);
+    } catch (error) {
+      console.error("Error updating event:", error);
+      window.alert("Error updating event. Please try again later.");
+    }
   };
 
   return (
@@ -173,6 +224,7 @@ export default function CreateEvent() {
       <div className="max-w-4xl mx-auto p-6 rounded-lg font-sans">
         <h1 className="text-3xl font-bold mb-6">Edit Form</h1>
         <form onSubmit={handleSubmit}>
+          {/* BASIC INFORMATION */}
           <h2 className="text-lg font-semibold">BASIC INFORMATION</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-4">
@@ -276,10 +328,12 @@ export default function CreateEvent() {
               </div>
             </div>
           </div>
+
+          {/* DATE AND TIME */}
           <h2 className="text-lg font-semibold mt-6">DATE AND TIME</h2>
           <div className="grid grid-cols-3 gap-4">
             <div className="flex flex-col">
-              <h3>Event date</h3>
+              <h3>Event Date</h3>
               <input
                 type="date"
                 className="p-2 border rounded"
@@ -297,7 +351,7 @@ export default function CreateEvent() {
               />
             </div>
             <div className="flex flex-col">
-              <h3>Event Duration</h3>
+              <h3>Event Duration (Hours)</h3>
               <input
                 type="number"
                 placeholder="Choose Event Duration Hours"
@@ -308,7 +362,7 @@ export default function CreateEvent() {
               />
             </div>
             <div className="flex flex-col">
-              <h3>Event Registration Closing Date</h3>
+              <h3>Registration Closing Date</h3>
               <input
                 type="date"
                 className="p-2 border rounded"
@@ -317,7 +371,7 @@ export default function CreateEvent() {
               />
             </div>
             <div className="flex flex-col">
-              <h3>Event Registration Closing Time</h3>
+              <h3>Registration Closing Time</h3>
               <input
                 type="time"
                 className="p-2 border rounded"
@@ -326,6 +380,8 @@ export default function CreateEvent() {
               />
             </div>
           </div>
+
+          {/* LOCATION AND MODE */}
           <h2 className="text-lg font-semibold mt-6">LOCATION AND MODE</h2>
           <div className="grid grid-cols-3 gap-4">
             <select
@@ -346,14 +402,14 @@ export default function CreateEvent() {
               <>
                 <input
                   type="text"
-                  placeholder="Entre Event Platform"
+                  placeholder="Enter Event Platform"
                   className="p-2 border rounded"
                   value={eventLocation}
                   onChange={(e) => setEventLocation(e.target.value)}
                 />
                 <input
                   type="url"
-                  placeholder="Entre Meet Link"
+                  placeholder="Enter Meet Link"
                   className="p-2 border rounded"
                   value={eventMeetLink}
                   onChange={(e) => setEventMeetLink(e.target.value)}
@@ -363,7 +419,7 @@ export default function CreateEvent() {
               <>
                 <input
                   type="text"
-                  placeholder="Entre Event Location"
+                  placeholder="Enter Event Location"
                   className="p-2 border rounded"
                   value={eventLocation}
                   onChange={(e) => setEventLocation(e.target.value)}
@@ -397,6 +453,8 @@ export default function CreateEvent() {
               </>
             )}
           </div>
+
+          {/* PERKS AND FEE */}
           <h2 className="text-lg font-semibold mt-6">PERKS AND FEE</h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -420,14 +478,48 @@ export default function CreateEvent() {
               />
             </div>
           </div>
+
+          {/* INTERESTS */}
+          <div className="mt-4">
+            <h2 className="text-lg font-semibold">Select Interests</h2>
+            {interestsData.map((group) => (
+              <div key={group.id} className="mb-2">
+                <h4 className="font-bold">{group.name}</h4>
+                <div className="flex flex-wrap">
+                  {group.interests.map((interest: any) => (
+                    <label key={interest.id} className="mr-4">
+                      <input
+                        type="checkbox"
+                        value={interest.id}
+                        checked={selectedInterestIds.includes(interest.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedInterestIds([...selectedInterestIds, interest.id]);
+                          } else {
+                            setSelectedInterestIds(
+                              selectedInterestIds.filter((id) => id !== interest.id)
+                            );
+                          }
+                        }}
+                      />{" "}
+                      {interest.icon} {interest.name}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* EVENT GUIDELINES */}
           <textarea
             placeholder="Enter Event Guidelines"
             className="w-full p-2 border rounded mt-4"
             value={eventGuidelines}
             onChange={(e) => setEventGuidelines(e.target.value)}
           ></textarea>
+
           <button type="submit" className="mt-4 w-full py-2 bg-black text-white rounded">
-            CONTINUE
+            Edit
           </button>
         </form>
       </div>

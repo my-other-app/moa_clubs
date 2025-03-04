@@ -114,24 +114,27 @@ export default function EditEvent() {
             <h2 className="font-bold text-lg">MANDATORY INFORMATION</h2>
             <div className="mt-4 space-y-4">
               <div>
-                <label className="block font-medium">Participant Name</label>
+                <label className="block font-medium">Participant Name<span className="text-red-500">*</span></label>
                 <input
                   type="text"
+                  required
                   placeholder="Enter Your Name"
                   className="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
                 />
               </div>
               <div>
-                <label className="block font-medium">Participant Email</label>
+                <label className="block font-medium">Participant Email<span className="text-red-500">*</span></label>
                 <input
                   type="email"
+                  required
                   placeholder="Enter Your Email"
                   className="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
                 />
               </div>
               <div>
-                <label className="block font-medium">Participant Number</label>
+                <label className="block font-medium">Participant Number<span className="text-red-500">*</span></label>
                 <input
+                required
                   type="tel"
                   placeholder="Enter Your Number"
                   className="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"

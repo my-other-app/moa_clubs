@@ -118,7 +118,7 @@ export default function CreateEvent() {
     <>
       <Sidebar />
       <div className="max-w-4xl mx-auto p-6 rounded-lg font-sans">
-        <h1 className="text-3xl font-bold mb-6">Edit Form</h1>
+        <h1 className="text-3xl font-bold mb-6">EDIT EVENT</h1>
         <form onSubmit={handleSubmit}>
           <h2 className="text-lg font-semibold">BASIC INFORMATION</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

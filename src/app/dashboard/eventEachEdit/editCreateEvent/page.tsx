@@ -3,8 +3,7 @@
 import { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import Image from "next/image";
 import Sidebar from "@/app/components/sidebar";
-import { useRouter } from "next/navigation";
-
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEvent, EventData } from "@/app/context/eventContext";
 import axios from "axios";
 
@@ -15,10 +14,17 @@ type Category = {
 
 export default function CreateEvent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const eventId = searchParams.get("event_id"); // extract event id from query params
   const { setEventData } = useEvent();
+
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   // State for event details
   const [eventPoster, setEventPoster] = useState<File | null>(null);
+  // Holds the existing poster image URL from the API response.
+  const [existingPosterUrl, setExistingPosterUrl] = useState<string>("");
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [eventTitle, setEventTitle] = useState<string>("");
@@ -38,8 +44,7 @@ export default function CreateEvent() {
   const [eventPerks, setEventPerks] = useState<number>(0);
   const [eventGuidelines, setEventGuidelines] = useState<string>("");
 
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
+  // Fetch event categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -56,6 +61,61 @@ export default function CreateEvent() {
     fetchCategories();
   }, [API_BASE_URL]);
 
+  // Fetch event details if eventId is present
+  useEffect(() => {
+    if (!eventId) return;
+    const fetchEventDetails = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+          console.error("Access token not found");
+          return;
+        }
+        const response = await axios.get(`${API_BASE_URL}/api/v1/events/info/${eventId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const eventDetails = response.data;
+        // Update state with event details
+        setEventTitle(eventDetails.name || "");
+        setEventDescription(eventDetails.about || "");
+        setSelectedCategory(
+          eventDetails.category?.id ? parseInt(eventDetails.category.id, 10) : null
+        );
+        setEventSeats(
+          eventDetails.max_participants ? eventDetails.max_participants.toString() : ""
+        );
+        if (eventDetails.event_datetime) {
+          // Assuming event_datetime is in ISO format
+          const [datePart, timePart] = eventDetails.event_datetime.split("T");
+          setEventDate(datePart);
+          setEventStartTime(timePart.substring(0, 5)); // HH:mm format
+        }
+        setEventDuration(eventDetails.duration || null);
+        if (eventDetails.reg_enddate) {
+          // Assuming reg_enddate is in ISO format
+          const [regDate, regTime] = eventDetails.reg_enddate.split("T");
+          setEventRegistrationClosingDate(regDate);
+          setEventRegistrationClosingTime(regTime.substring(0, 5));
+        }
+        setEventMode(eventDetails.is_online);
+        setEventLocation(eventDetails.location_name || "");
+        setEventMeetLink(eventDetails.url || "");
+        setEventFee(eventDetails.reg_fee || 0);
+        setEventPerks(eventDetails.prize_amount || 0);
+        setEventGuidelines(eventDetails.event_guidelines || "");
+        // Use poster.medium if available; if not, use club.logo.medium.
+        setExistingPosterUrl(
+          eventDetails.poster?.medium || eventDetails.club?.logo?.medium || ""
+        );
+      } catch (error) {
+        console.error("Error fetching event details:", error);
+        window.alert("Failed to fetch event details. Please try again later.");
+      }
+    };
+
+    fetchEventDetails();
+  }, [API_BASE_URL, eventId]);
+
   const handlePosterUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -68,7 +128,7 @@ export default function CreateEvent() {
     // Validate required fields
     if (
       !eventTitle ||
-      !eventPoster ||
+      (!eventPoster && !existingPosterUrl) ||
       !selectedCategory ||
       !eventSeats ||
       !eventDescription ||
@@ -95,9 +155,10 @@ export default function CreateEvent() {
       location_name: eventLocation,
       url: eventMeetLink,
       reg_fee: eventFee,
-      prize_amount:eventPerks,
+      prize_amount: eventPerks,
       event_guidelines: eventGuidelines,
-      poster: eventPoster,
+      // Use the newly uploaded poster file or preserve existing poster URL.
+      poster: eventPoster || new File([], ""),
       has_fee: true,
       has_prize: true,
       reg_enddate: eventRegistrationClosingDate,
@@ -138,11 +199,16 @@ export default function CreateEvent() {
                 <select
                   className="p-2 border rounded"
                   value={selectedCategory ?? ""}
-                  onChange={(e) => setSelectedCategory(parseInt(e.target.value, 10))}
+                  onChange={(e) =>
+                    setSelectedCategory(parseInt(e.target.value, 10))
+                  }
                 >
                   <option value="">Choose Event Category</option>
                   {categories.map((category) => (
-                    <option key={category.id} value={parseInt(category.id, 10)}>
+                    <option
+                      key={category.id}
+                      value={parseInt(category.id, 10)}
+                    >
                       {category.name}
                     </option>
                   ))}
@@ -170,7 +236,10 @@ export default function CreateEvent() {
                 ></textarea>
               </div>
               <div className="flex flex-col items-center">
-                <label htmlFor="eventPoster" className="p-2 rounded cursor-pointer flex items-center justify-center">
+                <label
+                  htmlFor="eventPoster"
+                  className="p-2 rounded cursor-pointer flex items-center justify-center"
+                >
                   {eventPoster ? (
                     <Image
                       src={URL.createObjectURL(eventPoster)}
@@ -179,11 +248,40 @@ export default function CreateEvent() {
                       alt="Event Poster"
                       className="w-50 aspect-square h-50 object-cover rounded"
                     />
+                  ) : existingPosterUrl ? (
+                    <Image
+                      src={existingPosterUrl}
+                      width={100}
+                      height={100}
+                      alt="Event Poster"
+                      className="w-50 aspect-square h-50 object-cover rounded"
+                    />
                   ) : (
                     <div>
-                      <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="0.25" y="0.25" width="99.5" height="99.5" rx="49.75" fill="#F3F3F3" />
-                        <rect x="0.25" y="0.25" width="99.5" height="99.5" rx="49.75" stroke="#979797" strokeWidth="0.5" />
+                      <svg
+                        width="100"
+                        height="100"
+                        viewBox="0 0 100 100"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <rect
+                          x="0.25"
+                          y="0.25"
+                          width="99.5"
+                          height="99.5"
+                          rx="49.75"
+                          fill="#F3F3F3"
+                        />
+                        <rect
+                          x="0.25"
+                          y="0.25"
+                          width="99.5"
+                          height="99.5"
+                          rx="49.75"
+                          stroke="#979797"
+                          strokeWidth="0.5"
+                        />
                         <path
                           d="M51 32H41.6C38.2397 32 36.5595 32 35.2761 32.654C34.1471 33.2292 33.2292 34.1471 32.654 35.2761C32 36.5595 32 38.2397 32 41.6V58.4C32 61.7603 32 63.4405 32.654 64.7239C33.2292 65.8529 34.1471 66.7708 35.2761 67.346C36.5595 68 38.2397 68 41.6 68H60C61.8599 68 62.7899 68 63.5529 67.7956C65.6235 67.2408 67.2408 65.6235 67.7956 63.5529C68 62.7899 68 61.8599 68 60M64 42V30M58 36H70M47 43C47 45.2091 45.2091 47 43 47C40.7909 47 39 45.2091 39 43C39 40.7909 40.7909 39 43 39C45.2091 39 47 40.7909 47 43ZM55.9801 49.8363L39.0623 65.2161C38.1107 66.0812 37.6349 66.5137 37.5929 66.8884C37.5564 67.2132 37.6809 67.5353 37.9264 67.7511C38.2096 68 38.8526 68 40.1386 68H58.912C61.7903 68 63.2295 68 64.3598 67.5164C65.7789 66.9094 66.9094 65.7789 67.5164 64.3598C68 63.2295 68 61.7903 68 58.912C68 57.9435 68 57.4593 67.8941 57.0083C67.7611 56.4416 67.5059 55.9107 67.1465 55.4528C66.8605 55.0884 66.4824 54.7859 65.7261 54.1809L60.1317 49.7053C59.3748 49.0998 58.9963 48.7971 58.5796 48.6902C58.2123 48.596 57.8257 48.6082 57.4651 48.7254C57.0559 48.8583 56.6973 49.1843 55.9801 49.8363Z"
                           stroke="#979797"
@@ -194,7 +292,13 @@ export default function CreateEvent() {
                       </svg>
                     </div>
                   )}
-                  <input id="eventPoster" type="file" accept="image/*" className="hidden" onChange={handlePosterUpload} />
+                  <input
+                    id="eventPoster"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handlePosterUpload}
+                  />
                 </label>
                 <h3>Add Event Poster</h3>
               </div>
@@ -204,11 +308,21 @@ export default function CreateEvent() {
           <div className="grid grid-cols-3 gap-4">
             <div className="flex flex-col">
               <h3>Event date</h3>
-              <input type="date" className="p-2 border rounded" value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
+              <input
+                type="date"
+                className="p-2 border rounded"
+                value={eventDate}
+                onChange={(e) => setEventDate(e.target.value)}
+              />
             </div>
             <div className="flex flex-col">
               <h3>Event Start Time</h3>
-              <input type="time" className="p-2 border rounded" value={eventStartTime} onChange={(e) => setEventStartTime(e.target.value)} />
+              <input
+                type="time"
+                className="p-2 border rounded"
+                value={eventStartTime}
+                onChange={(e) => setEventStartTime(e.target.value)}
+              />
             </div>
             <div className="flex flex-col">
               <h3>Event Duration</h3>
@@ -217,17 +331,33 @@ export default function CreateEvent() {
                 placeholder="Choose Event Duration Hours"
                 className="p-2 border rounded"
                 value={eventDuration || ""}
-                onChange={(e) => setEventDuration(parseInt(e.target.value, 10))}
+                onChange={(e) =>
+                  setEventDuration(parseInt(e.target.value, 10))
+                }
                 required
               />
             </div>
             <div className="flex flex-col">
               <h3>Event Registration Closing Date</h3>
-              <input type="date" className="p-2 border rounded" value={eventRegistrationClosingDate} onChange={(e) => setEventRegistrationClosingDate(e.target.value)} />
+              <input
+                type="date"
+                className="p-2 border rounded"
+                value={eventRegistrationClosingDate}
+                onChange={(e) =>
+                  setEventRegistrationClosingDate(e.target.value)
+                }
+              />
             </div>
             <div className="flex flex-col">
               <h3>Event Registration Closing Time</h3>
-              <input type="time" className="p-2 border rounded" value={eventRegistrationClosingTime} onChange={(e) => setEventRegistrationClosingTime(e.target.value)} />
+              <input
+                type="time"
+                className="p-2 border rounded"
+                value={eventRegistrationClosingTime}
+                onChange={(e) =>
+                  setEventRegistrationClosingTime(e.target.value)
+                }
+              />
             </div>
           </div>
           <h2 className="text-lg font-semibold mt-6">LOCATION AND MODE</h2>
@@ -250,14 +380,14 @@ export default function CreateEvent() {
               <>
                 <input
                   type="text"
-                  placeholder="Entre Event Platform"
+                  placeholder="Enter Event Platform"
                   className="p-2 border rounded"
                   value={eventLocation}
                   onChange={(e) => setEventLocation(e.target.value)}
                 />
                 <input
                   type="url"
-                  placeholder="Entre Meet Link"
+                  placeholder="Enter Meet Link"
                   className="p-2 border rounded"
                   value={eventMeetLink}
                   onChange={(e) => setEventMeetLink(e.target.value)}
@@ -267,7 +397,7 @@ export default function CreateEvent() {
               <>
                 <input
                   type="text"
-                  placeholder="Entre Event Location"
+                  placeholder="Enter Event Location"
                   className="p-2 border rounded"
                   value={eventLocation}
                   onChange={(e) => setEventLocation(e.target.value)}
@@ -282,8 +412,22 @@ export default function CreateEvent() {
               </>
             ) : (
               <>
-                <input type="text" placeholder="Choose Event Mode" className="p-2 border rounded" value={eventLocation} onChange={(e) => setEventLocation(e.target.value)} disabled />
-                <input type="url" placeholder="Choose Event Mode" className="p-2 border rounded" value={eventMeetLink} onChange={(e) => setEventMeetLink(e.target.value)} disabled />
+                <input
+                  type="text"
+                  placeholder="Choose Event Mode"
+                  className="p-2 border rounded"
+                  value={eventLocation}
+                  onChange={(e) => setEventLocation(e.target.value)}
+                  disabled
+                />
+                <input
+                  type="url"
+                  placeholder="Choose Event Mode"
+                  className="p-2 border rounded"
+                  value={eventMeetLink}
+                  onChange={(e) => setEventMeetLink(e.target.value)}
+                  disabled
+                />
               </>
             )}
           </div>
@@ -316,7 +460,10 @@ export default function CreateEvent() {
             value={eventGuidelines}
             onChange={(e) => setEventGuidelines(e.target.value)}
           ></textarea>
-          <button type="submit" className="mt-4 w-full py-2 bg-black text-white rounded">
+          <button
+            type="submit"
+            className="mt-4 w-full py-2 bg-black text-white rounded"
+          >
             CONTINUE
           </button>
         </form>

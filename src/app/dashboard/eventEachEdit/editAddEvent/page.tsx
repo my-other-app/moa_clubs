@@ -1,13 +1,11 @@
 "use client";
 
-import { useState, useEffect, ChangeEvent } from "react";
+import { useState, ChangeEvent } from "react";
 import Sidebar from "@/app/components/sidebar";
 import { ChevronLeft, ChevronDown, Circle } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEvent } from "@/app/context/eventContext";
 import { v4 as uuidv4 } from "uuid";
-import axios from "axios";
-import AdditionalDetails from "@/app/components/additionalDetails";
 
 interface Question {
   type: string;
@@ -18,10 +16,7 @@ interface Question {
 
 export default function EditEvent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const eventId = searchParams.get("event_id");
   const { eventData, setEventData, submitEvent } = useEvent();
-
   const [loading, setLoading] = useState<boolean>(false);
   const [options, setOptions] = useState<string[]>([""]);
   const [questionType, setQuestionType] = useState<string>("");
@@ -29,34 +24,6 @@ export default function EditEvent() {
   const [questionRequired, setQuestionRequired] = useState<boolean>(true);
   const [questions, setQuestions] = useState<Question[]>([]);
 
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-  // Fetch event data from API if not already in context
-  useEffect(() => {
-    if (!eventId) return;
-    if (!eventData) {
-      const fetchEventData = async () => {
-        try {
-          const token = localStorage.getItem("accessToken");
-          if (!token) {
-            console.error("Access token not found");
-            return;
-          }
-          const response = await axios.get(
-            `${API_BASE_URL}/api/v1/events/info/${eventId}`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          setEventData(response.data);
-        } catch (error) {
-          console.error("Error fetching event data:", error);
-          window.alert("Failed to fetch event details. Please try again later.");
-        }
-      };
-      fetchEventData();
-    }
-  }, [eventId, eventData, API_BASE_URL, setEventData]);
-
-  // Functions to handle adding new questions
   const addOption = () => {
     setOptions([...options, ""]);
   };
@@ -83,7 +50,7 @@ export default function EditEvent() {
     };
     setQuestions([...questions, newQuestion]);
     console.log("Added Question:", newQuestion);
-    // Reset inputs
+    // Reset input fields
     setCurrentQuestion("");
     setQuestionType("");
     setOptions([""]);
@@ -91,13 +58,15 @@ export default function EditEvent() {
   };
 
   const handleContinue = async () => {
-    // Merge new questions with the existing additional_details
+    // Map questions to the required format with unique keys
     const additionalDetailsArray = questions.map((q) => ({
       key: uuidv4(),
       label: q.text,
       field_type: q.type === "multipleChoice" ? "select" : "text",
       options: q.type === "multipleChoice" ? q.options : [],
       required: q.required,
+      question: q.text,
+      answer: ""
     }));
 
     console.log("Questions Array:", questions);
@@ -108,6 +77,7 @@ export default function EditEvent() {
       return;
     }
 
+    // Create an updated event data object with additional_details as an array.
     const updatedEventData = {
       ...eventData,
       additional_details: additionalDetailsArray,
@@ -120,7 +90,7 @@ export default function EditEvent() {
     setLoading(true);
     try {
       const result = await submitEvent(updatedEventData);
-      console.log("Event updated:", result);
+      console.log("Event created:", result);
       router.push("/dashboard/events");
     } catch (error) {
       console.error("Error submitting event:", error);
@@ -141,8 +111,33 @@ export default function EditEvent() {
         <p className="text-gray-500">Add questions for the registration form</p>
         <div className="flex flex-row gap-12 items-start">
           <div className="mt-6 flex-1/2">
-            {/* Display additional details from fetched event data */}
-            {eventData && <AdditionalDetails eventData={eventData} />}
+            <h2 className="font-bold text-lg">MANDATORY INFORMATION</h2>
+            <div className="mt-4 space-y-4">
+              <div>
+                <label className="block font-medium">Participant Name</label>
+                <input
+                  type="text"
+                  placeholder="Enter Your Name"
+                  className="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
+                />
+              </div>
+              <div>
+                <label className="block font-medium">Participant Email</label>
+                <input
+                  type="email"
+                  placeholder="Enter Your Email"
+                  className="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
+                />
+              </div>
+              <div>
+                <label className="block font-medium">Participant Number</label>
+                <input
+                  type="tel"
+                  placeholder="Enter Your Number"
+                  className="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
+                />
+              </div>
+            </div>
             <div className="mt-6">
               <h2 className="font-bold text-lg">QUESTIONS</h2>
               {questions.length === 0 ? (
@@ -153,9 +148,7 @@ export default function EditEvent() {
                     <li key={index} className="p-2 border rounded">
                       <div className="font-medium">{q.text}</div>
                       <div className="text-sm text-gray-500">Type: {q.type}</div>
-                      <div className="text-sm text-gray-500">
-                        Required: {q.required ? "Yes" : "No"}
-                      </div>
+                      <div className="text-sm text-gray-500">Required: {q.required ? "Yes" : "No"}</div>
                       {q.type === "multipleChoice" && (
                         <ul className="ml-4 mt-1 space-y-1">
                           {q.options.map((opt, i) => (
@@ -171,8 +164,6 @@ export default function EditEvent() {
               )}
             </div>
           </div>
-
-          {/* New question creation */}
           <div className="max-w-md mx-auto p-6 border rounded-lg shadow-md mt-6 min-h-[300px] flex-col flex-1/2">
             <h2 className="text-lg font-bold">CREATE A NEW QUESTION</h2>
             <div className="mt-4 space-y-4">
@@ -230,10 +221,7 @@ export default function EditEvent() {
                           />
                         </div>
                       ))}
-                      <button
-                        onClick={addOption}
-                        className="mt-2 text-gray-600 font-medium hover:underline"
-                      >
+                      <button onClick={addOption} className="mt-2 text-gray-600 font-medium hover:underline">
                         Add another option
                       </button>
                     </div>
@@ -249,8 +237,6 @@ export default function EditEvent() {
             </div>
           </div>
         </div>
-
-        {/* FINISH button */}
         <button
           onClick={handleContinue}
           disabled={loading}

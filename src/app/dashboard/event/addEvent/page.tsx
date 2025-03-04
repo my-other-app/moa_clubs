@@ -65,6 +65,8 @@ export default function EditEvent() {
       field_type: q.type === "multipleChoice" ? "select" : "text",
       options: q.type === "multipleChoice" ? q.options : [],
       required: q.required,
+      question: q.text,
+      answer: ""
     }));
 
     console.log("Questions Array:", questions);

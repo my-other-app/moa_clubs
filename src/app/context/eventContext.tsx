@@ -1,5 +1,13 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
+// 1) Define the shape of each additional detail:
+export type AdditionalDetail = {
+  question: string;
+  answer: string;
+  // Add any other properties you need
+};
+
+// 2) Update the EventData type:
 export type EventData = {
   name: string;
   poster: File | string;
@@ -18,12 +26,12 @@ export type EventData = {
   contact_email: string | null;
   url: string | null;
   category_id: number;
-  // club_id: number | null;
   interest_ids: string | null;
   max_participants: number | null;
-  additional_details: any[]; // Now an array of question objects
+  additional_details: AdditionalDetail[]; // <-- Use the custom type array
   event_guidelines: string | null;
 };
+
 
 type EventContextType = {
   eventData: EventData | null;

@@ -112,9 +112,9 @@ export default function CreateEvent() {
         setEventFee(data.reg_fee || 0);
         setEventPerks(data.prize_amount || 0);
         setEventGuidelines(data.event_guidelines || "");
-        // Set existing poster using the medium image URL
-        if (data.poster && data.poster.medium) {
-          setExistingPosterUrl(data.poster.medium);
+        // Optionally set an existing poster URL if provided in the data
+        if (data.poster_url) {
+          setExistingPosterUrl(data.poster_url);
         }
       } catch (error) {
         console.error("Error fetching event details:", error);
@@ -151,23 +151,6 @@ export default function CreateEvent() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    // Validate required fields
-    if (
-      !eventTitle ||
-      (!eventPoster && !existingPosterUrl) ||
-      !selectedCategory ||
-      !eventSeats ||
-      !eventDescription ||
-      !eventDate ||
-      !eventStartTime ||
-      eventDuration === null ||
-      !eventRegistrationClosingDate ||
-      !eventRegistrationClosingTime
-    ) {
-      window.alert("Please fill in all required fields.");
-      return;
-    }
-
     // Combine date and time values for event_datetime and registration end date
     const eventDatetime = `${eventDate}T${eventStartTime}:00`;
     const regEndDateTime = `${eventRegistrationClosingDate}T${eventRegistrationClosingTime}:00`;
@@ -175,10 +158,12 @@ export default function CreateEvent() {
     // Create FormData and append fields
     const formData = new FormData();
     formData.append("name", eventTitle);
-    formData.append("category_id", selectedCategory.toString());
+    if (selectedCategory !== null) {
+      formData.append("category_id", selectedCategory.toString());
+    }
     formData.append("max_participants", eventSeats);
     formData.append("about", eventDescription);
-    formData.append("duration", eventDuration.toString());
+    formData.append("duration", (eventDuration ?? 0).toString());
     formData.append("event_datetime", eventDatetime);
     formData.append("reg_enddate", regEndDateTime);
     formData.append("is_online", eventMode.toString());
@@ -188,13 +173,13 @@ export default function CreateEvent() {
     formData.append("prize_amount", eventPerks.toString());
     formData.append("event_guidelines", eventGuidelines);
 
-    // Format selectedInterestIds as a comma separated list of integers
+    // Format selectedInterestIds as a comma-separated list of integers
     const formattedInterestIds = selectedInterestIds.join(",");
     if (formattedInterestIds) {
       formData.append("interest_ids", formattedInterestIds);
     }
 
-    // Append poster (file if new upload, or existing URL)
+    // Append poster (new file upload or existing URL)
     if (eventPoster) {
       formData.append("poster", eventPoster);
     } else if (existingPosterUrl) {
@@ -207,19 +192,13 @@ export default function CreateEvent() {
         window.alert("Access token not found. Please log in again.");
         return;
       }
-
       // Send the update request with multipart/form-data
-      await axios.put(
-        `${API_BASE_URL}/api/v1/events/update/${eventId}`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
+      await axios.put(`${API_BASE_URL}/api/v1/events/update/${eventId}`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
       router.push(`/dashboard/eventEachEdit/editAddEvent?event_id=${eventId}`);
     } catch (error) {
       console.error("Error updating event:", error);
@@ -564,7 +543,7 @@ export default function CreateEvent() {
             onChange={(e) => setEventGuidelines(e.target.value)}
           ></textarea>
 
-          <button type="submit" className="mt-4 w-full py-2 bg-black text-white rounded">
+          <button onClick={handleSubmit} type="submit" className="mt-4 w-full py-2 bg-black text-white rounded">
             Edit
           </button>
         </form>

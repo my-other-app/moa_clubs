@@ -4,7 +4,6 @@ import { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import Image from "next/image";
 import Sidebar from "@/app/components/sidebar";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEvent, EventData } from "@/app/context/eventContext";
 import axios from "axios";
 
 type Category = {
@@ -16,7 +15,7 @@ export default function CreateEvent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const eventId = searchParams.get("event_id");
-  const { setEventData } = useEvent();
+
 
   // State for event details
   const [eventPoster, setEventPoster] = useState<File | null>(null);
@@ -116,26 +115,7 @@ export default function CreateEvent() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     // Validate required fields (all except eventFee, eventPerks, and eventGuidelines)
-    if (
-      !eventTitle ||
-      !eventPoster ||
-      !selectedCategory ||
-      !eventSeats ||
-      !eventDescription ||
-      !eventDate ||
-      !eventStartTime ||
-      eventDuration === null ||
-      !eventRegistrationClosingDate ||
-      !eventRegistrationClosingTime ||
-      eventMode === "" ||
-      !eventLocation ||
-      !eventMeetLink
-    ) {
-      setWarningMessage("Please fill in all required fields.");
-      return;
-    }
-    // Clear warning message on valid submission
-    setWarningMessage("");
+
 
     // Compose datetimes from separate date and time values
     const eventDatetime = `${eventDate}T${eventStartTime}:00`;
@@ -143,11 +123,22 @@ export default function CreateEvent() {
 
     // Build FormData for multipart/form-data submission
     const formData = new FormData();
+    const interest = [1,2,3]
     formData.append("name", eventTitle);
-    formData.append("category_id", selectedCategory.toString());
+    if (selectedCategory !== null) {
+      formData.append("category_id", selectedCategory.toString());
+    } else {
+      setWarningMessage("Please select a category.");
+      return;
+    }
     formData.append("max_participants", eventSeats);
     formData.append("about", eventDescription);
-    formData.append("duration", eventDuration.toString());
+    if (eventDuration !== null) {
+      formData.append("duration", eventDuration.toString());
+    } else {
+      setWarningMessage("Event duration is required.");
+      return;
+    }
     formData.append("event_datetime", eventDatetime);
     formData.append("is_online", (eventMode === true).toString());
     formData.append("location_name", eventLocation);
@@ -156,8 +147,11 @@ export default function CreateEvent() {
     formData.append("prize_amount", eventPerks.toString());
     formData.append("event_guidelines", eventGuidelines);
     formData.append("reg_enddate", regEndDatetime);
+    formData.append("interest_ids", interest.join(","));
     // Append the poster file
-    formData.append("poster", eventPoster);
+    if (eventPoster) {
+      formData.append("poster", eventPoster);
+    }
 
     try {
       const token = localStorage.getItem("accessToken");
@@ -176,33 +170,8 @@ export default function CreateEvent() {
           },
         }
       );
-
-      // Optionally, save event data in context if needed
-      const eventDataToPass: EventData = {
-        name: eventTitle,
-        category_id: selectedCategory,
-        max_participants: parseInt(eventSeats, 10),
-        about: eventDescription,
-        duration: eventDuration,
-        event_datetime: eventDatetime,
-        is_online: eventMode === true,
-        location_name: eventLocation,
-        url: eventMeetLink,
-        reg_fee: eventFee,
-        prize_amount: eventPerks,
-        event_guidelines: eventGuidelines,
-        poster: eventPoster,
-        has_fee: true,
-        has_prize: true,
-        reg_enddate: regEndDatetime,
-        additional_details: [],
-        reg_startdate: "",
-        contact_phone: null,
-        contact_email: null,
-        interest_ids: null
-      };
-
-      setEventData(eventDataToPass);
+      
+     
       router.push(`/dashboard/event/addEvent?event_id=${eventId}`);
     } catch (error) {
       console.error("Error updating event:", error);
@@ -546,7 +515,7 @@ export default function CreateEvent() {
           {warningMessage && (
             <div className="text-red-500 mt-4 text-center">{warningMessage}</div>
           )}
-          <button type="submit" className="mt-4 w-full py-2 bg-black text-white rounded">
+          <button onClick={handleSubmit} type="submit" className="mt-4 w-full py-2 bg-gray-700 hover:bg-gray-800 text-white">
             Edit
           </button>
         </form>

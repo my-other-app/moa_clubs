@@ -80,7 +80,7 @@ export default function CreateEvent() {
       return;
     }
 
-    const eventDatetime = `${eventRegistrationClosingDate}T${eventRegistrationClosingTime}:00`;
+    const eventDatetime = `${eventDate}T${eventStartTime}:00`;
 
     const eventDataToPass: EventData = {
       name: eventTitle,
@@ -100,7 +100,7 @@ export default function CreateEvent() {
       has_prize: eventPerks !== 0,
       reg_enddate: eventRegistrationClosingDate,
       additional_details: [],
-      reg_startdate: "",
+      reg_startdate: eventDate,
       contact_phone: null,
       contact_email: null,
       interest_ids: null,

@@ -4,7 +4,6 @@ import { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import Image from "next/image";
 import Sidebar from "@/app/components/sidebar";
 import { useRouter, useSearchParams } from "next/navigation";
-
 import { useEvent, EventData } from "@/app/context/eventContext";
 import axios from "axios";
 
@@ -62,7 +61,7 @@ export default function CreateEvent() {
     fetchCategories();
   }, [API_BASE_URL]);
 
-  // Fetch event details from /api/v1/events/info/{event_id} and prepopulate the form
+  // Fetch event details and prepopulate the form if eventId exists
   useEffect(() => {
     if (!eventId) return;
     const fetchEventDetails = async () => {
@@ -76,7 +75,6 @@ export default function CreateEvent() {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = response.data;
-        // Populate form fields with the fetched data
         setEventTitle(data.name || "");
         setEventDescription(data.about || "");
         setSelectedCategory(data.category ? parseInt(data.category.id, 10) : null);
@@ -94,7 +92,6 @@ export default function CreateEvent() {
         }
         setEventMode(data.is_online);
         setEventLocation(data.location_name || "");
-        // Prefer location_link if available; otherwise, use url
         setEventMeetLink(data.location_link || data.url || "");
         setEventFee(data.reg_fee || 0);
         setEventPerks(data.prize_amount || 0);
@@ -114,7 +111,10 @@ export default function CreateEvent() {
     }
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  // Define eventIntrestIds variable
+  const eventIntrestIds: number[] = [];
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     // Validate required fields (all except eventFee, eventPerks, and eventGuidelines)
     if (
@@ -132,42 +132,83 @@ export default function CreateEvent() {
       !eventLocation ||
       !eventMeetLink
     ) {
-      setWarningMessage("use client");
+      setWarningMessage("Please fill in all required fields.");
       return;
     }
     // Clear warning message on valid submission
     setWarningMessage("");
 
-    // Compose event datetime from date and time
+    // Compose datetimes from separate date and time values
     const eventDatetime = `${eventDate}T${eventStartTime}:00`;
+    const regEndDatetime = `${eventRegistrationClosingDate}T${eventRegistrationClosingTime}:00`;
 
-    const eventDataToPass: EventData = {
-      name: eventTitle,
-      category_id: selectedCategory,
-      max_participants: parseInt(eventSeats, 10),
-      about: eventDescription,
-      duration: eventDuration,
-      event_datetime: eventDatetime,
-      is_online: eventMode === true, // Ensures a boolean value
-      location_name: eventLocation,
-      url: eventMeetLink,
-      reg_fee: eventFee,
-      prize_amount: eventPerks,
-      event_guidelines: eventGuidelines,
-      poster: eventPoster,
-      has_fee: true,
-      has_prize: true,
-      reg_enddate: eventRegistrationClosingDate,
-      additional_details: [],
-      reg_startdate: "",
-      contact_phone: null,
-      contact_email: null,
-      interest_ids: null,
-    };
+    // Build FormData for multipart/form-data submission
+    const formData = new FormData();
+    formData.append("name", eventTitle);
+    formData.append("category_id", selectedCategory.toString());
+    formData.append("max_participants", eventSeats);
+    formData.append("about", eventDescription);
+    formData.append("duration", eventDuration.toString());
+    formData.append("event_datetime", eventDatetime);
+    formData.append("is_online", (eventMode === true).toString());
+    formData.append("location_name", eventLocation);
+    formData.append("url", eventMeetLink);
+    formData.append("reg_fee", eventFee.toString());
+    formData.append("prize_amount", eventPerks.toString());
+    formData.append("event_guidelines", eventGuidelines);
+    formData.append("reg_enddate", regEndDatetime);
+    // Append the poster file
+    formData.append("poster", eventPoster);
 
-    // Save event data in context and navigate to add questions
-    setEventData(eventDataToPass);
-    router.push(`/dashboard/event/addEvent?event_id=${eventId}`);
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        window.alert("Access token not found. Please log in.");
+        return;
+      }
+      // Send PUT request to update event details
+      await axios.put(
+        `${API_BASE_URL}/api/v1/events/update/${eventId}`,
+        formData,
+        {
+          headers: {
+            // Remove "Content-Type" header to allow Axios to set the correct boundaries
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Optionally, save event data in context if needed
+      const eventDataToPass: EventData = {
+        name: eventTitle,
+        category_id: selectedCategory,
+        max_participants: parseInt(eventSeats, 10),
+        about: eventDescription,
+        duration: eventDuration,
+        event_datetime: eventDatetime,
+        is_online: eventMode === true,
+        location_name: eventLocation,
+        url: eventMeetLink,
+        reg_fee: eventFee,
+        prize_amount: eventPerks,
+        event_guidelines: eventGuidelines,
+        poster: eventPoster,
+        has_fee: true,
+        has_prize: true,
+        reg_enddate: regEndDatetime,
+        additional_details: [],
+        reg_startdate: "",
+        contact_phone: null,
+        contact_email: null,
+        interest_ids: eventIntrestIds,
+      };
+
+      setEventData(eventDataToPass);
+      router.push(`/dashboard/event/addEvent?event_id=${eventId}`);
+    } catch (error) {
+      console.error("Error updating event:", error);
+      window.alert("Failed to update the event. Please try again later.");
+    }
   };
 
   return (
@@ -199,7 +240,9 @@ export default function CreateEvent() {
                 <select
                   className="p-2 border rounded"
                   value={selectedCategory ?? ""}
-                  onChange={(e) => setSelectedCategory(parseInt(e.target.value, 10))}
+                  onChange={(e) =>
+                    setSelectedCategory(parseInt(e.target.value, 10))
+                  }
                   required
                 >
                   <option value="">Choose Event Category</option>
@@ -505,7 +548,7 @@ export default function CreateEvent() {
             <div className="text-red-500 mt-4 text-center">{warningMessage}</div>
           )}
           <button type="submit" className="mt-4 w-full py-2 bg-black text-white rounded">
-            CONTINUE
+            Edit
           </button>
         </form>
       </div>

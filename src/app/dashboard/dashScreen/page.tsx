@@ -14,11 +14,11 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const getAccessToken = () => localStorage.getItem("accessToken");
 
 const registrations = Array(7).fill({
-  id: "",
-  name: "",
-  email: "",
-  phone: "",
-  institution: "",
+  id: "H",
+  name: "Host",
+  email: "host@",
+  phone: "host@23",
+  institution: "host@instution",
 });
 
 export default function DashScreen() {

@@ -200,7 +200,7 @@ export default function CreateEvent() {
         reg_startdate: "",
         contact_phone: null,
         contact_email: null,
-        interest_ids: eventIntrestIds,
+        interest_ids: null
       };
 
       setEventData(eventDataToPass);

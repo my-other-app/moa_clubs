@@ -112,7 +112,6 @@ export default function CreateEvent() {
   };
 
   // Define eventIntrestIds variable
-  const eventIntrestIds: number[] = [];
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

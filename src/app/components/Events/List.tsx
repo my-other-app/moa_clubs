@@ -29,6 +29,10 @@ export default function EventsList({ events }: EventsListProps) {
   const { navigateTo } = useNavigate();
 
   const handleDelete = async (eventId: Key) => {
+    // Add a confirmation popup before deletion
+    const confirmed = window.confirm("Are you sure you want to delete this event?");
+    if (!confirmed) return;
+  
     const token = localStorage.getItem("accessToken");
     if (!token) {
       console.error("Access token not found");
@@ -54,6 +58,7 @@ export default function EventsList({ events }: EventsListProps) {
       console.error("Error deleting the event:", error);
     }
   };
+  
   
 
   return (

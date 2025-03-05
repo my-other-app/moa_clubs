@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, ChangeEvent } from "react";
+import { useState, useEffect, ChangeEvent } from "react";
 import Sidebar from "@/app/components/sidebar";
 import { ChevronLeft, ChevronDown, Circle } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useEvent } from "@/app/context/eventContext";
 import { v4 as uuidv4 } from "uuid";
+import axios from "axios";
 
 interface Question {
   type: string;
@@ -16,7 +17,9 @@ interface Question {
 
 export default function EditEvent() {
   const router = useRouter();
-  const { eventData, setEventData, submitEvent } = useEvent();
+  const params = useParams();
+  const eventId = params?.eventId; // expects route param, e.g. /events/edit/10
+  const { eventData, setEventData } = useEvent();
   const [loading, setLoading] = useState<boolean>(false);
   const [options, setOptions] = useState<string[]>([""]);
   const [questionType, setQuestionType] = useState<string>("");
@@ -24,32 +27,82 @@ export default function EditEvent() {
   const [questionRequired, setQuestionRequired] = useState<boolean>(true);
   const [questions, setQuestions] = useState<Question[]>([]);
 
+  // Initial render debugging
+  console.debug("EditEvent rendered with eventId:", eventId);
+  console.debug("Initial eventData:", eventData);
+
+  // Fetch event data including additional_details on mount (or when eventId changes)
+  useEffect(() => {
+    const fetchEventDetails = async () => {
+      console.debug("Fetching event details for eventId:", eventId);
+      if (!eventId) return;
+      const accessToken = localStorage.getItem("access_token");
+      console.debug("Access token found:", accessToken);
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/events/info/${eventId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+        console.log("Fetched event data:", response.data);
+        // Process additional_details if available
+        if (response.data.additional_details) {
+          const fetchedQuestions = response.data.additional_details.map((item: any) => ({
+            type: item.field_type === "select" ? "multipleChoice" : "shortAnswer",
+            text: item.label,
+            options: item.options || [],
+            required: item.required,
+          }));
+          console.debug("Setting fetched questions:", fetchedQuestions);
+          setQuestions(fetchedQuestions);
+        }
+      } catch (error) {
+        console.error("Error fetching event data", error);
+      }
+    };
+
+    fetchEventDetails();
+  }, [eventId]);
+
   const addOption = () => {
-    setOptions([...options, ""]);
+    const newOptions = [...options, ""];
+    console.debug("Adding new option. Options before:", options, "Options after:", newOptions);
+    setOptions(newOptions);
   };
 
   const handleQuestionTypeChange = (e: ChangeEvent<HTMLSelectElement>) => {
     const selectedType = e.target.value;
+    console.debug("Question type changed to:", selectedType);
     setQuestionType(selectedType);
     setCurrentQuestion("");
     setQuestionRequired(true);
     if (selectedType === "multipleChoice") {
+      console.debug("Resetting options for multiple choice.");
       setOptions([""]);
     } else {
+      console.debug("Clearing options for short answer.");
       setOptions([]);
     }
   };
 
   const handleAddQuestion = () => {
-    if (currentQuestion.trim() === "") return;
+    if (currentQuestion.trim() === "") {
+      console.debug("Empty question text, not adding question.");
+      return;
+    }
     const newQuestion: Question = {
       type: questionType,
       text: currentQuestion,
       options: questionType === "multipleChoice" ? options : [],
       required: questionRequired,
     };
-    setQuestions([...questions, newQuestion]);
-    console.log("Added Question:", newQuestion);
+    console.debug("Adding new question:", newQuestion);
+    const updatedQuestions = [...questions, newQuestion];
+    setQuestions(updatedQuestions);
+    console.debug("Questions state after addition:", updatedQuestions);
     // Reset input fields
     setCurrentQuestion("");
     setQuestionType("");
@@ -57,8 +110,17 @@ export default function EditEvent() {
     setQuestionRequired(true);
   };
 
+  // Delete a question based on its index
+  const handleDeleteQuestion = (index: number) => {
+    console.debug("Deleting question at index:", index);
+    const updatedQuestions = questions.filter((_, i) => i !== index);
+    setQuestions(updatedQuestions);
+    console.debug("Questions state after deletion:", updatedQuestions);
+  };
+
   const handleContinue = async () => {
-    // Map questions to the required format with unique keys
+    console.debug("Handle continue clicked. Current questions:", questions);
+    // Map questions to the required additional_details format with unique keys
     const additionalDetailsArray = questions.map((q) => ({
       key: uuidv4(),
       label: q.text,
@@ -69,8 +131,7 @@ export default function EditEvent() {
       answer: ""
     }));
 
-    console.log("Questions Array:", questions);
-    console.log("Additional Details Array:", additionalDetailsArray);
+    console.debug("Additional Details Array to be sent:", additionalDetailsArray);
 
     if (!eventData) {
       console.error("No event data found in context");
@@ -83,19 +144,34 @@ export default function EditEvent() {
       additional_details: additionalDetailsArray,
     };
 
-    console.log("Updated Event Data:", updatedEventData);
+    console.debug("Updated Event Data:", updatedEventData);
 
-    // Update context and submit the event
-    setEventData(updatedEventData);
+    // Get access token from localStorage
+    const accessToken = localStorage.getItem("access_token");
+    if (!accessToken) {
+      console.error("No access token found");
+      return;
+    }
+
     setLoading(true);
     try {
-      const result = await submitEvent(updatedEventData);
-      console.log("Event created:", result);
+      console.debug("Sending PUT request to update event...");
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/events/update/${eventId}`,
+        updatedEventData,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+      console.log("Event updated successfully:", response.data);
       router.push("/dashboard/events");
     } catch (error) {
-      console.error("Error submitting event:", error);
+      console.error("Error updating event:", error);
     } finally {
       setLoading(false);
+      console.debug("Loading state set to false");
     }
   };
 
@@ -103,64 +179,53 @@ export default function EditEvent() {
     <>
       <Sidebar />
       <div className="px-32 mx-auto p-6">
-        <button onClick={() => router.back()} className="flex items-center text-gray-600 hover:text-black mb-4">
+        <button
+          onClick={() => {
+            console.debug("Back button clicked");
+            router.back();
+          }}
+          className="flex items-center text-gray-600 hover:text-black mb-4"
+        >
           <ChevronLeft className="w-5 h-5 mr-1" />
           Back
         </button>
-        <h1 className="text-3xl font-bold">Add Additional Details</h1>
-        <p className="text-gray-500">Add questions for the registration form</p>
+        <h1 className="text-3xl font-bold">Edit Additional Details</h1>
+        <p className="text-gray-500">Manage questions for the registration form</p>
         <div className="flex flex-row gap-12 items-start">
           <div className="mt-6 flex-1/2">
-            <h2 className="font-bold text-lg">MANDATORY INFORMATION</h2>
-            <div className="mt-4 space-y-4">
-              <div>
-                <label className="block font-medium">Participant Name<span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Enter Your Name"
-                  className="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
-                />
-              </div>
-              <div>
-                <label className="block font-medium">Participant Email<span className="text-red-500">*</span></label>
-                <input
-                  type="email"
-                  required
-                  placeholder="Enter Your Email"
-                  className="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
-                />
-              </div>
-              <div>
-                <label className="block font-medium">Participant Number<span className="text-red-500">*</span></label>
-                <input
-                required
-                  type="tel"
-                  placeholder="Enter Your Number"
-                  className="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
-                />
-              </div>
-            </div>
             <div className="mt-6">
               <h2 className="font-bold text-lg">QUESTIONS</h2>
               {questions.length === 0 ? (
-                <p className="text-gray-500 mt-2">No questions added yet.</p>
+                <p className="text-gray-500 mt-2">No questions available.</p>
               ) : (
                 <ul className="mt-2 space-y-2">
                   {questions.map((q, index) => (
-                    <li key={index} className="p-2 border rounded">
-                      <div className="font-medium">{q.text}</div>
-                      <div className="text-sm text-gray-500">Type: {q.type}</div>
-                      <div className="text-sm text-gray-500">Required: {q.required ? "Yes" : "No"}</div>
-                      {q.type === "multipleChoice" && (
-                        <ul className="ml-4 mt-1 space-y-1">
-                          {q.options.map((opt, i) => (
-                            <li key={i} className="text-gray-600">
-                              {opt || `Option ${i + 1}`}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
+                    <li
+                      key={index}
+                      className="p-2 border rounded flex justify-between items-start"
+                    >
+                      <div>
+                        <div className="font-medium">{q.text}</div>
+                        <div className="text-sm text-gray-500">Type: {q.type}</div>
+                        <div className="text-sm text-gray-500">
+                          Required: {q.required ? "Yes" : "No"}
+                        </div>
+                        {q.type === "multipleChoice" && (
+                          <ul className="ml-4 mt-1 space-y-1">
+                            {q.options.map((opt, i) => (
+                              <li key={i} className="text-gray-600">
+                                {opt || `Option ${i + 1}`}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleDeleteQuestion(index)}
+                        className="text-red-500 hover:underline"
+                      >
+                        Delete
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -193,7 +258,10 @@ export default function EditEvent() {
                       type="text"
                       placeholder="Enter Your Question"
                       value={currentQuestion}
-                      onChange={(e) => setCurrentQuestion(e.target.value)}
+                      onChange={(e) => {
+                        console.debug("Question input changed:", e.target.value);
+                        setCurrentQuestion(e.target.value);
+                      }}
                       className="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
                     />
                   </div>
@@ -201,7 +269,10 @@ export default function EditEvent() {
                     <input
                       type="checkbox"
                       checked={questionRequired}
-                      onChange={(e) => setQuestionRequired(e.target.checked)}
+                      onChange={(e) => {
+                        console.debug("Question required toggled to:", e.target.checked);
+                        setQuestionRequired(e.target.checked);
+                      }}
                       className="mr-2"
                     />
                     <label className="font-medium">Is this question required?</label>
@@ -218,13 +289,17 @@ export default function EditEvent() {
                             onChange={(e) => {
                               const newOptions = [...options];
                               newOptions[index] = e.target.value;
+                              console.debug(`Option ${index + 1} changed to:`, e.target.value);
                               setOptions(newOptions);
                             }}
                             className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
                           />
                         </div>
                       ))}
-                      <button onClick={addOption} className="mt-2 text-gray-600 font-medium hover:underline">
+                      <button
+                        onClick={addOption}
+                        className="mt-2 text-gray-600 font-medium hover:underline"
+                      >
                         Add another option
                       </button>
                     </div>

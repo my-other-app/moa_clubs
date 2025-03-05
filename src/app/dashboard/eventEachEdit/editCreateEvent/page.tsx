@@ -123,7 +123,25 @@ export default function CreateEvent() {
 
     // Build FormData for multipart/form-data submission
     const formData = new FormData();
-    const interest = [1,2,3]
+
+
+
+
+
+
+
+    const interest = [1,2,3] //replace this
+
+
+
+
+
+
+
+
+
+
+
     formData.append("name", eventTitle);
     if (selectedCategory !== null) {
       formData.append("category_id", selectedCategory.toString());
@@ -172,7 +190,7 @@ export default function CreateEvent() {
       );
       
      
-      router.push(`/dashboard/event/addEvent?event_id=${eventId}`);
+      router.push(`/dashboard/events`);
     } catch (error) {
       console.error("Error updating event:", error);
       window.alert("Failed to update the event. Please try again later.");

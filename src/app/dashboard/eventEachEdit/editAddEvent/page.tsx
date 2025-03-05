@@ -15,11 +15,18 @@ interface Question {
   required: boolean;
 }
 
+interface AdditionalDetail {
+  field_type: string;
+  label: string;
+  options?: string[];
+  required: boolean;
+}
+
 export default function EditEvent() {
   const router = useRouter();
   const params = useParams();
   const eventId = params?.eventId; // expects route param, e.g. /events/edit/10
-  const { eventData, setEventData } = useEvent();
+  const { eventData } = useEvent();
   const [loading, setLoading] = useState<boolean>(false);
   const [options, setOptions] = useState<string[]>([""]);
   const [questionType, setQuestionType] = useState<string>("");
@@ -50,7 +57,7 @@ export default function EditEvent() {
         console.log("Fetched event data:", response.data);
         // Process additional_details if available
         if (response.data.additional_details) {
-          const fetchedQuestions = response.data.additional_details.map((item: any) => ({
+          const fetchedQuestions = response.data.additional_details.map((item: AdditionalDetail) => ({
             type: item.field_type === "select" ? "multipleChoice" : "shortAnswer",
             text: item.label,
             options: item.options || [],

@@ -43,7 +43,7 @@ export default function UploadImage() {
       <button onClick={() => router.back()} className="absolute top-4 left-4 text-gray-600 cursor-pointer">
         &larr; Back
       </button>
-      <div className="bg-white p-8 rounded-lg w-96 border-gray-700 border">
+      <div className="bg-white p-8 rounded-xl w-96 border-gray-700 border">
         
         {/* Progress Indicator */}
         <div className="flex justify-center mb-4">
@@ -54,7 +54,7 @@ export default function UploadImage() {
           <div className="w-1/5 h-1 bg-gray-300 mx-1"></div>
         </div>
 
-        <h1 className="text-xl font-bold text-center mb-4">DROP YOUR DETAILS IN!</h1>
+        <h1 className=" font-bold text-center mb-4 bebas text-3xl">DROP YOUR DETAILS IN!</h1>
 
         {/* Image Upload */}
         <div className="flex flex-col items-center mb-4">

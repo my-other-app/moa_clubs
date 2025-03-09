@@ -101,19 +101,19 @@ export default function IntrestedArea() {
         &larr; Back
       </button>
 
-      <div className="bg-white p-8 rounded-lg shadow-lg w-[45%] border-2 border-gray-700">
+      <div className="bg-white p-8 rounded-xl w-[45%] border border-gray-700">
         
         {/* Progress Bar */}
         <div className="flex justify-center mb-2">
           <div className="w-1/10 h-1 bg-teal-500 mx-1"></div>
           <div className="w-1/10 h-1 bg-teal-500 mx-1"></div>
-          <div className="w-1/10 h-1 bg-teal-500 mx-1"></div>
+          <div className="w-1/10 h-1 bg-gray-300 mx-1"></div>
           <div className="w-1/10 h-1 bg-gray-300 mx-1"></div>
           <div className="w-1/10 h-1 bg-gray-300 mx-1"></div>
         </div>
 
         <div className="space-y-4 p-5 rounded-xl flex flex-col items-center">
-          <h2 className="text-xl font-bold text-center mb-4">
+          <h2 className="text-4xl font-bold text-center mb-4 bebas">
             SELECT AREAS RELATED TO YOUR CLUB
           </h2>
 
@@ -147,7 +147,7 @@ export default function IntrestedArea() {
             type="button"
             onClick={handleSubmit}
             disabled={selected.length === 0}
-            className={`w-64 h-15 text-2xl bg-gray-700 text-white p-2 rounded-lg font-semibold hover:bg-gray-800 mt-4 ${
+            className={`w-64 h-15 text-2xl bg-[#2C333D] text-white p-2 rounded-lg font-semibold hover:bg-gray-800 mt-4 ${
               selected.length === 0 ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >

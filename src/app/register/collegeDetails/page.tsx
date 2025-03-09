@@ -51,7 +51,7 @@ export default function CollegeDetails() {
         <h2 className="text-center text-3xl font-bold mb-4 bebas">DROP YOUR DETAILS IN!</h2>
 
         <form onSubmit={handleSubmit}>
-          <label className="block text-gray-700 font-light">
+          <label className="block text-sm text-gray-700 font-light">
           Organization Name</label>
           <input
             type="text"
@@ -62,7 +62,7 @@ export default function CollegeDetails() {
             required
           />
 
-          <label className="block text-gray-700 font-light">Location</label>
+          <label className="block text-sm text-gray-700 font-light">Location</label>
           <input
             type="text"
             placeholder="Enter Your Location"

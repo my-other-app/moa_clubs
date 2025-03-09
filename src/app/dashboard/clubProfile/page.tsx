@@ -80,12 +80,12 @@ export default function ClubProfile() {
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   const colors = [
-        "bg-red-400",
-        "bg-blue-400",
-        "bg-green-400",
-        "bg-yellow-400",
-        "bg-purple-400",
-        "bg-pink-400",
+        "bg-red-300",
+        "bg-green-300",
+        "bg-yellow-300",
+        "bg-blue-300",
+        "bg-purple-300",
+        "bg-pink-300",
       ];
       
 
@@ -125,17 +125,17 @@ export default function ClubProfile() {
     Lorem ipsum dolor sit amet, consectetur adipiscing elit...`;
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-6 max-w-6xl mx-auto">
       <Sidebar />
-      <h1 className="text-3xl font-bold mb-4">CLUB PROFILE</h1>
+      <h1 className="text-4xl  mb-4 bebas">CLUB PROFILE</h1>
       {club ? (
         <>
           {/* Top Row: Logo, Club Name/Tags, and Buttons */}
-          <div className="flex flex-col sm:flex-row justify-between border bg-white rounded-lg p-4 items-start sm:items-center mb-4">
+          <div className="flex flex-col sm:flex-row justify-between border-gray-400 border bg-white rounded-lg p-4 items-start sm:items-center mb-4">
             {/* Left: Logo + Club Name + Tags */}
             <div className="flex items-start gap-4">
               {/* Club Logo */}
-              <div className="w-24 h-24 relative rounded-full overflow-hidden bg-gray-100">
+              <div className="w-24 h-24 relative rounded-full border border-black overflow-hidden bg-gray-100">
                 <Image
                   src={club.logo.thumbnail}
                   alt={`${club.name} Logo`}
@@ -168,11 +168,11 @@ export default function ClubProfile() {
             {/* Right: Buttons */}
             <div className="mt-4 sm:mt-0 flex gap-2">
               <Link href="/register/uploadImage">
-              <button className="border bg-gray-700 rounded px-8 py-1 text-sm text-amber-50 font-medium hover:bg-gray-800">
+              <button className="border bg-[#2C333D] bebas rounded-md w-48 h-12 px-8 py-1 text-2xl text-amber-50 font-medium hover:bg-gray-800">
                 EDIT PROFILE
               </button>
               </Link>
-              <button className="border border-gray-700 rounded px-4 py-1 text-sm font-medium hover:bg-gray-100">
+              <button className="border border-gray-700 bebas rounded-md w-48 h-12 px-4 py-1 text-2xl text-gray-700 font-medium hover:bg-gray-100">
                 CHANGE PASSWORD
               </button>
             </div>
@@ -181,7 +181,7 @@ export default function ClubProfile() {
           {/* Content Row: Description on left, Info on right */}
           <div className="flex flex-col md:flex-row gap-3">
             {/* Left: Club Description with Read More */}
-            <div className="border rounded-lg p-4 bg-white flex-3/5">
+            <div className="border-gray-400 border rounded-lg p-4 bg-white flex-3/5">
               <ReadMore text={clubDescription} wordLimit={75} />
             </div>
 
@@ -189,29 +189,30 @@ export default function ClubProfile() {
             <div className="flex flex-col gap-3 flex-2/5">
               {/* College & Location */}
               <div className="flex flex-col sm:flex-row gap-3 flex-1/2">
-                <div className="p-4 border rounded-lg bg-white">
+                <div className="p-4 border border-gray-400 rounded-lg bg-white">
                   <div className="flex items-center gap-2 mb-1">
                     <FaUniversity className="text-xl text-gray-700" />
-                    <p className="font-semibold">College</p>
+                    <p className="font-light">College</p>
                   </div>
-                  <p className="text-gray-700">
+                  <p className="text-black babes font-bold">
                     COLLEGE OF ENGINEERING TRIVANDRUM
                   </p>
                 </div>
-                <div className="p-4 border rounded-lg bg-white flex-1/2">
+                <div className="p-4 border border-gray-400 rounded-lg bg-white flex-1/2">
                   <div className="flex items-center gap-2 mb-1">
                     <FaMapMarkerAlt className="text-xl text-gray-700" />
-                    <p className="font-semibold">Location</p>
+                    <p className="font-light">Location</p>
                   </div>
-                  <p className="text-gray-700">{club.location_name}</p>
+                  <p className="text-black babes font-bold">{club.location_name}</p>
                 </div>
               </div>
               {/* Social Links */}
-              <div className="p-4 border rounded-lg bg-white space-y-2">
+              <div className="p-4 border-gray-400 text-gray-300 border rounded-lg bg-white space-y-2">
+                <h1 className="text-black bebas text-2xl">LINKS</h1>
                 {club.socials.instagram && (
                   <div className="flex items-center gap-2">
                     <FaInstagram className="text-xl text-pink-500" />
-                    <span className="font-semibold">Instagram:</span>
+                    <span className="font-light">Instagram:</span>
                     <a
                       href={club.socials.instagram}
                       target="_blank"
@@ -225,7 +226,7 @@ export default function ClubProfile() {
                 {club.socials.youtube && (
                   <div className="flex items-center gap-2">
                     <FaYoutube className="text-xl text-red-500" />
-                    <span className="font-semibold">Youtube:</span>
+                    <span className="font-light">Youtube:</span>
                     <a
                       href={club.socials.youtube}
                       target="_blank"
@@ -239,7 +240,7 @@ export default function ClubProfile() {
                 {club.socials.linkedin && (
                   <div className="flex items-center gap-2">
                     <FaLinkedin className="text-xl text-blue-700" />
-                    <span className="font-semibold">LinkedIn:</span>
+                    <span className="font-light">LinkedIn:</span>
                     <a
                       href={club.socials.linkedin}
                       target="_blank"
@@ -253,7 +254,7 @@ export default function ClubProfile() {
                 {club.socials.website && (
                   <div className="flex items-center gap-2">
                     <FaGlobe className="text-xl text-green-600" />
-                    <span className="font-semibold">Website:</span>
+                    <span className="font-light">Website:</span>
                     <a
                       href={club.socials.website}
                       target="_blank"

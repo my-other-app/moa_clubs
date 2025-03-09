@@ -95,7 +95,7 @@ const FinalFill = () => {
         &larr; Back
       </button>
       <div className="flex flex-grow items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm border-2 border-gray-700">
+        <div className="bg-white rounded-xl p-6 w-full max-w-sm border border-gray-700">
           <div className="flex justify-center mb-4">
             {Array(5)
               .fill(0)
@@ -108,8 +108,8 @@ const FinalFill = () => {
           </h2>
           <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Club Lead Name
+              <label className="block text-sm font-light text-gray-700">
+              Organization Lead Name
               </label>
               <input
                 type="text"
@@ -123,8 +123,8 @@ const FinalFill = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Club Lead Contact Number
+              <label className="block text-sm font-light text-gray-700">
+              Organization Lead Contact Number
               </label>
               <input
                 type="tel"
@@ -142,7 +142,7 @@ const FinalFill = () => {
             )}
             <button
               type="submit"
-              className="w-full bebas text-2xl h-12 bg-gray-700 text-white py-2 rounded-md hover:bg-gray-800 disabled:opacity-50"
+              className="w-full bebas text-2xl h-12 bg-[#2C333D] text-white py-2 rounded-md hover:bg-gray-800 disabled:opacity-50"
               disabled={loading}
             >
               {loading ? "Processing..." : "FINISH"}

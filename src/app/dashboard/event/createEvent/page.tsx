@@ -4,16 +4,73 @@ import { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import Image from "next/image";
 import Sidebar from "@/app/components/sidebar";
 import { useRouter } from "next/navigation";
-
 import { useEvent, EventData } from "@/app/context/eventContext";
 import axios from "axios";
 
 type Category = {
-  id: string;
+  id: number;
   name: string;
 };
 
+// Renamed interests constant to avoid shadowing the fetched categories state
+const interestCategories = [
+  {
+    title: "Academic",
+    options: [
+      { id: 6, name: "💻Coding" },
+      { id: 7, name: "🎨UI/UX" },
+      { id: 8, name: "📊Data Science" },
+      { id: 9, name: "👨‍💼Entrepreneurship" },
+      { id: 10, name: "🏷️Marketing" },
+      { id: 11, name: "💰Finance" },
+      { id: 2, name: "🦾AI/ML" },
+      { id: 12, name: "📈Analytics" },
+      { id: 13, name: "🔒Cybersecurity" },
+      { id: 14, name: "🏭Product Management" },
+    ],
+  },
+  {
+    title: "Creative",
+    options: [
+      { id: 15, name: "📸Photography" },
+      { id: 16, name: "🎵Music" },
+      { id: 17, name: "🎬Film" },
+      { id: 18, name: "🐰Animation" },
+      { id: 19, name: "✏️Writing" },
+      { id: 20, name: "👗Fashion" },
+      { id: 21, name: "🎮Gaming" },
+    ],
+  },
+  {
+    title: "Emerging Trends",
+    options: [
+      { id: 22, name: "🔗Blockchain" },
+      { id: 23, name: "🥽VR/AR" },
+      { id: 24, name: "🎭Memes & Internet Culture" },
+      { id: 25, name: "🎥Content Creation" },
+      { id: 26, name: "🎮E-Sports" },
+      { id: 27, name: "🚀Space Exploration" },
+    ],
+  },
+];
+
 export default function CreateEvent() {
+  // State for interests selection
+  const [selected, setSelected] = useState<{ id: number; name: string }[]>([]);
+
+
+  // Toggle selection with a max limit of 5 interests
+  const toggleSelection = (option: { id: number; name: string }) => {
+    setSelected((prev) => {
+      if (prev.some((item) => item.id === option.id)) {
+        return prev.filter((item) => item.id !== option.id);
+      } else if (prev.length < 5) {
+        return [...prev, option];
+      }
+      return prev;
+    });
+  };
+
   const router = useRouter();
   const { setEventData } = useEvent();
 
@@ -30,7 +87,7 @@ export default function CreateEvent() {
   const [eventRegistrationClosingDate, setEventRegistrationClosingDate] = useState<string>("");
   const [eventRegistrationClosingTime, setEventRegistrationClosingTime] = useState<string>("");
 
-  // Change eventMode type to boolean or empty string to handle not-selected state.
+  // eventMode is either true (online), false (offline) or an empty string (not selected)
   const [eventMode, setEventMode] = useState<boolean | "">("");
   const [eventLocation, setEventLocation] = useState<string>("");
   const [eventMeetLink, setEventMeetLink] = useState<string>("");
@@ -67,16 +124,13 @@ export default function CreateEvent() {
     e.preventDefault();
     // Validate required fields
     if (
-      
       !eventPoster ||
       !eventDuration ||
-      !eventRegistrationClosingTime||
+      !eventRegistrationClosingTime ||
       !eventRegistrationClosingDate ||
       !eventStartTime
-
-                     
     ) {
-      window.alert("All fields required !");
+      window.alert("All fields required!");
       return;
     }
 
@@ -90,25 +144,25 @@ export default function CreateEvent() {
       about: eventDescription,
       duration: eventDuration ?? 0,
       event_datetime: eventDatetime,
-      is_online: eventMode === true, // Ensures a boolean value
+      is_online: eventMode === true,
       location_name: eventLocation,
       url: eventMeetLink,
       reg_fee: eventFee,
-      prize_amount:eventPerks,
+      prize_amount: eventPerks,
       event_guidelines: eventGuidelines,
       poster: eventPoster,
       has_fee: eventFee !== 0,
       has_prize: eventPerks !== 0,
       reg_enddate: eventCloseDatetime,
       additional_details: [],
-      reg_startdate: '',
+      reg_startdate: "",
       contact_phone: null,
       contact_email: null,
       interest_ids: null,
       // club_id: null
     };
 
-    // Save event data in context and navigate to add questions
+    // Save event data in context and navigate to the next step
     setEventData(eventDataToPass);
     router.push("/dashboard/event/addEvent");
   };
@@ -117,13 +171,15 @@ export default function CreateEvent() {
     <>
       <Sidebar />
       <div className="max-w-4xl mx-auto p-6 rounded-lg font-sans">
-        <h1 className="text-3xl font-bold mb-6">CREATE NEW EVENT</h1>
+        <h1 className="text-4xl font-bold mb-6 bebas">CREATE NEW EVENT</h1>
         <form onSubmit={handleSubmit}>
-          <h2 className="text-lg font-semibold">BASIC INFORMATION</h2>
+          <h2 className="text-2xl bebas font-semibold">BASIC INFORMATION</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-4">
               <div className="flex flex-col">
-                <h3>Event Title<span className="text-red-500">*</span></h3>
+                <h3 className="text-gray-700 text-sm mb-1">
+                  Event Title<span className="text-red-500">*</span>
+                </h3>
                 <input
                   type="text"
                   placeholder="Enter Your Event Title"
@@ -134,23 +190,29 @@ export default function CreateEvent() {
                 />
               </div>
               <div className="flex flex-col">
-                <h3>Event Category<span className="text-red-500">*</span></h3>
+                <h3 className="text-gray-700 text-sm mb-1">
+                  Event Category<span className="text-red-500">*</span>
+                </h3>
                 <select
                   className="p-2 border rounded"
                   value={selectedCategory ?? ""}
                   required
                   onChange={(e) => setSelectedCategory(parseInt(e.target.value, 10))}
                 >
-                  <option value="">Choose Event Category</option>
+                  <option value="" className="text-gray-700">
+                    Choose Event Category
+                  </option>
                   {categories.map((category) => (
-                    <option key={category.id} value={parseInt(category.id, 10)}>
+                    <option key={category.id} value={parseInt(category.id.toString(), 10)}>
                       {category.name}
                     </option>
                   ))}
                 </select>
               </div>
               <div className="flex flex-col">
-                <h3>Event Seats<span className="text-red-500">*</span></h3>
+                <h3 className="text-gray-700 text-sm mb-1">
+                  Event Seats<span className="text-red-500">*</span>
+                </h3>
                 <input
                   type="text"
                   required
@@ -163,7 +225,9 @@ export default function CreateEvent() {
             </div>
             <div>
               <div className="flex flex-col">
-                <h3>Event Description<span className="text-red-500">*</span></h3>
+                <h3 className="text-gray-700 text-sm mb-1">
+                  Event Description<span className="text-red-500">*</span>
+                </h3>
                 <textarea
                   placeholder="Enter Event Description"
                   className="p-2 border rounded"
@@ -173,7 +237,10 @@ export default function CreateEvent() {
                 ></textarea>
               </div>
               <div className="flex flex-col items-center">
-                <label htmlFor="eventPoster" className="p-2 rounded cursor-pointer flex items-center justify-center">
+                <label
+                  htmlFor="eventPoster"
+                  className="p-2 rounded cursor-pointer flex items-center justify-center"
+                >
                   {eventPoster ? (
                     <Image
                       src={URL.createObjectURL(eventPoster)}
@@ -184,8 +251,13 @@ export default function CreateEvent() {
                     />
                   ) : (
                     <div>
-                      
-                      <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <svg
+                        width="100"
+                        height="100"
+                        viewBox="0 0 100 100"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
                         <rect x="0.25" y="0.25" width="99.5" height="99.5" rx="49.75" fill="#F3F3F3" />
                         <rect x="0.25" y="0.25" width="99.5" height="99.5" rx="49.75" stroke="#979797" strokeWidth="0.5" />
                         <path
@@ -198,28 +270,51 @@ export default function CreateEvent() {
                       </svg>
                     </div>
                   )}
-                  <input id="eventPoster" type="file" accept="image/*" className="hidden" onChange={handlePosterUpload} />
+                  <input
+                    id="eventPoster"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handlePosterUpload}
+                  />
                 </label>
-                <h3>Add Event Poster<span className="text-red-500">*</span></h3>
+                <h3>
+                  Add Event Poster<span className="text-red-500">*</span>
+                </h3>
               </div>
             </div>
           </div>
-          <h2 className="text-lg font-semibold mt-6">DATE AND TIME<span className="text-red-500">*</span></h2>
+          <h2 className="font-semibold mt-6 text-2xl bebas">DATE AND TIME</h2>
           <div className="grid grid-cols-3 gap-4">
             <div className="flex flex-col">
-              <h3>Event date</h3>
-              <input type="date" className="p-2 border rounded" value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
-            </div>
-            <div className="flex flex-col">
-              <h3>Event Start Time<span className="text-red-500">*</span></h3>
+              <h3 className="text-gray-700 text-sm mb-1">
+                Event date<span className="text-red-500">*</span>
+              </h3>
               <input
-              required type="time" className="p-2 border rounded" value={eventStartTime} onChange={(e) => setEventStartTime(e.target.value)} />
+                type="date"
+                className="p-2 border rounded"
+                value={eventDate}
+                onChange={(e) => setEventDate(e.target.value)}
+              />
             </div>
             <div className="flex flex-col">
-              <h3>Event Duration<span className="text-red-500">*</span></h3>
+              <h3 className="text-gray-700 text-sm mb-1">
+                Event Start Time<span className="text-red-500">*</span>
+              </h3>
+              <input
+                required
+                type="time"
+                className="p-2 border rounded"
+                value={eventStartTime}
+                onChange={(e) => setEventStartTime(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col">
+              <h3 className="text-gray-700 text-sm mb-1">
+                Event Duration<span className="text-red-500">*</span>
+              </h3>
               <input
                 type="number"
-                
                 placeholder="Choose Event Duration Hours"
                 className="p-2 border rounded"
                 value={eventDuration || ""}
@@ -228,16 +323,33 @@ export default function CreateEvent() {
               />
             </div>
             <div className="flex flex-col">
-              <h3>Event Registration Closing Date<span 
-              className="text-red-500">*</span></h3>
-              <input required type="date" className="p-2 border rounded" value={eventRegistrationClosingDate} onChange={(e) => setEventRegistrationClosingDate(e.target.value)} />
+              <h3 className="text-gray-700 text-sm mb-1">
+                Event Registration Closing Date<span className="text-red-500">*</span>
+              </h3>
+              <input
+                required
+                type="date"
+                className="p-2 border rounded"
+                value={eventRegistrationClosingDate}
+                onChange={(e) => setEventRegistrationClosingDate(e.target.value)}
+              />
             </div>
             <div className="flex flex-col">
-              <h3>Event Registration Closing Time<span className="text-red-500">*</span></h3>
-              <input required type="time" className="p-2 border rounded" value={eventRegistrationClosingTime} onChange={(e) => setEventRegistrationClosingTime(e.target.value)} />
+              <h3 className="text-gray-700 text-sm mb-1">
+                Event Registration Closing Time<span className="text-red-500">*</span>
+              </h3>
+              <input
+                required
+                type="time"
+                className="p-2 border rounded"
+                value={eventRegistrationClosingTime}
+                onChange={(e) => setEventRegistrationClosingTime(e.target.value)}
+              />
             </div>
           </div>
-          <h2 className="text-lg font-semibold mt-6">LOCATION AND MODE<span className="text-red-500">*</span></h2>
+          <h2 className="font-semibold mt-6 text-2xl bebas">
+            LOCATION AND MODE<span className="text-red-500">*</span>
+          </h2>
           <div className="grid grid-cols-3 gap-4">
             <select
               className="p-2 border rounded"
@@ -256,17 +368,17 @@ export default function CreateEvent() {
             {eventMode === true ? (
               <>
                 <input
-                required
+                  required
                   type="text"
-                  placeholder="Entre Event Platform"
+                  placeholder="Enter Event Platform"
                   className="p-2 border rounded"
                   value={eventLocation}
                   onChange={(e) => setEventLocation(e.target.value)}
                 />
                 <input
-                required
+                  required
                   type="url"
-                  placeholder="Entre Meet Link"
+                  placeholder="Enter Meet Link"
                   className="p-2 border rounded"
                   value={eventMeetLink}
                   onChange={(e) => setEventMeetLink(e.target.value)}
@@ -275,9 +387,9 @@ export default function CreateEvent() {
             ) : eventMode === false ? (
               <>
                 <input
-                required
+                  required
                   type="text"
-                  placeholder="Entre Event Location"
+                  placeholder="Enter Event Location"
                   className="p-2 border rounded"
                   value={eventLocation}
                   onChange={(e) => setEventLocation(e.target.value)}
@@ -292,15 +404,31 @@ export default function CreateEvent() {
               </>
             ) : (
               <>
-                <input required type="text" placeholder="Choose Event Mode" className="p-2 border rounded" value={eventLocation} onChange={(e) => setEventLocation(e.target.value)} disabled />
-                <input required type="url" placeholder="Choose Event Mode" className="p-2 border rounded" value={eventMeetLink} onChange={(e) => setEventMeetLink(e.target.value)} disabled />
+                <input
+                  required
+                  type="text"
+                  placeholder="Choose Event Mode"
+                  className="p-2 border rounded"
+                  value={eventLocation}
+                  onChange={(e) => setEventLocation(e.target.value)}
+                  disabled
+                />
+                <input
+                  required
+                  type="url"
+                  placeholder="Choose Event Mode"
+                  className="p-2 border rounded"
+                  value={eventMeetLink}
+                  onChange={(e) => setEventMeetLink(e.target.value)}
+                  disabled
+                />
               </>
             )}
           </div>
-          <h2 className="text-lg font-semibold mt-6">PERKS AND FEE</h2>
+          <h2 className="font-semibold mt-6 text-2xl bebas">PERKS AND FEE</h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <h3>Event Registration Fee</h3>
+              <h3 className="text-gray-700 text-sm mb-1">Event Registration Fee</h3>
               <input
                 type="number"
                 placeholder="Enter The Fee"
@@ -310,7 +438,7 @@ export default function CreateEvent() {
               />
             </div>
             <div>
-              <h3>Prize Worth</h3>
+              <h3 className="text-gray-700 text-sm mb-1">Prize Worth</h3>
               <input
                 type="number"
                 placeholder="Enter The Prize Worth"
@@ -320,15 +448,54 @@ export default function CreateEvent() {
               />
             </div>
           </div>
+          <h2 className="font-semibold mt-6 text-2xl bebas">GUIDELINES</h2>
+          <h3 className="text-gray-700 text-sm mb-1">Event Guidelines</h3>
           <textarea
             placeholder="Enter Event Guidelines"
-            className="w-full p-2 border rounded mt-4"
+            className="w-full p-2 border rounded"
             value={eventGuidelines}
             onChange={(e) => setEventGuidelines(e.target.value)}
           ></textarea>
-          <button type="submit" className="mt-4 w-full py-2 bg-black text-white rounded">
-            CONTINUE
-          </button>
+<h2 className="font-semibold mt-6 text-2xl bebas">SELECT AREA RELATED TO THE EVENT</h2>
+          <div className="space-y-4 bg-gray-100 p-5 rounded-xl">
+            {interestCategories.map(({ title, options }) => (
+              <div key={title}>
+                <h3 className="font-semibold text-gray-700 mb-2">{title}</h3>
+                <div className="flex flex-wrap gap-2">
+                  {options.map((option) => (
+                    <button
+                      key={option.id}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        toggleSelection(option);
+                      }}
+                      aria-pressed={selected.some((item) => item.id === option.id)}
+                      disabled={
+                        selected.length >= 5 && !selected.some((item) => item.id === option.id)
+                      }
+                      className={`px-3 py-1 rounded-full transition ${
+                        selected.some((item) => item.id === option.id)
+                          ? "border-green-600 border-2"
+                          : "bg-white hover:bg-gray-300"
+                      } ${
+                        selected.length >= 5 && !selected.some((item) => item.id === option.id)
+                          ? "opacity-50 cursor-not-allowed"
+                          : ""
+                      }`}
+                    >
+                      {option.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="w-full mt-4 flex justify-end">
+  <button type="submit" className="bg-[#2C333D] bebas text-2xl p-2 px-8 text-white rounded">
+    CONTINUE
+  </button>
+</div>
+
         </form>
       </div>
     </>

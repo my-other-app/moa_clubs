@@ -37,36 +37,36 @@ export default function CollegeDetails() {
         &larr; Back
       </button>
 
-      <div className="bg-white p-8 rounded-xl shadow-md border-2 border-gray-700 w-96">
+      <div className="bg-white p-8 rounded-xl border border-gray-700 w-96">
         {/* Progress Bar */}
         <div className="flex justify-center mb-4">
           <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
           <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
           <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
-          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
+          <div className="w-1/5 h-1 bg-gray-300 mx-1"></div>
           <div className="w-1/5 h-1 bg-gray-300 mx-1"></div>
         </div>
 
         {/* Form Header */}
-        <h2 className="text-center text-xl font-bold mb-4">DROP YOUR DETAILS IN!</h2>
+        <h2 className="text-center text-3xl font-bold mb-4 bebas">DROP YOUR DETAILS IN!</h2>
 
         <form onSubmit={handleSubmit}>
-          <label className="block text-gray-700 font-medium">
+          <label className="block text-gray-700 font-light">
           Organization Name</label>
           <input
             type="text"
             placeholder="Enter Your Organization"
-            className="w-full p-2 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-2 border rounded-lg mb-4"
             value={college}
             onChange={(e) => setCollege(e.target.value)}
             required
           />
 
-          <label className="block text-gray-700 font-medium">Location</label>
+          <label className="block text-gray-700 font-light">Location</label>
           <input
             type="text"
             placeholder="Enter Your Location"
-            className="w-full p-2 border rounded-lg mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-2 border rounded-lg mb-6 "
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             required
@@ -74,7 +74,7 @@ export default function CollegeDetails() {
 
           <button
             type="submit"
-            className="w-full bg-gray-700 h-12 text-2xl bebas text-white p-2 rounded-lg font-semibold hover:bg-gray-800"
+            className="w-full bg-[#2C333D] h-12 text-2xl bebas text-white p-2 rounded-lg font-semibold hover:bg-gray-800"
           >
             CONTINUE
           </button>

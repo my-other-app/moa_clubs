@@ -133,7 +133,7 @@ export default function ClubProfile() {
           {/* Top Row: Logo, Club Name/Tags, and Buttons */}
           <div className="flex flex-col sm:flex-row justify-between border-gray-400 border bg-white rounded-lg p-4 items-start sm:items-center mb-4">
             {/* Left: Logo + Club Name + Tags */}
-            <div className="flex items-start gap-4">
+            <div className="flex flex-col md:flex-row items-start gap-4">
               {/* Club Logo */}
               <div className="w-24 h-24 relative rounded-full border border-black overflow-hidden bg-gray-100">
                 <Image
@@ -166,13 +166,13 @@ export default function ClubProfile() {
             </div>
 
             {/* Right: Buttons */}
-            <div className="mt-4 sm:mt-0 flex gap-2">
+            <div className="mt-4 sm:mt-0 grid grid-cols-2 gap-2 w-1/1 md:w-1/2">
               <Link href="/register/uploadImage">
-              <button className="border bg-[#2C333D] bebas rounded-md w-48 h-12 px-8 py-1 text-2xl text-amber-50 font-medium hover:bg-gray-800">
+              <button className="border bg-[#2C333D] bebas rounded-md w-1/1 h-12 py-1 text-1xl text-amber-50 font-medium hover:bg-gray-800">
                 EDIT PROFILE
               </button>
               </Link>
-              <button className="border border-gray-700 bebas rounded-md w-48 h-12 px-4 py-1 text-2xl text-gray-700 font-medium hover:bg-gray-100">
+              <button className="border border-gray-700 bebas rounded-md h-12 py-1 text-1xl text-gray-700 font-medium hover:bg-gray-100">
                 CHANGE PASSWORD
               </button>
             </div>

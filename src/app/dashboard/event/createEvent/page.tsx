@@ -17,39 +17,39 @@ const interestCategories = [
   {
     title: "Academic",
     options: [
-      { id: 6, name: "💻Coding" },
-      { id: 7, name: "🎨UI/UX" },
-      { id: 8, name: "📊Data Science" },
-      { id: 9, name: "👨‍💼Entrepreneurship" },
-      { id: 10, name: "🏷️Marketing" },
-      { id: 11, name: "💰Finance" },
-      { id: 2, name: "🦾AI/ML" },
-      { id: 12, name: "📈Analytics" },
-      { id: 13, name: "🔒Cybersecurity" },
-      { id: 14, name: "🏭Product Management" },
+      { id: 6, name: "💻 Coding" },
+      { id: 7, name: "🎨 UI/UX" },
+      { id: 8, name: "📊 Data Science" },
+      { id: 9, name: "👨‍💼 Entrepreneurship" },
+      { id: 10, name: "🏷️ Marketing" },
+      { id: 11, name: "💰 Finance" },
+      { id: 2, name: "🦾 AI/ML" },
+      { id: 12, name: "📈 Analytics" },
+      { id: 13, name: "🔒 Cybersecurity" },
+      { id: 14, name: "🏭 Product Management" },
     ],
   },
   {
     title: "Creative",
     options: [
-      { id: 15, name: "📸Photography" },
-      { id: 16, name: "🎵Music" },
-      { id: 17, name: "🎬Film" },
-      { id: 18, name: "🐰Animation" },
-      { id: 19, name: "✏️Writing" },
-      { id: 20, name: "👗Fashion" },
-      { id: 21, name: "🎮Gaming" },
+      { id: 15, name: "📸 Photography" },
+      { id: 16, name: "🎵 Music" },
+      { id: 17, name: "🎬 Film" },
+      { id: 18, name: "🐰 Animation" },
+      { id: 19, name: "✏️ Writing" },
+      { id: 20, name: "👗 Fashion" },
+      { id: 21, name: "🎮 Gaming" },
     ],
   },
   {
     title: "Emerging Trends",
     options: [
-      { id: 22, name: "🔗Blockchain" },
-      { id: 23, name: "🥽VR/AR" },
-      { id: 24, name: "🎭Memes & Internet Culture" },
-      { id: 25, name: "🎥Content Creation" },
-      { id: 26, name: "🎮E-Sports" },
-      { id: 27, name: "🚀Space Exploration" },
+      { id: 22, name: "🔗 Blockchain" },
+      { id: 23, name: "🥽 VR/AR" },
+      { id: 24, name: "🎭 Memes & Internet Culture" },
+      { id: 25, name: "🎥 Content Creation" },
+      { id: 26, name: "🎮 E-Sports" },
+      { id: 27, name: "🚀 Space Exploration" },
     ],
   },
 ];
@@ -170,12 +170,12 @@ export default function CreateEvent() {
   return (
     <>
       <Sidebar />
-      <div className="max-w-4xl mx-auto p-6 rounded-lg font-sans">
-        <h1 className="text-4xl font-bold mb-6 bebas">CREATE NEW EVENT</h1>
+      <div className="max-w-6xl mx-auto my-12 p-6 rounded-lg font-sans">
+        <h1 className="text-4xl font-bold mb-18 bebas">CREATE NEW EVENT</h1>
         <form onSubmit={handleSubmit}>
-          <h2 className="text-2xl bebas font-semibold">BASIC INFORMATION</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-4">
+          <h2 className="text-2xl bebas font-semibold mb-6">BASIC INFORMATION</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            <div className="space-y-4 flex flex-col gap-5">
               <div className="flex flex-col">
                 <h3 className="text-gray-700 text-sm mb-1">
                   Event Title<span className="text-red-500">*</span>
@@ -183,7 +183,7 @@ export default function CreateEvent() {
                 <input
                   type="text"
                   placeholder="Enter Your Event Title"
-                  className="p-2 border rounded"
+                  className="p-2 border border-gray-400 rounded"
                   value={eventTitle}
                   onChange={(e) => setEventTitle(e.target.value)}
                   required
@@ -194,7 +194,7 @@ export default function CreateEvent() {
                   Event Category<span className="text-red-500">*</span>
                 </h3>
                 <select
-                  className="p-2 border rounded"
+                  className="p-2 border border-gray-400 rounded"
                   value={selectedCategory ?? ""}
                   required
                   onChange={(e) => setSelectedCategory(parseInt(e.target.value, 10))}
@@ -217,26 +217,27 @@ export default function CreateEvent() {
                   type="text"
                   required
                   placeholder="Enter available seats for the event"
-                  className="p-2 border rounded"
+                  className="p-2 border border-gray-400 rounded"
                   value={eventSeats}
                   onChange={(e) => setEventSeats(e.target.value)}
                 />
               </div>
             </div>
-            <div>
-              <div className="flex flex-col">
+            <div className="flex flex-col min-h-1/1">
+              <div className="flex flex-col flex-1 w-1/1">
                 <h3 className="text-gray-700 text-sm mb-1">
                   Event Description<span className="text-red-500">*</span>
                 </h3>
                 <textarea
                   placeholder="Enter Event Description"
-                  className="p-2 border rounded"
+                  className="p-2 border border-gray-400 rounded h-1/1"
                   value={eventDescription}
                   required
                   onChange={(e) => setEventDescription(e.target.value)}
                 ></textarea>
               </div>
-              <div className="flex flex-col items-center">
+            </div>
+            <div className="flex flex-col items-center my-auto">
                 <label
                   htmlFor="eventPoster"
                   className="p-2 rounded cursor-pointer flex items-center justify-center"
@@ -282,17 +283,16 @@ export default function CreateEvent() {
                   Add Event Poster<span className="text-red-500">*</span>
                 </h3>
               </div>
-            </div>
           </div>
-          <h2 className="font-semibold mt-6 text-2xl bebas">DATE AND TIME</h2>
-          <div className="grid grid-cols-3 gap-4">
+          <h2 className="font-semibold mt-6 text-2xl bebas mb-6">DATE AND TIME</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
             <div className="flex flex-col">
               <h3 className="text-gray-700 text-sm mb-1">
                 Event date<span className="text-red-500">*</span>
               </h3>
               <input
                 type="date"
-                className="p-2 border rounded"
+                className="p-2 border border-gray-400 rounded"
                 value={eventDate}
                 onChange={(e) => setEventDate(e.target.value)}
               />
@@ -304,7 +304,7 @@ export default function CreateEvent() {
               <input
                 required
                 type="time"
-                className="p-2 border rounded"
+                className="p-2 border border-gray-400 rounded"
                 value={eventStartTime}
                 onChange={(e) => setEventStartTime(e.target.value)}
               />
@@ -315,8 +315,8 @@ export default function CreateEvent() {
               </h3>
               <input
                 type="number"
-                placeholder="Choose Event Duration Hours"
-                className="p-2 border rounded"
+                placeholder="Enter Event Duration Hours"
+                className="p-2 border border-gray-400 rounded"
                 value={eventDuration || ""}
                 onChange={(e) => setEventDuration(parseInt(e.target.value, 10))}
                 required
@@ -329,7 +329,7 @@ export default function CreateEvent() {
               <input
                 required
                 type="date"
-                className="p-2 border rounded"
+                className="p-2 border border-gray-400 rounded"
                 value={eventRegistrationClosingDate}
                 onChange={(e) => setEventRegistrationClosingDate(e.target.value)}
               />
@@ -341,18 +341,18 @@ export default function CreateEvent() {
               <input
                 required
                 type="time"
-                className="p-2 border rounded"
+                className="p-2 border border-gray-400 rounded"
                 value={eventRegistrationClosingTime}
                 onChange={(e) => setEventRegistrationClosingTime(e.target.value)}
               />
             </div>
           </div>
-          <h2 className="font-semibold mt-6 text-2xl bebas">
+          <h2 className="font-semibold mt-6 text-2xl bebas mb-6">
             LOCATION AND MODE<span className="text-red-500">*</span>
           </h2>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
             <select
-              className="p-2 border rounded"
+              className="p-2 border border-gray-400 rounded"
               value={eventMode === true ? "true" : eventMode === false ? "false" : ""}
               onChange={(e) => {
                 const value = e.target.value;
@@ -371,7 +371,7 @@ export default function CreateEvent() {
                   required
                   type="text"
                   placeholder="Enter Event Platform"
-                  className="p-2 border rounded"
+                  className="p-2 border border-gray-400 rounded"
                   value={eventLocation}
                   onChange={(e) => setEventLocation(e.target.value)}
                 />
@@ -379,7 +379,7 @@ export default function CreateEvent() {
                   required
                   type="url"
                   placeholder="Enter Meet Link"
-                  className="p-2 border rounded"
+                  className="p-2 border border-gray-400 rounded"
                   value={eventMeetLink}
                   onChange={(e) => setEventMeetLink(e.target.value)}
                 />
@@ -390,14 +390,14 @@ export default function CreateEvent() {
                   required
                   type="text"
                   placeholder="Enter Event Location"
-                  className="p-2 border rounded"
+                  className="p-2 border border-gray-400 rounded"
                   value={eventLocation}
                   onChange={(e) => setEventLocation(e.target.value)}
                 />
                 <input
                   type="url"
                   placeholder="Google Map Link"
-                  className="p-2 border rounded"
+                  className="p-2 border border-gray-400 rounded"
                   value={eventMeetLink}
                   onChange={(e) => setEventMeetLink(e.target.value)}
                 />
@@ -408,7 +408,7 @@ export default function CreateEvent() {
                   required
                   type="text"
                   placeholder="Choose Event Mode"
-                  className="p-2 border rounded"
+                  className="p-2 border border-gray-400 rounded"
                   value={eventLocation}
                   onChange={(e) => setEventLocation(e.target.value)}
                   disabled
@@ -417,7 +417,7 @@ export default function CreateEvent() {
                   required
                   type="url"
                   placeholder="Choose Event Mode"
-                  className="p-2 border rounded"
+                  className="p-2 border border-gray-400 rounded"
                   value={eventMeetLink}
                   onChange={(e) => setEventMeetLink(e.target.value)}
                   disabled
@@ -425,14 +425,14 @@ export default function CreateEvent() {
               </>
             )}
           </div>
-          <h2 className="font-semibold mt-6 text-2xl bebas">PERKS AND FEE</h2>
-          <div className="grid grid-cols-2 gap-4">
+          <h2 className="font-semibold mt-6 text-2xl bebas mb-6">PERKS AND FEE</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
             <div>
               <h3 className="text-gray-700 text-sm mb-1">Event Registration Fee</h3>
               <input
                 type="number"
                 placeholder="Enter The Fee"
-                className="p-2 border rounded w-full"
+                className="p-2 border border-gray-400 rounded w-full"
                 value={eventFee}
                 onChange={(e) => setEventFee(parseInt(e.target.value, 10))}
               />
@@ -442,17 +442,17 @@ export default function CreateEvent() {
               <input
                 type="number"
                 placeholder="Enter The Prize Worth"
-                className="p-2 border rounded w-full"
+                className="p-2 border border-gray-400 rounded w-full"
                 value={eventPerks}
                 onChange={(e) => setEventPerks(parseInt(e.target.value, 10))}
               />
             </div>
           </div>
-          <h2 className="font-semibold mt-6 text-2xl bebas">GUIDELINES</h2>
+          <h2 className="font-semibold mt-6 text-2xl bebas mb-6">GUIDELINES</h2>
           <h3 className="text-gray-700 text-sm mb-1">Event Guidelines</h3>
           <textarea
             placeholder="Enter Event Guidelines"
-            className="w-full p-2 border rounded"
+            className="w-full p-2 border border-gray-400 rounded min-h-50"
             value={eventGuidelines}
             onChange={(e) => setEventGuidelines(e.target.value)}
           ></textarea>
@@ -461,7 +461,7 @@ export default function CreateEvent() {
             {interestCategories.map(({ title, options }) => (
               <div key={title}>
                 <h3 className="font-semibold text-gray-700 mb-2">{title}</h3>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-4">
                   {options.map((option) => (
                     <button
                       key={option.id}

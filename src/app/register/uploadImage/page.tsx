@@ -43,18 +43,18 @@ export default function UploadImage() {
       <button onClick={() => router.back()} className="absolute top-4 left-4 text-gray-600 cursor-pointer">
         &larr; Back
       </button>
-      <div className="bg-white p-8 rounded-lg shadow-lg w-96 border-gray-700 border-2">
+      <div className="bg-white p-8 rounded-xl w-96 border-gray-700 border">
         
         {/* Progress Indicator */}
         <div className="flex justify-center mb-4">
           <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
-          <div className="w-1/5 h-1 bg-teal-500 mx-1"></div>
+          <div className="w-1/5 h-1 bg-gray-300 mx-1"></div>
           <div className="w-1/5 h-1 bg-gray-300 mx-1"></div>
           <div className="w-1/5 h-1 bg-gray-300 mx-1"></div>
           <div className="w-1/5 h-1 bg-gray-300 mx-1"></div>
         </div>
 
-        <h1 className="text-xl font-bold text-center mb-4">DROP YOUR DETAILS IN!</h1>
+        <h1 className=" font-bold text-center mb-4 bebas text-3xl">DROP YOUR DETAILS IN!</h1>
 
         {/* Image Upload */}
         <div className="flex flex-col items-center mb-4">
@@ -87,7 +87,7 @@ export default function UploadImage() {
             )}
           </label>
           <input id="clubLogo" type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
-          <p className="text-sm text-gray-600 mt-2">Add Club Logo</p>
+          <p className="text-sm text-gray-600 mt-2">Add Organization Logo</p>
         </div>
 
         {/* Form Submission */}
@@ -96,7 +96,7 @@ export default function UploadImage() {
             type="button"
             onClick={handleButtonClick}
             disabled={!clubLogoPreview}
-            className={`w-64 h-15 text-2xl bg-gray-700 text-white p-2 rounded-lg font-semibold hover:bg-gray-800 mt-4 ${
+            className={`w-64 h-15 text-2xl bg-[#2C333D] text-white p-2 rounded-lg font-semibold hover:bg-gray-800 mt-4 ${
               !clubLogoPreview ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >

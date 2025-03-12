@@ -107,7 +107,7 @@ export default function Welcome() {
           We provide you with an end-to-end<br></br> solution for managing events
         </p>
         <form onSubmit={handleSubmit}>
-          <label className="block mb-2 font-light text-gray-700">Username</label>
+          <label className="block mb-2 font-light text-sm text-gray-700">Username</label>
           <input
             type="text"
             placeholder="Enter Your username"
@@ -116,7 +116,7 @@ export default function Welcome() {
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-          <label className="block mb-2 font-light text-gray-700">Password</label>
+          <label className="block mb-2 font-light text-sm text-gray-700">Password</label>
           <input
             type="password"
             placeholder="Enter Password"

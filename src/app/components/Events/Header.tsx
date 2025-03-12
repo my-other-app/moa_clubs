@@ -37,7 +37,7 @@ export default function EventsHeader() {
           <input
             type="text"
             placeholder="Search for events"
-            className="pl-10 pr-4 py-2 border border-gray-400 rounded-md w-full"
+            className="pl-10 pr-4 py-2 border border-gray-400 text-sm rounded-md w-72"
           />
         </div>
       </div>

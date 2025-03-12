@@ -69,7 +69,7 @@ export default function EventsList({ events }: EventsListProps) {
           events.map((event) => (
             <div
               key={event.id}
-              className="grid grid-cols-3 items-center p-4 rounded-lg border border-gray-300"
+              className="grid grid-cols-3 items-center p-4 rounded-lg border-2 border-gray-300"
             >
               {/* Left Column: Event Details */}
               <div className="flex items-center space-x-4">

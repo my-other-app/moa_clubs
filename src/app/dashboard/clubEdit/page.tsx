@@ -35,6 +35,62 @@ const EditClub: NextPage = () => {
   // Interests (list of IDs)
   const [selectedInterests, setSelectedInterests] = useState<number[]>([]);
 
+  const interestCategories = [
+    {
+      title: "Academic",
+      options: [
+        { id: 6, name: "💻 Coding" },
+        { id: 7, name: "🎨 UI/UX" },
+        { id: 8, name: "📊 Data Science" },
+        { id: 9, name: "👨‍💼 Entrepreneurship" },
+        { id: 10, name: "🏷️ Marketing" },
+        { id: 11, name: "💰 Finance" },
+        { id: 2, name: "🦾 AI/ML" },
+        { id: 12, name: "📈 Analytics" },
+        { id: 13, name: "🔒 Cybersecurity" },
+        { id: 14, name: "🏭 Product Management" },
+      ],
+    },
+    {
+      title: "Creative",
+      options: [
+        { id: 15, name: "📸 Photography" },
+        { id: 16, name: "🎵 Music" },
+        { id: 17, name: "🎬 Film" },
+        { id: 18, name: "🐰 Animation" },
+        { id: 19, name: "✏️ Writing" },
+        { id: 20, name: "👗 Fashion" },
+        { id: 21, name: "🎮 Gaming" },
+      ],
+    },
+    {
+      title: "Emerging Trends",
+      options: [
+        { id: 22, name: "🔗 Blockchain" },
+        { id: 23, name: "🥽 VR/AR" },
+        { id: 24, name: "🎭 Memes & Internet Culture" },
+        { id: 25, name: "🎥 Content Creation" },
+        { id: 26, name: "🎮 E-Sports" },
+        { id: 27, name: "🚀 Space Exploration" },
+      ],
+    },
+  ];
+
+  const [selected, setSelected] = useState<{ id: number; name: string }[]>([]);
+
+
+  // Toggle selection with a max limit of 5 interests
+  const toggleSelection = (option: { id: number; name: string }) => {
+    setSelected((prev) => {
+      if (prev.some((item) => item.id === option.id)) {
+        return prev.filter((item) => item.id !== option.id);
+      } else if (prev.length < 5) {
+        return [...prev, option];
+      }
+      return prev;
+    });
+  };
+
   // Fetch club data on mount and pre-fill form
   useEffect(() => {
     const fetchClubData = async () => {
@@ -135,19 +191,19 @@ formData.append("org_id", clubOrganization.toString());
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8 mx-20">
+    <div className="min-h-screen bg-gray-50 p-8 md:mx-20">
       <Sidebar />
       {/* Page Title */}
-      <h1 className="mb-6 text-2xl font-bold text-gray-800">EDIT CLUB PROFILE</h1>
+      <h1 className="mb-6 mt-12 md:mt-0 text-4xl font-bold text-gray-800 bebas max-w-5xl space-y-8 mx-auto">EDIT CLUB PROFILE</h1>
       <form className="mx-auto max-w-5xl space-y-8" onSubmit={handleSubmit}>
         {/* BASIC INFORMATION */}
-        <div>
-          <h2 className="mb-4 text-xl font-semibold text-gray-800">BASIC INFORMATION</h2>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <h2 className="mb-4 mt-12 text-2xl font-semibold text-gray-800 bebas">BASIC INFORMATION</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-rows-2 gap-6 md:gap-0">
             {/* Club Name */}
             <div>
               <label htmlFor="clubName" className="mb-1 block text-sm font-medium text-gray-700">
-                Club Name *
+                Club Name <span className="text-red-500">*</span>
               </label>
               <input
                 id="clubName"
@@ -176,8 +232,7 @@ formData.append("org_id", clubOrganization.toString());
             </div>
           </div>
 
-          {/* Club Description & Logo */}
-          <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+          {/* <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2"> */}
             {/* Description */}
             <div>
               <label htmlFor="clubDescription" className="mb-1 block text-sm font-medium text-gray-700">
@@ -188,13 +243,15 @@ formData.append("org_id", clubOrganization.toString());
                 name="clubDescription"
                 placeholder="Enter Club Description"
                 rows={5}
-                className="w-full resize-none rounded border border-gray-300 p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full h-3/4 resize-none rounded border border-gray-300 p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                 value={clubDescription}
                 onChange={(e) => setClubDescription(e.target.value)}
               />
             </div>
-            {/* Logo Upload */}
-            <div className="flex flex-col items-center justify-center">
+            
+          {/* </div> */}
+          {/* Logo Upload */}
+          <div className="flex flex-col items-center justify-center">
               <div className="flex flex-col items-center mb-4">
                 <label
                   htmlFor="clubLogo"
@@ -234,12 +291,11 @@ formData.append("org_id", clubOrganization.toString());
                 <p className="text-sm text-gray-600 mt-2">Add Club Logo</p>
               </div>
             </div>
-          </div>
         </div>
 
         {/* LINKS TO CONNECT (disabled fields) */}
         <div>
-          <h2 className="mb-4 text-xl font-semibold text-gray-800">LINKS TO CONNECT</h2>
+          <h2 className="mb-4 text-2xl font-semibold text-gray-800 bebas">LINKS TO CONNECT</h2>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
               <label htmlFor="instagramLink" className="mb-1 block text-sm font-medium text-gray-700">
@@ -250,9 +306,8 @@ formData.append("org_id", clubOrganization.toString());
                 id="instagramLink"
                 name="instagramLink"
                 placeholder="Instagram Link"
-                className="w-full rounded border border-gray-300 p-2 text-sm bg-gray-100 text-gray-500 cursor-not-allowed"
+                className="w-full rounded border border-gray-300 p-2 text-sm text-gray-500"
                 value={instagramLink}
-                disabled
               />
             </div>
             <div>
@@ -264,9 +319,8 @@ formData.append("org_id", clubOrganization.toString());
                 id="youtubeLink"
                 name="youtubeLink"
                 placeholder="Youtube Link"
-                className="w-full rounded border border-gray-300 p-2 text-sm bg-gray-100 text-gray-500 cursor-not-allowed"
+                className="w-full rounded border border-gray-300 p-2 text-sm text-gray-500"
                 value={youtubeLink}
-                disabled
               />
             </div>
             <div>
@@ -278,9 +332,8 @@ formData.append("org_id", clubOrganization.toString());
                 id="linkedInLink"
                 name="linkedInLink"
                 placeholder="LinkedIn Link"
-                className="w-full rounded border border-gray-300 p-2 text-sm bg-gray-100 text-gray-500 cursor-not-allowed"
+                className="w-full rounded border border-gray-300 p-2 text-sm text-gray-500"
                 value={linkedInLink}
-                disabled
               />
             </div>
             <div>
@@ -292,9 +345,8 @@ formData.append("org_id", clubOrganization.toString());
                 id="websiteLink"
                 name="websiteLink"
                 placeholder="Website Link"
-                className="w-full rounded border border-gray-300 p-2 text-sm bg-gray-100 text-gray-500 cursor-not-allowed"
+                className="w-full rounded border border-gray-300 p-2 text-sm text-gray-500"
                 value={websiteLink}
-                disabled
               />
             </div>
           </div>
@@ -302,7 +354,7 @@ formData.append("org_id", clubOrganization.toString());
 
         {/* CONTACT INFORMATION */}
         <div className="mb-6">
-          <h2 className="mb-4 text-xl font-semibold text-gray-800">CONTACT INFORMATION</h2>
+          <h2 className="mb-4 mt-12 text-2xl font-semibold text-gray-800 bebas">CONTACT INFORMATION</h2>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
               <label htmlFor="contactPhone" className="mb-1 block text-sm font-medium text-gray-700">
@@ -336,9 +388,44 @@ formData.append("org_id", clubOrganization.toString());
           </div>
         </div>
 
+        <h2 className="font-semibold mt-12 text-2xl bebas">SELECT AREA RELATED TO THE EVENT</h2>
+          <div className="space-y-4 bg-gray-100 p-5 rounded-xl">
+            {interestCategories.map(({ title, options }) => (
+              <div key={title}>
+                <h3 className="font-semibold text-gray-700 mb-2">{title}</h3>
+                <div className="flex flex-wrap gap-4">
+                  {options.map((option) => (
+                    <button
+                      key={option.id}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        toggleSelection(option);
+                      }}
+                      aria-pressed={selected.some((item) => item.id === option.id)}
+                      disabled={
+                        selected.length >= 5 && !selected.some((item) => item.id === option.id)
+                      }
+                      className={`px-3 py-1 rounded-full transition ${
+                        selected.some((item) => item.id === option.id)
+                          ? "border-green-600 border-2"
+                          : "bg-white hover:bg-gray-300"
+                      } ${
+                        selected.length >= 5 && !selected.some((item) => item.id === option.id)
+                          ? "opacity-50 cursor-not-allowed"
+                          : ""
+                      }`}
+                    >
+                      {option.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div> 
+
         {/* SUBMIT BUTTON */}
         <div className="pt-4">
-          <button type="submit" className="rounded bg-gray-700 px-6 py-2 text-white hover:bg-gray-800">
+          <button type="submit" className="text-2xl rounded bg-gray-700 px-6 py-2 text-white hover:bg-gray-800 bebas">
             CONTINUE
           </button>
         </div>

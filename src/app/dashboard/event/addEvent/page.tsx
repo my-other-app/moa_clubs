@@ -102,17 +102,17 @@ export default function EditEvent() {
   return (
     <>
       <Sidebar />
-      <div className="px-32 mx-auto p-6">
+      <div className="md:max-w-6xl mx-auto p-6">
         <button onClick={() => router.back()} className="flex items-center text-gray-600 hover:text-black mb-4">
-          <ChevronLeft className="w-5 h-5 mr-1" />
+          <ChevronLeft className="w-5 h-5 mr-1  md:inline"/>
           Back
         </button>
         <h1 className="text-4xl font-bold bebas">EDIT REGISTRATION FORM</h1>
         <p className="text-gray-500">Add questions for the registration form</p>
-        <div className="flex flex-row gap-12 items-start">
-          <div className="mt-6 flex-1/2">
+        <div className="flex flex-col md:flex-row md:gap-12 items-start">
+          <div className="mt-6 flex-1 md:flex-1/2 w-full">
             <h2 className="font-bold text-2xl bebas">MANDATORY INFORMATION</h2>
-            <div className="mt-4 space-y-4">
+            <div className="mt-4 space-y-4 w-full">
               <div>
                 <label className="block font-light">Participant Name<span className="text-red-500">*</span></label>
                 <input
@@ -167,7 +167,7 @@ export default function EditEvent() {
               )}
             </div>
           </div>
-          <div className="max-w-md mx-auto p-6 border rounded-lg shadow-md mt-6 min-h-[300px] flex-col flex-1/2">
+          <div className="w-full md:mx-auto p-6 border rounded-lg shadow-md mt-6 mb-6 min-h-[300px] flex-col flex-1/2">
             <h2 className="text-2xl bebas font-bold">CREATE A NEW QUESTION</h2>
             <div className="mt-4 space-y-4">
               <div>
@@ -243,7 +243,7 @@ export default function EditEvent() {
         <button
           onClick={handleContinue}
           disabled={loading}
-          className="bottom-10 right-30 absolute w-48 bebas text-2xl self-end mt-4 px-4 py-2 bg-[#2C333D] text-white rounded-lg"
+          className="bebas text-2xl self-end mt-4 px-8 py-2 bg-[#2C333D] text-white rounded-lg"
         >
           {loading ? "Processing..." : "FINISH"}
         </button>

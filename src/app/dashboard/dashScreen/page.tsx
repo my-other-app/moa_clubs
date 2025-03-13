@@ -1,91 +1,106 @@
-"use client"
+"use client";
 
-import axios from "axios"
-import { MouseEventHandler, ReactNode, useEffect, useState } from "react"
-import Image from "next/image"
-import { Edit, Trash, Settings, Download, Search, Plus } from "lucide-react"
-import Sidebar from "@/app/components/sidebar"
-import { useSearchParams } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import axios from "axios";
+import { MouseEventHandler, ReactNode, useEffect, useState } from "react";
+import Image from "next/image";
+import { Edit, Trash, Settings, Download, Search, Plus } from "lucide-react";
+import Sidebar from "@/app/components/sidebar";
+import { useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import Popup from "reactjs-popup";
-import Volunteer from "@/app/components/dashboard/volunteer"
+import Volunteer from "@/app/components/dashboard/volunteer";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
-const getAccessToken = () => localStorage.getItem("accessToken")
-
-// Sample data for demonstration
-const registrations = Array(7).fill({
-  id: "NEX25AA001",
-  name: "Edwin Emmanuel Roy",
-  email: "emmanuelroy162@gmail.com",
-  phone: "8113859251",
-  institution: "College of Engineering Trivandrum",
-})
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const getAccessToken = () => localStorage.getItem("accessToken");
 
 export default function DashScreen() {
-  const [message, setMessage] = useState("")
-
+  const [message, setMessage] = useState("");
   interface Event {
-    id: number
-    name: string
+    id: number;
+    name: string;
     poster?: {
-      logo?: {
-        medium: string
-      }
-      medium?: string
-    }
+      medium: string;
+    };
   }
 
-  const [events, setEvents] = useState<Event[]>([])
-  const searchParams = useSearchParams()
-  const event_id = searchParams.get("event_id")
-  const parsedEventId = event_id ? Number.parseInt(event_id as string, 10) : 0
+  interface Registration {
+    profile: ReactNode;
+    ticket_id: ReactNode;
+    full_name: ReactNode;
+    id: number;
+    name: string;
+    email: string;
+    phone: string;
+    institution: string;
+  }
+
+  const [events, setEvents] = useState<Event[]>([]);
+  const [registrations, setRegistrations] = useState<Registration[]>([]);
+  const searchParams = useSearchParams();
+  const event_id = searchParams.get("event_id");
+  const parsedEventId = event_id ? Number.parseInt(event_id as string, 10) : 0;
 
   // Function to fetch events from API
   const getEvents = async () => {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      console.warn("⚠️ No access token found! User might be logged out.");
+      return;
+    }
     try {
-      const accessToken = getAccessToken()
-
-      if (!accessToken) {
-        console.warn("⚠️ No access token found! User might be logged out.")
-        return []
-      }
-
       const response = await axios.get(`${API_BASE_URL}/api/v1/clubs/events/list`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
-      })
-
-      // Set events state with items from the API response
-      setEvents(response.data.items)
-      return response.data.items
+      });
+      setEvents(response.data.items);
     } catch (error) {
-      console.error("❌ Error fetching events:", error)
-      return []
+      console.error("❌ Error fetching events:", error);
     }
-  }
+  };
 
-  // Fetch events once the component mounts
+  // Function to fetch registrations from API
+  const getRegistrations = async () => {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      console.error("No access token found");
+      return;
+    }
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/api/v1/events/registration/${parsedEventId}/list`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+      // Assuming the API returns an object with an "items" array
+      setRegistrations(response.data.items);
+    } catch (error) {
+      console.error("Error fetching registrations:", error);
+    }
+  };
+
+  // Fetch events and registrations on mount or when event_id changes
   useEffect(() => {
-    getEvents()
-  }, [event_id])
+    getEvents();
+    if (parsedEventId) {
+      getRegistrations();
+    }
+  }, [event_id, parsedEventId]);
 
   // Find the event matching the event_id
-  const currentEvent = events.find((event) => event.id === parsedEventId)
-  console.log(currentEvent)
+  const currentEvent = events.find((event) => event.id === parsedEventId);
+  console.log(currentEvent);
 
   const handleSendMessage = () => {
-    if (!message.trim()) return
-
-    // Add your message sending logic here
-    console.log("Sending message:", message)
-
-    // Reset message
-    setMessage("")
-  }
+    if (!message.trim()) return;
+    console.log("Sending message:", message);
+    setMessage("");
+  };
 
   const handleDownloadCSV = async () => {
     const accessToken = getAccessToken();
@@ -94,32 +109,27 @@ export default function DashScreen() {
       return;
     }
     try {
-      // Replace {event_id} with the actual event id
       const response = await axios.get(
         `${API_BASE_URL}/api/v1/events/registration/${parsedEventId}/export`,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
-          responseType: "blob", // Ensure we handle binary data (CSV)
+          responseType: "blob",
         }
       );
-  
-      // Create a temporary URL for the downloaded file blob
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "registration.csv"); // Set desired file name
+      link.setAttribute("download", "registration.csv");
       document.body.appendChild(link);
       link.click();
-  
-      // Clean up and remove the temporary link element
       document.body.removeChild(link);
     } catch (error) {
       console.error("Error downloading CSV:", error);
     }
   };
-  
+
   return (
     <div className="flex min-h-screen md:px-12">
       <Sidebar />
@@ -140,33 +150,24 @@ export default function DashScreen() {
               <button className="w-12 h-12 p-3 bg-[#f3f3f3] rounded flex justify-center items-center">
                 <Settings className="w-6 h-6 text-[#979797]" />
               </button>
-                
-                
 
-
-
-
-                <Popup
+              <Popup
                 trigger={
-                  <button className="p-3 flex items-center gap-2 bg-[#2c333d] text-white rounded-xl ">
+                  <button className="p-3 flex items-center gap-2 bg-[#2c333d] text-white rounded-xl">
                     <Plus className="w-5 h-5" />
                     <span className="text-base font-medium font-['DM_Sans']">Add Volunteers</span>
                   </button>
                 }
                 modal
                 nested
-                overlayStyle={{ background: "rgba(0, 0, 0, 0.5)" }} 
+                overlayStyle={{ background: "rgba(0, 0, 0, 0.5)" }}
                 contentStyle={{ width: "900px", padding: "20px" }}
               >
                 {((close: MouseEventHandler<HTMLButtonElement> | undefined) => (
                   <div className="p-4 bg-white rounded-2xl">
-                    <button
-                      onClick={close}
-                      className="text-right w-full text-black mb-2"
-                    >
+                    <button onClick={close} className="text-right w-full text-black mb-2">
                       X
                     </button>
-                    {/* Volunteer component with the relevant eventId */}
                     <Volunteer
                       event_id={
                         Array.isArray(event_id)
@@ -177,9 +178,6 @@ export default function DashScreen() {
                   </div>
                 )) as unknown as ReactNode}
               </Popup>
-
-
-        
             </div>
           </div>
 
@@ -190,7 +188,7 @@ export default function DashScreen() {
               <Image
                 src={
                   currentEvent?.poster?.medium || "https://dummyimage.com/600x400/000/fff"
-                  }
+                }
                 alt="Event poster"
                 width={600}
                 height={600}
@@ -200,13 +198,14 @@ export default function DashScreen() {
 
             {/* Right Column - Stats and Announcements */}
             <div className="flex-1">
-              {/* Stats Cards */}
               <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
                 <div className="h-[151px] px-4 sm:px-[60px] py-[29px] bg-[#b4e5bc] rounded-lg flex flex-col justify-center items-center">
                   <div className="flex flex-col justify-start items-center gap-2">
                     <div className="inline-flex justify-start items-center gap-2">
                       <div className="w-4 h-4 bg-[#096b5b] rounded-full" />
-                      <div className="text-[#096b5b] text-[32px] font-medium font-['DM_Sans']">Live</div>
+                      <div className="text-[#096b5b] text-[32px] font-medium font-['DM_Sans']">
+                        Live
+                      </div>
                     </div>
                     <div className="text-center text-[#096b5b] text-base font-light font-['DM_Sans']">
                       The event is live and registrations are open
@@ -232,14 +231,18 @@ export default function DashScreen() {
                 <div className="h-[151px] px-4 sm:px-[60px] py-10 bg-[#f3aba7] rounded-lg flex flex-col justify-center items-center">
                   <div className="flex flex-col justify-between items-center">
                     <div className="text-[#cc0000] text-[32px] font-bold font-['DM_Sans']">2</div>
-                    <div className="text-center text-[#cc0000] text-base font-light font-['DM_Sans']">Institutions</div>
+                    <div className="text-center text-[#cc0000] text-base font-light font-['DM_Sans']">
+                      Institutions
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Announcements Section */}
               <div className="w-full flex flex-col justify-start items-start gap-1 mb-8">
-                <div className="text-black text-2xl font-normal font-['Bebas_Neue']">Make Announcements</div>
+                <div className="text-black text-2xl font-normal font-['Bebas_Neue']">
+                  Make Announcements
+                </div>
                 <div className="self-stretch flex flex-col justify-start items-start gap-1 w-full">
                   <div className="text-[#2c333d] text-xs font-normal font-['DM_Sans']">
                     Send message to the registered participants as notifications
@@ -275,7 +278,9 @@ export default function DashScreen() {
                     </div>
                     <div className="w-[145px] h-0 border-b-[3px] border-[#2c333d]" />
                   </div>
-                  <div className="text-[#b4b4b4] text-xl font-medium font-['DM_Sans']">Attendance</div>
+                  <div className="text-[#b4b4b4] text-xl font-medium font-['DM_Sans']">
+                    Attendance
+                  </div>
                 </div>
                 <div className="flex flex-col sm:flex-row justify-start items-center gap-[18px] w-full md:w-auto">
                   <div className="relative w-full sm:w-auto">
@@ -307,22 +312,29 @@ export default function DashScreen() {
                       <th className="py-3 px-4 text-left text-[#2c333d] text-xl font-light font-['DM_Sans']">
                         Participant Name
                       </th>
-                      <th className="py-3 px-4 text-left text-[#2c333d] text-xl font-light font-['DM_Sans']">Email</th>
-                      <th className="py-3 px-4 text-left text-[#2c333d] text-xl font-light font-['DM_Sans']">Number</th>
                       <th className="py-3 px-4 text-left text-[#2c333d] text-xl font-light font-['DM_Sans']">
-                        College Name
+                        Email
+                      </th>
+                      <th className="py-3 px-4 text-left text-[#2c333d] text-xl font-light font-['DM_Sans']">
+                        Number
+                      </th>
+                      <th className="py-3 px-4 text-left text-[#2c333d] text-xl font-light font-['DM_Sans']">
+                      Organization Name
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     {registrations.map((reg, index) => (
-                      <tr key={index} className={index !== registrations.length - 1 ? "border-b border-[#979797]" : ""}>
+                      <tr
+                        key={index}
+                        className={index !== registrations.length - 1 ? "border-b border-[#979797]" : ""}
+                      >
                         <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">{reg.id}</td>
-                        <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">{reg.name}</td>
+                        <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">{reg.full_name}</td>
                         <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">{reg.email}</td>
                         <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">{reg.phone}</td>
                         <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">
-                          {reg.institution}
+                          {reg.profile}
                         </td>
                       </tr>
                     ))}
@@ -335,7 +347,9 @@ export default function DashScreen() {
                   variant="outline"
                   className="w-60 h-[60px] px-[50px] py-[15px] bg-white rounded-lg border border-[#2c333d]"
                 >
-                  <span className="text-center text-[#2c333d] text-2xl font-normal font-['Bebas_Neue']">Show All</span>
+                  <span className="text-center text-[#2c333d] text-2xl font-normal font-['Bebas_Neue']">
+                    Show All
+                  </span>
                 </Button>
               </div>
             </div>
@@ -344,6 +358,5 @@ export default function DashScreen() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-

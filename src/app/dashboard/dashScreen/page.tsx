@@ -1,7 +1,7 @@
 "use client"
 
 import axios from "axios"
-import { useEffect, useState } from "react"
+import { MouseEventHandler, ReactNode, useEffect, useState } from "react"
 import Image from "next/image"
 import { Edit, Trash, Settings, Download, Search, Plus } from "lucide-react"
 import Sidebar from "@/app/components/sidebar"
@@ -9,8 +9,8 @@ import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import VolunteerPopup from "./volunteer-popup"
-import image from "./image.svg"
+import Popup from "reactjs-popup";
+import Volunteer from "@/app/components/dashboard/volunteer"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 const getAccessToken = () => localStorage.getItem("accessToken")
@@ -26,7 +26,6 @@ const registrations = Array(7).fill({
 
 export default function DashScreen() {
   const [message, setMessage] = useState("")
-  const [showVolunteerPopup, setShowVolunteerPopup] = useState(false)
 
   interface Event {
     id: number
@@ -141,14 +140,46 @@ export default function DashScreen() {
               <button className="w-12 h-12 p-3 bg-[#f3f3f3] rounded flex justify-center items-center">
                 <Settings className="w-6 h-6 text-[#979797]" />
               </button>
-              <Button
-                variant="default"
-                className="h-12 px-4 py-2 bg-[#2c333d] rounded-lg flex items-center gap-2"
-                onClick={() => setShowVolunteerPopup(true)}
+                
+                
+
+
+
+
+                <Popup
+                trigger={
+                  <button className="p-3 flex items-center gap-2 bg-[#2c333d] text-white rounded-xl ">
+                    <Plus className="w-5 h-5" />
+                    <span className="text-base font-medium font-['DM_Sans']">Add Volunteers</span>
+                  </button>
+                }
+                modal
+                nested
+                overlayStyle={{ background: "rgba(0, 0, 0, 0.5)" }} 
+                contentStyle={{ width: "900px", padding: "20px" }}
               >
-                <Plus className="w-5 h-5" />
-                <span className="text-base font-medium font-['DM_Sans']">Add Volunteers</span>
-              </Button>
+                {((close: MouseEventHandler<HTMLButtonElement> | undefined) => (
+                  <div className="p-4 bg-white rounded-2xl">
+                    <button
+                      onClick={close}
+                      className="text-right w-full text-black mb-2"
+                    >
+                      X
+                    </button>
+                    {/* Volunteer component with the relevant eventId */}
+                    <Volunteer
+                      event_id={
+                        Array.isArray(event_id)
+                          ? parseInt(event_id[0], 10)
+                          : parseInt(event_id as string, 10)
+                      }
+                    />
+                  </div>
+                )) as unknown as ReactNode}
+              </Popup>
+
+
+        
             </div>
           </div>
 
@@ -310,10 +341,6 @@ export default function DashScreen() {
             </div>
           </div>
 
-          {/* Volunteer Popup */}
-          {showVolunteerPopup && (
-            <VolunteerPopup event_id={parsedEventId} onClose={() => setShowVolunteerPopup(false)} />
-          )}
         </div>
       </div>
     </div>

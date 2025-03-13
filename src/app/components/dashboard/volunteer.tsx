@@ -94,8 +94,8 @@ export default function Volunteer({ event_id }: VolunteerProps) {
   };
 
   return (
-    <div>
-      <h2 className="text-lg font-semibold mt-6">VOLUNTEERS AND GUIDELINES</h2>
+    <div className="">
+      <h2 className="text-3xl bebas font-semibold mt-6 mx-4">ADD VOLUNTEERS</h2>
       <div className="flex justify-between">
         {/* Volunteer Form */}
         <div className="flex flex-col gap-4 items-center w-full p-3 flex-1/2">

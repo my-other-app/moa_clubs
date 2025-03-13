@@ -76,6 +76,7 @@ export default function DashScreen() {
 
   // Find the event matching the event_id
   const currentEvent = events.find((event) => event.id === parsedEventId)
+  console.log(currentEvent)
 
   const handleSendMessage = () => {
     if (!message.trim()) return
@@ -87,11 +88,39 @@ export default function DashScreen() {
     setMessage("")
   }
 
-  const handleDownloadCSV = () => {
-    // Add your CSV download logic here
-    console.log("Downloading CSV for event ID:", parsedEventId)
-  }
-
+  const handleDownloadCSV = async () => {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      console.error("No access token found");
+      return;
+    }
+    try {
+      // Replace {event_id} with the actual event id
+      const response = await axios.get(
+        `${API_BASE_URL}/api/v1/events/registration/${parsedEventId}/export`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          responseType: "blob", // Ensure we handle binary data (CSV)
+        }
+      );
+  
+      // Create a temporary URL for the downloaded file blob
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "registration.csv"); // Set desired file name
+      document.body.appendChild(link);
+      link.click();
+  
+      // Clean up and remove the temporary link element
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error downloading CSV:", error);
+    }
+  };
+  
   return (
     <div className="flex min-h-screen md:px-12">
       <Sidebar />
@@ -129,8 +158,8 @@ export default function DashScreen() {
             <div className="flex-shrink-0 w-full lg:w-auto">
               <Image
                 src={
-                  image
-                }
+                  currentEvent?.poster?.medium || "https://dummyimage.com/600x400/000/fff"
+                  }
                 alt="Event poster"
                 width={600}
                 height={600}

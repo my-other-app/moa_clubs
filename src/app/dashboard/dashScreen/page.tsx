@@ -17,6 +17,9 @@ const getAccessToken = () => localStorage.getItem("accessToken");
 
 export default function DashScreen() {
   const [message, setMessage] = useState("");
+  // State to track which tab is active: "registration" or "attendance"
+  const [activeTab, setActiveTab] = useState("registration");
+
   interface Event {
     id: number;
     name: string;
@@ -25,6 +28,7 @@ export default function DashScreen() {
     };
   }
 
+  // Registration type updated to include is_attended
   interface Registration {
     profile: ReactNode;
     ticket_id: ReactNode;
@@ -34,6 +38,7 @@ export default function DashScreen() {
     email: string;
     phone: string;
     institution: string;
+    is_attended: boolean;
   }
 
   const [events, setEvents] = useState<Event[]>([]);
@@ -42,7 +47,7 @@ export default function DashScreen() {
   const event_id = searchParams.get("event_id");
   const parsedEventId = event_id ? Number.parseInt(event_id as string, 10) : 0;
 
-  // Function to fetch events from API
+  // Fetch events from API
   const getEvents = async () => {
     const accessToken = getAccessToken();
     if (!accessToken) {
@@ -61,7 +66,7 @@ export default function DashScreen() {
     }
   };
 
-  // Function to fetch registrations from API
+  // Fetch registrations from API
   const getRegistrations = async () => {
     const accessToken = getAccessToken();
     if (!accessToken) {
@@ -130,6 +135,12 @@ export default function DashScreen() {
     }
   };
 
+  // Determine which registrations to display based on active tab
+  const displayedRegistrations =
+    activeTab === "attendance"
+      ? registrations.filter((reg) => reg.is_attended)
+      : registrations;
+
   return (
     <div className="flex min-h-screen md:px-12">
       <Sidebar />
@@ -155,7 +166,9 @@ export default function DashScreen() {
                 trigger={
                   <button className="p-3 flex items-center gap-2 bg-[#2c333d] text-white rounded-xl">
                     <Plus className="w-5 h-5" />
-                    <span className="text-base font-medium font-['DM_Sans']">Add Volunteers</span>
+                    <span className="text-base font-medium font-['DM_Sans']">
+                      Add Volunteers
+                    </span>
                   </button>
                 }
                 modal
@@ -186,9 +199,7 @@ export default function DashScreen() {
             {/* Left Column - Event Image */}
             <div className="flex-shrink-0 w-full lg:w-auto">
               <Image
-                src={
-                  currentEvent?.poster?.medium || "https://dummyimage.com/600x400/000/fff"
-                }
+                src={currentEvent?.poster?.medium || "https://dummyimage.com/600x400/000/fff"}
                 alt="Event poster"
                 width={600}
                 height={600}
@@ -214,7 +225,9 @@ export default function DashScreen() {
                 </div>
                 <div className="h-[151px] px-4 sm:px-[60px] py-[27px] bg-[#ccc1f0] rounded-lg flex flex-col justify-center items-center">
                   <div className="flex flex-col justify-start items-center gap-2">
-                    <div className="text-[#9747ff] text-4xl font-bold font-['DM_Sans']">24</div>
+                    <div className="text-[#9747ff] text-4xl font-bold font-['DM_Sans']">
+                      24
+                    </div>
                     <div className="text-center text-[#9747ff] text-base font-light font-['DM_Sans']">
                       Total Registration Count
                     </div>
@@ -222,7 +235,9 @@ export default function DashScreen() {
                 </div>
                 <div className="h-[151px] px-4 sm:px-[60px] py-10 bg-[#b8dff2] rounded-lg flex flex-col justify-center items-center">
                   <div className="flex flex-col justify-start items-center gap-2">
-                    <div className="text-center text-[#0a4e6f] text-[32px] font-bold font-['DM_Sans']">234</div>
+                    <div className="text-center text-[#0a4e6f] text-[32px] font-bold font-['DM_Sans']">
+                      234
+                    </div>
                     <div className="text-center text-[#0a4e6f] text-base font-light font-['DM_Sans']">
                       Event Visitors
                     </div>
@@ -230,7 +245,9 @@ export default function DashScreen() {
                 </div>
                 <div className="h-[151px] px-4 sm:px-[60px] py-10 bg-[#f3aba7] rounded-lg flex flex-col justify-center items-center">
                   <div className="flex flex-col justify-between items-center">
-                    <div className="text-[#cc0000] text-[32px] font-bold font-['DM_Sans']">2</div>
+                    <div className="text-[#cc0000] text-[32px] font-bold font-['DM_Sans']">
+                      2
+                    </div>
                     <div className="text-center text-[#cc0000] text-base font-light font-['DM_Sans']">
                       Institutions
                     </div>
@@ -267,19 +284,42 @@ export default function DashScreen() {
             </div>
           </div>
 
-          {/* Registration Section */}
+          {/* Registration / Attendance Table */}
           <div className="mt-12">
             <div className="w-full flex flex-col justify-start items-start gap-4">
               <div className="self-stretch flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div className="flex justify-start items-start gap-9">
-                  <div className="w-[145px] inline-flex flex-col justify-start items-center gap-1">
-                    <div className="self-stretch text-center text-[#2c333d] text-xl font-medium font-['DM_Sans']">
-                      Registration
+                  <div className="flex justify-start items-start gap-9">
+                    <div
+                      onClick={() => setActiveTab("registration")}
+                      className="w-[145px] inline-flex flex-col justify-start items-center gap-1 cursor-pointer"
+                    >
+                      <div
+                        className={`self-stretch text-center text-xl font-medium font-['DM_Sans'] ${
+                          activeTab === "registration" ? "text-[#2c333d]" : "text-[#b4b4b4]"
+                        }`}
+                      >
+                        Registration
+                      </div>
+                      {activeTab === "registration" && (
+                        <div className="w-[145px] h-0 border-b-[3px] border-[#2c333d]" />
+                      )}
                     </div>
-                    <div className="w-[145px] h-0 border-b-[3px] border-[#2c333d]" />
-                  </div>
-                  <div className="text-[#b4b4b4] text-xl font-medium font-['DM_Sans']">
-                    Attendance
+                    <div
+                      onClick={() => setActiveTab("attendance")}
+                      className="w-[145px] inline-flex flex-col justify-start items-center gap-1 cursor-pointer"
+                    >
+                      <div
+                        className={`self-stretch text-center text-xl font-medium font-['DM_Sans'] ${
+                          activeTab === "attendance" ? "text-[#2c333d]" : "text-[#b4b4b4]"
+                        }`}
+                      >
+                        Attendance
+                      </div>
+                      {activeTab === "attendance" && (
+                        <div className="w-[145px] h-0 border-b-[3px] border-[#2c333d]" />
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row justify-start items-center gap-[18px] w-full md:w-auto">
@@ -296,12 +336,13 @@ export default function DashScreen() {
                     onClick={handleDownloadCSV}
                   >
                     <Download className="w-4 h-5 text-white" />
-                    <span className="text-white text-xs font-normal">Download CSV file</span>
+                    <span className="text-white text-xs font-normal">
+                      Download CSV file
+                    </span>
                   </Button>
                 </div>
               </div>
 
-              {/* Registration Table */}
               <div className="w-full overflow-x-auto border border-[#979797] rounded-lg">
                 <table className="w-full">
                   <thead>
@@ -319,20 +360,32 @@ export default function DashScreen() {
                         Number
                       </th>
                       <th className="py-3 px-4 text-left text-[#2c333d] text-xl font-light font-['DM_Sans']">
-                      Organization Name
+                        Organization Name
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {registrations.map((reg, index) => (
+                    {displayedRegistrations.map((reg, index) => (
                       <tr
                         key={index}
-                        className={index !== registrations.length - 1 ? "border-b border-[#979797]" : ""}
+                        className={
+                          index !== displayedRegistrations.length - 1
+                            ? "border-b border-[#979797]"
+                            : ""
+                        }
                       >
-                        <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">{reg.id}</td>
-                        <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">{reg.full_name}</td>
-                        <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">{reg.email}</td>
-                        <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">{reg.phone}</td>
+                        <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">
+                          {reg.id}
+                        </td>
+                        <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">
+                          {reg.full_name}
+                        </td>
+                        <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">
+                          {reg.email}
+                        </td>
+                        <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">
+                          {reg.phone}
+                        </td>
                         <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">
                           {reg.profile}
                         </td>

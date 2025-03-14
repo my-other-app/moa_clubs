@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import Popup from "reactjs-popup";
 import Volunteer from "@/app/components/dashboard/volunteer";
+import { useNavigate } from "@/app/utils/navigation";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const getAccessToken = () => localStorage.getItem("accessToken");
@@ -49,6 +50,20 @@ export default function DashScreen() {
   const searchParams = useSearchParams();
   const event_id = searchParams.get("event_id");
   const parsedEventId = event_id ? Number.parseInt(event_id as string, 10) : 0;
+
+  // Get the navigation helper from your custom hook.
+  const { navigateTo } = useNavigate();
+  // Retrieve the event_id query parameter from the URL.
+  const currentEventId = searchParams.get("event_id");
+
+  const handleEditClick = () => {
+    if (currentEventId) {
+      // Navigate to the edit page with the event_id appended as a query parameter.
+      navigateTo(`/dashboard/eventEachEdit/editCreateEvent?event_id=${currentEventId}`);
+    } else {
+      console.error("Event ID not found in URL");
+    }
+  };
 
   // Fetch events from API
   const getEvents = async () => {
@@ -152,6 +167,40 @@ export default function DashScreen() {
     setRegLimit((prev) => prev + 10);
   };
 
+  // Update: handleDelete now accepts a number parameter (the event id)
+  const handleDelete = async (eventId: number) => {
+    const confirmed = window.confirm("Are you sure you want to delete this event?");
+    if (!confirmed) return;
+
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      console.error("Access token not found");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/events/delete/${eventId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        console.log("Event deleted successfully");
+        window.location.reload();
+      } else {
+        const data = await response.json();
+        alert(data.message || "Failed to delete the event");
+      }
+    } catch (error) {
+      console.error("Error deleting the event:", error);
+    }
+  };
+
   return (
     <div className="flex min-h-screen md:px-12">
       <Sidebar />
@@ -163,10 +212,18 @@ export default function DashScreen() {
               {currentEvent ? currentEvent.name : "Loading....."}
             </h1>
             <div className="flex flex-wrap items-center gap-4">
-              <button className="w-12 h-12 p-3 bg-[#f3f3f3] rounded flex justify-center items-center">
+              {/* Edit Button */}
+              <button
+                onClick={handleEditClick}
+                className="w-12 h-12 p-3 bg-[#f3f3f3] rounded flex justify-center items-center"
+              >
                 <Edit className="w-6 h-6 text-[#979797]" />
               </button>
-              <button className="w-12 h-12 p-3 bg-[#f3f3f3] rounded flex justify-center items-center">
+              {/* Delete Button: Passing the parsedEventId to delete */}
+              <button
+                onClick={() => handleDelete(parsedEventId)}
+                className="w-12 h-12 p-3 bg-[#f3f3f3] rounded flex justify-center items-center"
+              >
                 <Trash className="w-6 h-6 text-[#979797]" />
               </button>
               <button className="w-12 h-12 p-3 bg-[#f3f3f3] rounded flex justify-center items-center">

@@ -3,7 +3,6 @@ import { FaTrash, FaExternalLinkAlt, FaEllipsisV } from "react-icons/fa";
 import { useNavigate } from "@/app/utils/navigation";
 import { StaticImport } from "next/dist/shared/lib/get-img-props";
 import { Key, ReactNode, useState } from "react";
-import { Button } from "@/components/ui/button";
 
 // Define Props Type – note the added is_past property
 interface Event {

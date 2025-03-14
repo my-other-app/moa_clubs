@@ -3,7 +3,7 @@
 import axios from "axios";
 import { MouseEventHandler, ReactNode, useEffect, useState } from "react";
 import Image from "next/image";
-import { Edit, Trash, Settings, Download, Search, Plus } from "lucide-react";
+import { Edit, Trash, Download, Search, Plus } from "lucide-react";
 import Sidebar from "@/app/components/sidebar";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";

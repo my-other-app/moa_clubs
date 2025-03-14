@@ -157,18 +157,6 @@ export default function EventsList({ events, activeTab }: EventsListProps) {
           <p className="text-gray-500 text-center col-span-2">No events found</p>
         )}
       </div>
-
-      {/* Show All Button at Bottom Centre */}
-      <div className="flex justify-center mt-8">
-        <Button
-          variant="outline"
-          className="w-60 h-[60px] px-[50px] py-[15px] bg-white rounded-lg border border-[#2c333d]"
-        >
-          <span className="text-center text-[#2c333d] text-2xl font-normal font-['Bebas_Neue']">
-            Show All
-          </span>
-        </Button>
-      </div>
     </div>
   );
 }

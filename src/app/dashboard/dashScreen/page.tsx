@@ -43,6 +43,9 @@ export default function DashScreen() {
 
   const [events, setEvents] = useState<Event[]>([]);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
+  // Registration limit state, defaulting to 10
+  const [regLimit, setRegLimit] = useState(10);
+  const [loadingRegistrations, setLoadingRegistrations] = useState(false);
   const searchParams = useSearchParams();
   const event_id = searchParams.get("event_id");
   const parsedEventId = event_id ? Number.parseInt(event_id as string, 10) : 0;
@@ -66,16 +69,17 @@ export default function DashScreen() {
     }
   };
 
-  // Fetch registrations from API
+  // Fetch registrations from API using the current regLimit
   const getRegistrations = async () => {
     const accessToken = getAccessToken();
     if (!accessToken) {
       console.error("No access token found");
       return;
     }
+    setLoadingRegistrations(true);
     try {
       const response = await axios.get(
-        `${API_BASE_URL}/api/v1/events/registration/${parsedEventId}/list`,
+        `${API_BASE_URL}/api/v1/events/registration/${parsedEventId}/list?limit=${regLimit}`,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -86,16 +90,18 @@ export default function DashScreen() {
       setRegistrations(response.data.items);
     } catch (error) {
       console.error("Error fetching registrations:", error);
+    } finally {
+      setLoadingRegistrations(false);
     }
   };
 
-  // Fetch events and registrations on mount or when event_id changes
+  // Fetch events and registrations on mount or when event_id or regLimit changes
   useEffect(() => {
     getEvents();
     if (parsedEventId) {
       getRegistrations();
     }
-  }, [event_id, parsedEventId]);
+  }, [event_id, parsedEventId, regLimit]);
 
   // Find the event matching the event_id
   const currentEvent = events.find((event) => event.id === parsedEventId);
@@ -141,6 +147,11 @@ export default function DashScreen() {
       ? registrations.filter((reg) => reg.is_attended)
       : registrations;
 
+  // Function to increase registration limit by 10 on "Show More" click
+  const handleShowMoreRegistrations = () => {
+    setRegLimit((prev) => prev + 10);
+  };
+
   return (
     <div className="flex min-h-screen md:px-12">
       <Sidebar />
@@ -149,7 +160,7 @@ export default function DashScreen() {
           {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <h1 className="text-5xl font-['Bebas_Neue'] tracking-wide">
-              {currentEvent ? currentEvent.name : "SF SEA HACKATHON"}
+              {currentEvent ? currentEvent.name : "Loading....."}
             </h1>
             <div className="flex flex-wrap items-center gap-4">
               <button className="w-12 h-12 p-3 bg-[#f3f3f3] rounded flex justify-center items-center">
@@ -395,13 +406,15 @@ export default function DashScreen() {
                 </table>
               </div>
 
+              {/* Show More Registrations Button */}
               <div className="flex justify-center w-full mt-4">
                 <Button
                   variant="outline"
+                  onClick={handleShowMoreRegistrations}
                   className="w-60 h-[60px] px-[50px] py-[15px] bg-white rounded-lg border border-[#2c333d]"
                 >
                   <span className="text-center text-[#2c333d] text-2xl font-normal font-['Bebas_Neue']">
-                    Show All
+                    {loadingRegistrations ? "Loading..." : "Show More"}
                   </span>
                 </Button>
               </div>

@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import { FaTrash, FaExternalLinkAlt, FaEllipsisV } from "react-icons/fa";
 import { useNavigate } from "@/app/utils/navigation";
@@ -6,7 +8,9 @@ import { ReactNode, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-// Updated Event interface with a new "slug" property
+// Import your custom modal
+import DeleteConfirmationModal from "@/app/components/DeleteConfirmationModal";
+
 interface Event {
   category: {
     name: string;
@@ -16,7 +20,7 @@ interface Event {
   } | null;
   name: ReactNode;
   id: number;
-  slug: string; // New property for the event slug
+  slug: string;
   image: string | StaticImport;
   title: string;
   status: string;
@@ -33,9 +37,12 @@ export default function EventsList({ events, activeTab }: EventsListProps) {
   const { navigateTo } = useNavigate();
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
+  // State for custom delete modal
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
+
   // Updated share handler to use the event slug for the URL
   const handleShare = async (event: Event) => {
-    // Construct the URL using the event slug
     const urlToShare = `https://events.myotherapp.com/${event.slug}`;
     if (navigator.share) {
       try {
@@ -61,24 +68,36 @@ export default function EventsList({ events, activeTab }: EventsListProps) {
     setOpenMenuId(null);
   };
 
-  const handleDelete = async (eventId: number) => {
-    const confirmed = window.confirm("Are you sure you want to delete this event?");
-    if (!confirmed) return;
+  // Open the delete confirmation modal
+  const openDeleteModal = (eventId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedEventId(eventId);
+    setShowDeleteModal(true);
+    setOpenMenuId(null);
+  };
+
+  // Confirm deletion: do the API call here
+  const confirmDelete = async () => {
+    if (selectedEventId == null) return;
 
     const token = localStorage.getItem("accessToken");
     if (!token) {
       console.error("Access token not found");
+      toast.error("No access token found");
       return;
     }
 
     try {
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-      const response = await fetch(`${API_BASE_URL}/api/v1/events/delete/${eventId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/events/delete/${selectedEventId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (response.ok) {
         toast.success("Event deleted successfully");
@@ -90,17 +109,20 @@ export default function EventsList({ events, activeTab }: EventsListProps) {
     } catch (error) {
       toast.error("Error deleting the event");
       console.error("Error deleting the event:", error);
+    } finally {
+      // Close the modal
+      setShowDeleteModal(false);
+      setSelectedEventId(null);
     }
   };
 
   const toggleMenu = (eventId: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    setOpenMenuId(prev => (prev === eventId ? null : eventId));
+    setOpenMenuId((prev) => (prev === eventId ? null : eventId));
   };
 
-  // Filter events based on activeTab: if "past", show events with is_past true;
-  // otherwise, show live events (is_past false)
-  const filteredEvents = events.filter(event =>
+  // Filter events based on activeTab
+  const filteredEvents = events.filter((event) =>
     activeTab === "past" ? event.is_past === true : event.is_past !== true
   );
 
@@ -113,7 +135,9 @@ export default function EventsList({ events, activeTab }: EventsListProps) {
             <div
               key={event.id}
               className="relative flex items-center justify-between border-2 border-gray-300 rounded-lg p-4 cursor-pointer"
-              onClick={() => navigateTo(`/dashboard/dashScreen?event_id=${event.id}`)}
+              onClick={() =>
+                navigateTo(`/dashboard/dashScreen?event_id=${event.id}`)
+              }
             >
               {/* Left: Event Details */}
               <div className="flex items-center">
@@ -126,7 +150,9 @@ export default function EventsList({ events, activeTab }: EventsListProps) {
                 />
                 <div className="ml-4">
                   <h2 className="text-lg font-semibold">{event.name}</h2>
-                  <h2 className="text-md font-semibold">{event.category?.name}</h2>
+                  <h2 className="text-md font-semibold">
+                    {event.category?.name}
+                  </h2>
                   <span className="text-green-600 text-sm">{event.status}</span>
                 </div>
               </div>
@@ -134,7 +160,9 @@ export default function EventsList({ events, activeTab }: EventsListProps) {
               {/* Right: Registration Count & Three Dots */}
               <div className="flex items-center space-x-4">
                 <div className="text-right">
-                  <h3 className="text-xl font-bold">{event.registrationCount}</h3>
+                  <h3 className="text-xl font-bold">
+                    {event.registrationCount}
+                  </h3>
                   <p className="text-gray-500 text-sm">Registration Count</p>
                 </div>
                 <button
@@ -160,11 +188,7 @@ export default function EventsList({ events, activeTab }: EventsListProps) {
                       Share
                     </button>
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(event.id);
-                        setOpenMenuId(null);
-                      }}
+                      onClick={(e) => openDeleteModal(event.id, e)}
                       className="flex items-center w-full px-4 py-2 text-red-600 hover:bg-gray-100"
                     >
                       <FaTrash className="mr-2" />
@@ -176,10 +200,21 @@ export default function EventsList({ events, activeTab }: EventsListProps) {
             </div>
           ))
         ) : (
-          <p className="text-gray-500 text-center col-span-2">No events found</p>
+          <p className="text-gray-500 text-center col-span-2">
+            No events found
+          </p>
         )}
       </div>
+
+      {/* Toast notifications */}
       <ToastContainer />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

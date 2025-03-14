@@ -6,7 +6,7 @@ import { ReactNode, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-// Define Props Type – note the added is_past property
+// Updated Event interface with a new "slug" property
 interface Event {
   category: {
     name: string;
@@ -16,6 +16,7 @@ interface Event {
   } | null;
   name: ReactNode;
   id: number;
+  slug: string; // New property for the event slug
   image: string | StaticImport;
   title: string;
   status: string;
@@ -32,10 +33,10 @@ export default function EventsList({ events, activeTab }: EventsListProps) {
   const { navigateTo } = useNavigate();
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
-  // Updated share handler to use a specific URL based on the event id
-  const handleShare = async (eventId: number) => {
-    // Construct the URL with the event id
-    const urlToShare = `https://www.myotherapp.com/dashboard/dashScreen?event_id=${eventId}`;
+  // Updated share handler to use the event slug for the URL
+  const handleShare = async (event: Event) => {
+    // Construct the URL using the event slug
+    const urlToShare = `https://events.myotherapp.com/${event.slug}`;
     if (navigator.share) {
       try {
         await navigator.share({
@@ -99,9 +100,9 @@ export default function EventsList({ events, activeTab }: EventsListProps) {
 
   // Filter events based on activeTab: if "past", show events with is_past true;
   // otherwise, show live events (is_past false)
-  const filteredEvents = events.filter(event => {
-    return activeTab === "past" ? event.is_past === true : event.is_past !== true;
-  });
+  const filteredEvents = events.filter(event =>
+    activeTab === "past" ? event.is_past === true : event.is_past !== true
+  );
 
   return (
     <div className="p-6">
@@ -151,7 +152,7 @@ export default function EventsList({ events, activeTab }: EventsListProps) {
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
-                      onClick={() => handleShare(event.id)}
+                      onClick={() => handleShare(event)}
                       aria-label="Share this page"
                       className="flex items-center w-full px-4 py-2 hover:bg-gray-100"
                     >

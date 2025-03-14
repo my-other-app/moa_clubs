@@ -1,7 +1,13 @@
 "use client";
 
 import axios from "axios";
-import { MouseEventHandler, ReactNode, useEffect, useState } from "react";
+import {
+  MouseEventHandler,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 import Image from "next/image";
 import { Edit, Trash, Download, Search, Plus } from "lucide-react";
 import Sidebar from "@/app/components/sidebar";
@@ -13,8 +19,8 @@ import Popup from "reactjs-popup";
 import Volunteer from "@/app/components/dashboard/volunteer";
 import { useNavigate } from "@/app/utils/navigation";
 import { FaExternalLinkAlt } from "react-icons/fa";
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const getAccessToken = () => localStorage.getItem("accessToken");
@@ -24,9 +30,11 @@ export default function DashScreen() {
   // State to track which tab is active: "registration" or "attendance"
   const [activeTab, setActiveTab] = useState("registration");
 
+  // Updated interface: added slug property.
   interface Event {
     id: number;
     name: string;
+    slug: string;
     poster?: {
       medium: string;
     };
@@ -54,43 +62,32 @@ export default function DashScreen() {
   const event_id = searchParams.get("event_id");
   const parsedEventId = event_id ? Number.parseInt(event_id as string, 10) : 0;
 
-  // Get the navigation helper from your custom hook.
   const { navigateTo } = useNavigate();
-  // Retrieve the event_id query parameter from the URL.
-  const currentEventId = searchParams.get("event_id");
-
-  const handleEditClick = () => {
-    if (currentEventId) {
-      // Navigate to the edit page with the event_id appended as a query parameter.
-      navigateTo(`/dashboard/eventEachEdit/editCreateEvent?event_id=${currentEventId}`);
-    } else {
-      console.error("Event ID not found in URL");
-    }
-  };
 
   // Fetch events from API
-  const getEvents = async () => {
+  const getEvents = useCallback(async () => {
     const accessToken = getAccessToken();
     if (!accessToken) {
       console.warn("⚠️ No access token found! User might be logged out.");
       return;
     }
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/v1/clubs/events/list`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      const response = await axios.get(
+        `${API_BASE_URL}/api/v1/clubs/events/list`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
       setEvents(response.data.items);
     } catch (error) {
       console.error("❌ Error fetching events:", error);
     }
-  };
-
-  
+  }, []);
 
   // Fetch registrations from API using the current regLimit
-  const getRegistrations = async () => {
+  const getRegistrations = useCallback(async () => {
     const accessToken = getAccessToken();
     if (!accessToken) {
       console.error("No access token found");
@@ -113,19 +110,61 @@ export default function DashScreen() {
     } finally {
       setLoadingRegistrations(false);
     }
-  };
+  }, [parsedEventId, regLimit]);
 
-  // Fetch events and registrations on mount or when event_id or regLimit changes
+  // Fetch events and registrations on mount or when dependencies change.
   useEffect(() => {
     getEvents();
     if (parsedEventId) {
       getRegistrations();
     }
-  }, [event_id, parsedEventId, regLimit]);
+  }, [event_id, parsedEventId, getEvents, getRegistrations]);
 
   // Find the event matching the event_id
   const currentEvent = events.find((event) => event.id === parsedEventId);
   console.log(currentEvent);
+
+  // Edit handler: navigate with both event_id and event slug.
+  const handleEditClick = () => {
+    if (currentEvent && currentEvent.slug) {
+      navigateTo(
+        `/dashboard/eventEachEdit/editCreateEvent?event_id=${parsedEventId}&slug=${currentEvent.slug}`
+      );
+    } else if (event_id) {
+      // Fallback if slug is missing
+      navigateTo(`/dashboard/eventEachEdit/editCreateEvent?event_id=${event_id}`);
+    } else {
+      console.error("Event ID not found in URL");
+    }
+  };
+
+  // Share handler: share the URL using the event slug if available.
+  const handleShare = async () => {
+    let urlToShare = window.location.href;
+    if (currentEvent && currentEvent.slug) {
+      urlToShare = `https://events.myotherapp.com/${currentEvent.slug}`;
+    }
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: currentEvent ? currentEvent.name : "Check out this event",
+          url: urlToShare,
+        });
+        toast.success("Event URL shared successfully!");
+      } catch (error) {
+        toast.error("Error sharing the page.");
+        console.error("Error sharing", error);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(urlToShare);
+        toast.info("URL copied to clipboard!");
+      } catch (err) {
+        toast.error("Failed to copy URL.");
+        console.error("Failed to copy: ", err);
+      }
+    }
+  };
 
   const handleSendMessage = () => {
     if (!message.trim()) return;
@@ -167,12 +206,12 @@ export default function DashScreen() {
       ? registrations.filter((reg) => reg.is_attended)
       : registrations;
 
-  // Function to increase registration limit by 10 on "Show More" click
+  // Increase registration limit by 10 on "Show More" click.
   const handleShowMoreRegistrations = () => {
     setRegLimit((prev) => prev + 10);
   };
 
-  // Update: handleDelete now accepts a number parameter (the event id)
+  // Delete handler remains unchanged.
   const handleDelete = async (eventId: number) => {
     const confirmed = window.confirm("Are you sure you want to delete this event?");
     if (!confirmed) return;
@@ -184,15 +223,12 @@ export default function DashScreen() {
     }
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/events/delete/${eventId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/api/v1/events/delete/${eventId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (response.ok) {
         console.log("Event deleted successfully");
@@ -205,35 +241,12 @@ export default function DashScreen() {
       console.error("Error deleting the event:", error);
     }
   };
-  
-    const handleShare = async () => {
-      const pageUrl = window.location.href;
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: document.title,
-            url: pageUrl,
-          });
-          toast.success("Event URL shared successfully!");
-        } catch (error) {
-          toast.error('Error sharing the page.');
-          console.error('Error sharing', error);
-        }
-      } else {
-        try {
-          await navigator.clipboard.writeText(pageUrl);
-          toast.info('URL copied to clipboard!');
-        } catch (err) {
-          toast.error('Failed to copy URL.');
-          console.error('Failed to copy: ', err);
-        }
-      }
-    };
 
   return (
     <div className="flex min-h-screen md:px-12">
       <Sidebar />
-      <div className="flex-1 p-6"><ToastContainer position="top-right" autoClose={3000} />
+      <div className="flex-1 p-6">
+        <ToastContainer position="top-right" autoClose={3000} />
         <div className="bg-white rounded-tl-2xl rounded-bl-2xl p-8 min-h-[calc(100vh-3rem)]">
           {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -248,17 +261,21 @@ export default function DashScreen() {
               >
                 <Edit className="w-6 h-6 text-[#979797]" />
               </button>
-              {/* Delete Button: Passing the parsedEventId to delete */}
+              {/* Delete Button */}
               <button
                 onClick={() => handleDelete(parsedEventId)}
                 className="w-12 h-12 p-3 bg-[#f3f3f3] rounded flex justify-center items-center"
               >
                 <Trash className="w-6 h-6 text-[#979797]" />
               </button>
-              <button onClick={handleShare} aria-label="Share this page" className="w-12 h-12 p-3 bg-[#f3f3f3] rounded flex justify-center items-center">
-                <FaExternalLinkAlt className=" text-[#979797]" />
+              {/* Share Button */}
+              <button
+                onClick={handleShare}
+                aria-label="Share this page"
+                className="w-12 h-12 p-3 bg-[#f3f3f3] rounded flex justify-center items-center"
+              >
+                <FaExternalLinkAlt className="text-[#979797]" />
               </button>
-
               <Popup
                 trigger={
                   <button className="p-3 flex items-center gap-2 bg-[#2c333d] text-white rounded-xl">
@@ -296,7 +313,10 @@ export default function DashScreen() {
             {/* Left Column - Event Image */}
             <div className="flex-shrink-0 w-full lg:w-auto">
               <Image
-                src={currentEvent?.poster?.medium || "https://dummyimage.com/600x400/000/fff"}
+                src={
+                  currentEvent?.poster?.medium ||
+                  "https://dummyimage.com/600x400/000/fff"
+                }
                 alt="Event poster"
                 width={600}
                 height={600}
@@ -506,7 +526,6 @@ export default function DashScreen() {
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </div>

@@ -12,6 +12,9 @@ import { Textarea } from "@/components/ui/textarea";
 import Popup from "reactjs-popup";
 import Volunteer from "@/app/components/dashboard/volunteer";
 import { useNavigate } from "@/app/utils/navigation";
+import { FaExternalLinkAlt } from "react-icons/fa";
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const getAccessToken = () => localStorage.getItem("accessToken");
@@ -83,6 +86,8 @@ export default function DashScreen() {
       console.error("❌ Error fetching events:", error);
     }
   };
+
+  
 
   // Fetch registrations from API using the current regLimit
   const getRegistrations = async () => {
@@ -200,11 +205,35 @@ export default function DashScreen() {
       console.error("Error deleting the event:", error);
     }
   };
+  
+    const handleShare = async () => {
+      const pageUrl = window.location.href;
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: document.title,
+            url: pageUrl,
+          });
+          toast.success("Event URL shared successfully!");
+        } catch (error) {
+          toast.error('Error sharing the page.');
+          console.error('Error sharing', error);
+        }
+      } else {
+        try {
+          await navigator.clipboard.writeText(pageUrl);
+          toast.info('URL copied to clipboard!');
+        } catch (err) {
+          toast.error('Failed to copy URL.');
+          console.error('Failed to copy: ', err);
+        }
+      }
+    };
 
   return (
     <div className="flex min-h-screen md:px-12">
       <Sidebar />
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-6"><ToastContainer position="top-right" autoClose={3000} />
         <div className="bg-white rounded-tl-2xl rounded-bl-2xl p-8 min-h-[calc(100vh-3rem)]">
           {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -226,8 +255,8 @@ export default function DashScreen() {
               >
                 <Trash className="w-6 h-6 text-[#979797]" />
               </button>
-              <button className="w-12 h-12 p-3 bg-[#f3f3f3] rounded flex justify-center items-center">
-                <Settings className="w-6 h-6 text-[#979797]" />
+              <button onClick={handleShare} aria-label="Share this page" className="w-12 h-12 p-3 bg-[#f3f3f3] rounded flex justify-center items-center">
+                <FaExternalLinkAlt className=" text-[#979797]" />
               </button>
 
               <Popup

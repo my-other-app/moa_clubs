@@ -2,7 +2,9 @@ import Image from "next/image";
 import { FaTrash, FaExternalLinkAlt, FaEllipsisV } from "react-icons/fa";
 import { useNavigate } from "@/app/utils/navigation";
 import { StaticImport } from "next/dist/shared/lib/get-img-props";
-import { Key, ReactNode, useState } from "react";
+import { ReactNode, useState } from "react";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // Define Props Type – note the added is_past property
 interface Event {
@@ -13,7 +15,7 @@ interface Event {
     thumbnail?: string;
   } | null;
   name: ReactNode;
-  id: number; // Change Key to number
+  id: number;
   image: string | StaticImport;
   title: string;
   status: string;
@@ -28,12 +30,33 @@ interface EventsListProps {
 
 export default function EventsList({ events, activeTab }: EventsListProps) {
   const { navigateTo } = useNavigate();
-  const [openMenuId, setOpenMenuId] = useState<Key | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
-
-
-  const handleShare = (eventId: Key) => {
-    console.log(`Sharing event with ID: ${eventId}`);
+  // Updated share handler to use a specific URL based on the event id
+  const handleShare = async (eventId: number) => {
+    // Construct the URL with the event id
+    const urlToShare = `https://www.myotherapp.com/dashboard/dashScreen?event_id=${eventId}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Check out this event",
+          url: urlToShare,
+        });
+        toast.success("Event URL shared successfully!");
+      } catch (error) {
+        toast.error("Error sharing event URL.");
+        console.error("Error sharing", error);
+      }
+    } else {
+      // Fallback: copy the URL to the clipboard
+      try {
+        await navigator.clipboard.writeText(urlToShare);
+        toast.info("Event URL copied to clipboard!");
+      } catch (err) {
+        toast.error("Failed to copy event URL.");
+        console.error("Failed to copy event URL: ", err);
+      }
+    }
     setOpenMenuId(null);
   };
 
@@ -49,30 +72,27 @@ export default function EventsList({ events, activeTab }: EventsListProps) {
 
     try {
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/events/delete/${eventId}`,
-        {
-          method: "DELETE",
-          headers: {
-        Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/api/v1/events/delete/${eventId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (response.ok) {
-        console.log("Event deleted successfully");
+        toast.success("Event deleted successfully");
         window.location.reload();
       } else {
         const data = await response.json();
-        alert(data.message || "Failed to delete the event");
+        toast.error(data.message || "Failed to delete the event");
       }
     } catch (error) {
+      toast.error("Error deleting the event");
       console.error("Error deleting the event:", error);
     }
   };
 
-
-  const toggleMenu = (eventId: Key, e: React.MouseEvent) => {
+  const toggleMenu = (eventId: number, e: React.MouseEvent) => {
     e.stopPropagation();
     setOpenMenuId(prev => (prev === eventId ? null : eventId));
   };
@@ -131,10 +151,8 @@ export default function EventsList({ events, activeTab }: EventsListProps) {
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleShare(event.id);
-                      }}
+                      onClick={() => handleShare(event.id)}
+                      aria-label="Share this page"
                       className="flex items-center w-full px-4 py-2 hover:bg-gray-100"
                     >
                       <FaExternalLinkAlt className="mr-2" />
@@ -160,6 +178,7 @@ export default function EventsList({ events, activeTab }: EventsListProps) {
           <p className="text-gray-500 text-center col-span-2">No events found</p>
         )}
       </div>
+      <ToastContainer />
     </div>
   );
 }

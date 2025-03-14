@@ -115,14 +115,6 @@ export default function Volunteer({ event_id }: VolunteerProps) {
             className="p-2 border rounded w-full"
             required
           />
-          <input
-            type="tel"
-            value={volunteerPhone}
-            onChange={(e) => setVolunteerPhone(e.target.value)}
-            placeholder="Enter Phone Number"
-            className="p-2 border rounded w-full"
-            required
-          />
           <button
             onClick={addVolunteer}
             className="mt-2 px-4 py-2 border border-black text-black hover:bg-black hover:text-white rounded text-2xl bebas"

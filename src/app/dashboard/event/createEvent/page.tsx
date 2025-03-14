@@ -12,7 +12,6 @@ type Category = {
   name: string;
 };
 
-// Renamed interests constant to avoid shadowing the fetched categories state
 const interestCategories = [
   {
     title: "Academic",
@@ -55,9 +54,13 @@ const interestCategories = [
 ];
 
 export default function CreateEvent() {
+  // State for event coordinator details
+  const [eventCoordinatorName, setEventCoordinatorName] = useState("");
+  const [eventCoordinatorPhone, setEventCoordinatorPhone] = useState("");
+  const [eventCoordinatorEmail, setEventCoordinatorEmail] = useState("");
+
   // State for interests selection
   const [selected, setSelected] = useState<{ id: number; name: string }[]>([]);
-
 
   // Toggle selection with a max limit of 5 interests
   const toggleSelection = (option: { id: number; name: string }) => {
@@ -74,26 +77,24 @@ export default function CreateEvent() {
   const router = useRouter();
   const { setEventData } = useEvent();
 
-  // State for event details
+  // Other event state variables
   const [eventPoster, setEventPoster] = useState<File | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [eventTitle, setEventTitle] = useState<string>("");
-  const [eventSeats, setEventSeats] = useState<string>("");
-  const [eventDescription, setEventDescription] = useState<string>("");
-  const [eventDate, setEventDate] = useState<string>("");
-  const [eventStartTime, setEventStartTime] = useState<string>("");
+  const [eventTitle, setEventTitle] = useState("");
+  const [eventSeats, setEventSeats] = useState("");
+  const [eventDescription, setEventDescription] = useState("");
+  const [eventDate, setEventDate] = useState("");
+  const [eventStartTime, setEventStartTime] = useState("");
   const [eventDuration, setEventDuration] = useState<number | null>(null);
-  const [eventRegistrationClosingDate, setEventRegistrationClosingDate] = useState<string>("");
-  const [eventRegistrationClosingTime, setEventRegistrationClosingTime] = useState<string>("");
-
-  // eventMode is either true (online), false (offline) or an empty string (not selected)
+  const [eventRegistrationClosingDate, setEventRegistrationClosingDate] = useState("");
+  const [eventRegistrationClosingTime, setEventRegistrationClosingTime] = useState("");
   const [eventMode, setEventMode] = useState<boolean | "">("");
-  const [eventLocation, setEventLocation] = useState<string>("");
-  const [eventMeetLink, setEventMeetLink] = useState<string>("");
+  const [eventLocation, setEventLocation] = useState("");
+  const [eventMeetLink, setEventMeetLink] = useState("");
   const [eventFee, setEventFee] = useState<number>(0);
   const [eventPerks, setEventPerks] = useState<number>(0);
-  const [eventGuidelines, setEventGuidelines] = useState<string>("");
+  const [eventGuidelines, setEventGuidelines] = useState("");
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -156,8 +157,8 @@ export default function CreateEvent() {
       reg_enddate: eventCloseDatetime,
       additional_details: [],
       reg_startdate: "",
-      contact_phone: null,
-      contact_email: null,
+      contact_phone: eventCoordinatorPhone, // Pass the coordinator's phone here
+      contact_email: eventCoordinatorEmail, // Pass the coordinator's email here
       interest_ids: null,
       // club_id: null
     };
@@ -189,6 +190,60 @@ export default function CreateEvent() {
                   required
                 />
               </div>
+
+              <div className="flex flex-col">
+                <h3 className="text-gray-700 text-sm mb-1">
+                  Event Coordinator Name<span className="text-red-500">*</span>
+                </h3>
+                <input
+                  type="text"
+                  placeholder="Enter Event Coordinator Name"
+                  className="p-2 border border-gray-400 rounded"
+                  value={eventCoordinatorName}
+                  onChange={(e) => setEventCoordinatorName(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="flex flex-col">
+                <h3 className="text-gray-700 text-sm mb-1">
+                  Event Coordinator Phone Number<span className="text-red-500">*</span>
+                </h3>
+                <input
+                  type="text"
+                  placeholder="Enter Event Coordinator Phone Number"
+                  className="p-2 border border-gray-400 rounded"
+                  value={eventCoordinatorPhone}
+                  onChange={(e) => setEventCoordinatorPhone(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="flex flex-col">
+                <h3 className="text-gray-700 text-sm mb-1">
+                  Event Coordinator Email<span className="text-red-500">*</span>
+                </h3>
+                <input
+                  type="email"
+                  placeholder="Enter Event Coordinator Email"
+                  className="p-2 border border-gray-400 rounded"
+                  value={eventCoordinatorEmail}
+                  onChange={(e) => setEventCoordinatorEmail(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+            <div className="flex flex-col min-h-1/1 gap-5">
+              <div className="flex flex-col flex-1 w-1/1">
+                <h3 className="text-gray-700 text-sm mb-1">
+                  Event Description<span className="text-red-500">*</span>
+                </h3>
+                <textarea
+                  placeholder="Enter Event Description"
+                  className="p-2 border border-gray-400 rounded h-1/1"
+                  value={eventDescription}
+                  required
+                  onChange={(e) => setEventDescription(e.target.value)}
+                ></textarea>
+              </div>
               <div className="flex flex-col">
                 <h3 className="text-gray-700 text-sm mb-1">
                   Event Category<span className="text-red-500">*</span>
@@ -203,7 +258,7 @@ export default function CreateEvent() {
                     Choose Event Category
                   </option>
                   {categories.map((category) => (
-                    <option key={category.id} value={parseInt(category.id.toString(), 10)}>
+                    <option key={category.id} value={category.id}>
                       {category.name}
                     </option>
                   ))}
@@ -223,66 +278,60 @@ export default function CreateEvent() {
                 />
               </div>
             </div>
-            <div className="flex flex-col min-h-1/1">
-              <div className="flex flex-col flex-1 w-1/1">
-                <h3 className="text-gray-700 text-sm mb-1">
-                  Event Description<span className="text-red-500">*</span>
-                </h3>
-                <textarea
-                  placeholder="Enter Event Description"
-                  className="p-2 border border-gray-400 rounded h-1/1"
-                  value={eventDescription}
-                  required
-                  onChange={(e) => setEventDescription(e.target.value)}
-                ></textarea>
-              </div>
-            </div>
             <div className="flex flex-col items-center my-auto">
-                <label
-                  htmlFor="eventPoster"
-                  className="p-2 rounded cursor-pointer flex items-center justify-center"
-                >
-                  {eventPoster ? (
-                    <Image
-                      src={URL.createObjectURL(eventPoster)}
-                      width={100}
-                      height={100}
-                      alt="Event Poster"
-                      className="w-50 aspect-square h-50 object-cover rounded"
-                    />
-                  ) : (
-                    <div>
-                      <svg
-                        width="100"
-                        height="100"
-                        viewBox="0 0 100 100"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <rect x="0.25" y="0.25" width="99.5" height="99.5" rx="49.75" fill="#F3F3F3" />
-                        <rect x="0.25" y="0.25" width="99.5" height="99.5" rx="49.75" stroke="#979797" strokeWidth="0.5" />
-                        <path
-                          d="M51 32H41.6C38.2397 32 36.5595 32 35.2761 32.654C34.1471 33.2292 33.2292 34.1471 32.654 35.2761C32 36.5595 32 38.2397 32 41.6V58.4C32 61.7603 32 63.4405 32.654 64.7239C33.2292 65.8529 34.1471 66.7708 35.2761 67.346C36.5595 68 38.2397 68 41.6 68H60C61.8599 68 62.7899 68 63.5529 67.7956C65.6235 67.2408 67.2408 65.6235 67.7956 63.5529C68 62.7899 68 61.8599 68 60M64 42V30M58 36H70M47 43C47 45.2091 45.2091 47 43 47C40.7909 47 39 45.2091 39 43C39 40.7909 40.7909 39 43 39C45.2091 39 47 40.7909 47 43ZM55.9801 49.8363L39.0623 65.2161C38.1107 66.0812 37.6349 66.5137 37.5929 66.8884C37.5564 67.2132 37.6809 67.5353 37.9264 67.7511C38.2096 68 38.8526 68 40.1386 68H58.912C61.7903 68 63.2295 68 64.3598 67.5164C65.7789 66.9094 66.9094 65.7789 67.5164 64.3598C68 63.2295 68 61.7903 68 58.912C68 57.9435 68 57.4593 67.8941 57.0083C67.7611 56.4416 67.5059 55.9107 67.1465 55.4528C66.8605 55.0884 66.4824 54.7859 65.7261 54.1809L60.1317 49.7053C59.3748 49.0998 58.9963 48.7971 58.5796 48.6902C58.2123 48.596 57.8257 48.6082 57.4651 48.7254C57.0559 48.8583 56.6973 49.1843 55.9801 49.8363Z"
-                          stroke="#979797"
-                          strokeWidth="4"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </div>
-                  )}
-                  <input
-                    id="eventPoster"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handlePosterUpload}
+              <label
+                htmlFor="eventPoster"
+                className="p-2 rounded cursor-pointer flex items-center justify-center"
+              >
+                {eventPoster ? (
+                  <Image
+                    src={URL.createObjectURL(eventPoster)}
+                    width={100}
+                    height={100}
+                    alt="Event Poster"
+                    className="w-50 aspect-square h-50 object-cover rounded"
                   />
-                </label>
-                <h3>
-                  Add Event Poster<span className="text-red-500">*</span>
-                </h3>
-              </div>
+                ) : (
+                  <div>
+                    <svg
+                      width="100"
+                      height="100"
+                      viewBox="0 0 100 100"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <rect x="0.25" y="0.25" width="99.5" height="99.5" rx="49.75" fill="#F3F3F3" />
+                      <rect
+                        x="0.25"
+                        y="0.25"
+                        width="99.5"
+                        height="99.5"
+                        rx="49.75"
+                        stroke="#979797"
+                        strokeWidth="0.5"
+                      />
+                      <path
+                        d="M51 32H41.6C38.2397 32 36.5595 32 35.2761 32.654C34.1471 33.2292 33.2292 34.1471 32.654 35.2761C32 36.5595 32 38.2397 32 41.6V58.4C32 61.7603 32 63.4405 32.654 64.7239C33.2292 65.8529 34.1471 66.7708 35.2761 67.346C36.5595 68 38.2397 68 41.6 68H60C61.8599 68 62.7899 68 63.5529 67.7956C65.6235 67.2408 67.2408 65.6235 67.7956 63.5529C68 62.7899 68 61.8599 68 60M64 42V30M58 36H70M47 43C47 45.2091 45.2091 47 43 47C40.7909 47 39 45.2091 39 43C39 40.7909 40.7909 39 43 39C45.2091 39 47 40.7909 47 43ZM55.9801 49.8363L39.0623 65.2161C38.1107 66.0812 37.6349 66.5137 37.5929 66.8884C37.5564 67.2132 37.6809 67.5353 37.9264 67.7511C38.2096 68 38.8526 68 40.1386 68H58.912C61.7903 68 63.2295 68 64.3598 67.5164C65.7789 66.9094 66.9094 65.7789 67.5164 64.3598C68 63.2295 68 61.7903 68 58.912C68 57.9435 68 57.4593 67.8941 57.0083C67.7611 56.4416 67.5059 55.9107 67.1465 55.4528C66.8605 55.0884 66.4824 54.7859 65.7261 54.1809L60.1317 49.7053C59.3748 49.0998 58.9963 48.7971 58.5796 48.6902C58.2123 48.596 57.8257 48.6082 57.4651 48.7254C57.0559 48.8583 56.6973 49.1843 55.9801 49.8363Z"
+                        stroke="#979797"
+                        strokeWidth="4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                )}
+                <input
+                  id="eventPoster"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handlePosterUpload}
+                />
+              </label>
+              <h3>
+                Add Event Poster<span className="text-red-500">*</span>
+              </h3>
+            </div>
           </div>
           <h2 className="font-semibold mt-6 text-2xl bebas mb-6">DATE AND TIME</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
@@ -456,7 +505,7 @@ export default function CreateEvent() {
             value={eventGuidelines}
             onChange={(e) => setEventGuidelines(e.target.value)}
           ></textarea>
-<h2 className="font-semibold mt-6 text-2xl bebas">SELECT AREA RELATED TO THE EVENT</h2>
+          <h2 className="font-semibold mt-6 text-2xl bebas">SELECT AREA RELATED TO THE EVENT</h2>
           <div className="space-y-4 bg-gray-100 p-5 rounded-xl">
             {interestCategories.map(({ title, options }) => (
               <div key={title}>
@@ -470,9 +519,7 @@ export default function CreateEvent() {
                         toggleSelection(option);
                       }}
                       aria-pressed={selected.some((item) => item.id === option.id)}
-                      disabled={
-                        selected.length >= 5 && !selected.some((item) => item.id === option.id)
-                      }
+                      disabled={selected.length >= 5 && !selected.some((item) => item.id === option.id)}
                       className={`px-3 py-1 rounded-full transition ${
                         selected.some((item) => item.id === option.id)
                           ? "border-green-600 border-2"
@@ -491,11 +538,10 @@ export default function CreateEvent() {
             ))}
           </div>
           <div className="w-full mt-4 flex justify-end">
-  <button type="submit" className="bg-[#2C333D] bebas text-2xl p-2 px-8 text-white rounded">
-    CONTINUE
-  </button>
-</div>
-
+            <button type="submit" className="bg-[#2C333D] bebas text-2xl p-2 px-8 text-white rounded">
+              CONTINUE
+            </button>
+          </div>
         </form>
       </div>
     </>

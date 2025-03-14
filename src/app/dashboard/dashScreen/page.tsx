@@ -22,6 +22,9 @@ import { FaExternalLinkAlt } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+// Import your custom DeleteConfirmationModal
+import DeleteConfirmationModal from "@/app/components/DeleteConfirmationModal";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const getAccessToken = () => localStorage.getItem("accessToken");
 
@@ -58,6 +61,11 @@ export default function DashScreen() {
   // Registration limit state, defaulting to 10
   const [regLimit, setRegLimit] = useState(10);
   const [loadingRegistrations, setLoadingRegistrations] = useState(false);
+
+  // State for delete modal
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
+
   const searchParams = useSearchParams();
   const event_id = searchParams.get("event_id");
   const parsedEventId = event_id ? Number.parseInt(event_id as string, 10) : 0;
@@ -200,45 +208,56 @@ export default function DashScreen() {
     }
   };
 
-  // Determine which registrations to display based on active tab
-  const displayedRegistrations =
-    activeTab === "attendance"
-      ? registrations.filter((reg) => reg.is_attended)
-      : registrations;
-
   // Increase registration limit by 10 on "Show More" click.
   const handleShowMoreRegistrations = () => {
     setRegLimit((prev) => prev + 10);
   };
 
-  // Delete handler remains unchanged.
-  const handleDelete = async (eventId: number) => {
-    const confirmed = window.confirm("Are you sure you want to delete this event?");
-    if (!confirmed) return;
+  // ─────────────────────────────────────────────────────────────────────────────
+  // CUSTOM DELETE MODAL LOGIC
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  // Open the custom modal
+  const openDeleteModal = (eventId: number) => {
+    setSelectedEventId(eventId);
+    setShowDeleteModal(true);
+  };
+
+  // Confirm the delete action
+  const confirmDelete = async () => {
+    if (selectedEventId == null) return;
 
     const token = localStorage.getItem("accessToken");
     if (!token) {
       console.error("Access token not found");
+      toast.error("Access token not found");
       return;
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/events/delete/${eventId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/events/delete/${selectedEventId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (response.ok) {
-        console.log("Event deleted successfully");
+        toast.success("Event deleted successfully");
         window.location.reload();
       } else {
         const data = await response.json();
-        alert(data.message || "Failed to delete the event");
+        toast.error(data.message || "Failed to delete the event");
       }
     } catch (error) {
       console.error("Error deleting the event:", error);
+      toast.error("Error deleting the event");
+    } finally {
+      setShowDeleteModal(false);
+      setSelectedEventId(null);
     }
   };
 
@@ -261,9 +280,9 @@ export default function DashScreen() {
               >
                 <Edit className="w-6 h-6 text-[#979797]" />
               </button>
-              {/* Delete Button */}
+              {/* Delete Button - open modal instead of window.confirm */}
               <button
-                onClick={() => handleDelete(parsedEventId)}
+                onClick={() => openDeleteModal(parsedEventId)}
                 className="w-12 h-12 p-3 bg-[#f3f3f3] rounded flex justify-center items-center"
               >
                 <Trash className="w-6 h-6 text-[#979797]" />
@@ -292,7 +311,10 @@ export default function DashScreen() {
               >
                 {((close: MouseEventHandler<HTMLButtonElement> | undefined) => (
                   <div className="p-4 bg-white rounded-2xl">
-                    <button onClick={close} className="text-right w-full text-black mb-2">
+                    <button
+                      onClick={close}
+                      className="text-right w-full text-black mb-2"
+                    >
                       X
                     </button>
                     <Volunteer
@@ -413,7 +435,9 @@ export default function DashScreen() {
                     >
                       <div
                         className={`self-stretch text-center text-xl font-medium font-['DM_Sans'] ${
-                          activeTab === "registration" ? "text-[#2c333d]" : "text-[#b4b4b4]"
+                          activeTab === "registration"
+                            ? "text-[#2c333d]"
+                            : "text-[#b4b4b4]"
                         }`}
                       >
                         Registration
@@ -428,7 +452,9 @@ export default function DashScreen() {
                     >
                       <div
                         className={`self-stretch text-center text-xl font-medium font-['DM_Sans'] ${
-                          activeTab === "attendance" ? "text-[#2c333d]" : "text-[#b4b4b4]"
+                          activeTab === "attendance"
+                            ? "text-[#2c333d]"
+                            : "text-[#b4b4b4]"
                         }`}
                       >
                         Attendance
@@ -482,32 +508,43 @@ export default function DashScreen() {
                     </tr>
                   </thead>
                   <tbody>
-                    {displayedRegistrations.map((reg, index) => (
-                      <tr
-                        key={index}
-                        className={
-                          index !== displayedRegistrations.length - 1
-                            ? "border-b border-[#979797]"
-                            : ""
-                        }
-                      >
-                        <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">
-                          {reg.id}
-                        </td>
-                        <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">
-                          {reg.full_name}
-                        </td>
-                        <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">
-                          {reg.email}
-                        </td>
-                        <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">
-                          {reg.phone}
-                        </td>
-                        <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">
-                          {reg.profile}
+                    {registrations.length > 0 ? (
+                      registrations.map((reg, index) => (
+                        <tr
+                          key={index}
+                          className={
+                            index !== registrations.length - 1
+                              ? "border-b border-[#979797]"
+                              : ""
+                          }
+                        >
+                          <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">
+                            {reg.id}
+                          </td>
+                          <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">
+                            {reg.full_name}
+                          </td>
+                          <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">
+                            {reg.email}
+                          </td>
+                          <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">
+                            {reg.phone}
+                          </td>
+                          <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">
+                            {reg.profile}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={5}
+                          className="py-4 px-4 text-center text-[#979797]"
+                        >
+                          No registrations found
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -528,6 +565,13 @@ export default function DashScreen() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

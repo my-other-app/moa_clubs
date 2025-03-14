@@ -13,7 +13,7 @@ interface Event {
     thumbnail?: string;
   } | null;
   name: ReactNode;
-  id: Key;
+  id: number; // Change Key to number
   image: string | StaticImport;
   title: string;
   status: string;
@@ -30,7 +30,14 @@ export default function EventsList({ events, activeTab }: EventsListProps) {
   const { navigateTo } = useNavigate();
   const [openMenuId, setOpenMenuId] = useState<Key | null>(null);
 
-  const handleDelete = async (eventId: Key) => {
+
+
+  const handleShare = (eventId: Key) => {
+    console.log(`Sharing event with ID: ${eventId}`);
+    setOpenMenuId(null);
+  };
+
+  const handleDelete = async (eventId: number) => {
     const confirmed = window.confirm("Are you sure you want to delete this event?");
     if (!confirmed) return;
 
@@ -41,12 +48,13 @@ export default function EventsList({ events, activeTab }: EventsListProps) {
     }
 
     try {
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/events/delete/${eventId}`,
+        `${API_BASE_URL}/api/v1/events/delete/${eventId}`,
         {
           method: "DELETE",
           headers: {
-            "Authorization": `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -63,10 +71,6 @@ export default function EventsList({ events, activeTab }: EventsListProps) {
     }
   };
 
-  const handleShare = (eventId: Key) => {
-    // Implement share functionality as needed.
-    setOpenMenuId(null);
-  };
 
   const toggleMenu = (eventId: Key, e: React.MouseEvent) => {
     e.stopPropagation();

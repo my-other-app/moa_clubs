@@ -1,8 +1,9 @@
 import Image from "next/image";
-import { FaEdit, FaTrash, FaExternalLinkAlt } from "react-icons/fa";
+import { FaTrash, FaExternalLinkAlt, FaEllipsisV } from "react-icons/fa";
 import { useNavigate } from "@/app/utils/navigation";
 import { StaticImport } from "next/dist/shared/lib/get-img-props";
-import { Key, ReactNode } from "react";
+import { Key, ReactNode, useState } from "react";
+import { Button } from "@/components/ui/button";
 
 // Define Props Type
 interface Event {
@@ -11,7 +12,7 @@ interface Event {
   } | null;
   poster: {
     thumbnail?: string;
-    // ...any other poster properties you need
+    // ...other poster properties
   } | null;
   name: ReactNode;
   id: Key;
@@ -27,26 +28,29 @@ interface EventsListProps {
 
 export default function EventsList({ events }: EventsListProps) {
   const { navigateTo } = useNavigate();
+  const [openMenuId, setOpenMenuId] = useState<Key | null>(null);
 
   const handleDelete = async (eventId: Key) => {
-    // Add a confirmation popup before deletion
     const confirmed = window.confirm("Are you sure you want to delete this event?");
     if (!confirmed) return;
-  
+
     const token = localStorage.getItem("accessToken");
     if (!token) {
       console.error("Access token not found");
       return;
     }
-  
+
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/events/delete/${eventId}`, {
-        method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-      });
-  
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/events/delete/${eventId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+          },
+        }
+      );
+
       if (response.ok) {
         console.log("Event deleted successfully");
         window.location.reload();
@@ -58,21 +62,29 @@ export default function EventsList({ events }: EventsListProps) {
       console.error("Error deleting the event:", error);
     }
   };
-  
-  
+
+  const handleShare = (eventId: Key) => {
+    setOpenMenuId(null);
+  };
+
+  const toggleMenu = (eventId: Key, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setOpenMenuId(prev => (prev === eventId ? null : eventId));
+  };
 
   return (
     <div className="p-6">
-      {/* Events List */}
-      <div className="space-y-4">
+      {/* Events List: 2 events per row */}
+      <div className="grid grid-cols-2 gap-4">
         {events.length > 0 ? (
           events.map((event) => (
             <div
               key={event.id}
-              className="grid grid-cols-3 items-center p-4 rounded-lg border-2 border-gray-300"
+              className="relative flex items-center justify-between border-2 border-gray-300 rounded-lg p-4 cursor-pointer"
+              onClick={() => navigateTo(`/dashboard/dashScreen?event_id=${event.id}`)}
             >
-              {/* Left Column: Event Details */}
-              <div className="flex items-center space-x-4">
+              {/* Left: Event Details */}
+              <div className="flex items-center">
                 <Image
                   src={event.poster?.thumbnail || "/default-thumbnail.png"}
                   alt={typeof event.name === "string" ? event.name : ""}
@@ -80,56 +92,75 @@ export default function EventsList({ events }: EventsListProps) {
                   height={50}
                   className="rounded-md"
                 />
-                <div>
+                <div className="ml-4">
                   <h2 className="text-lg font-semibold">{event.name}</h2>
                   <h2 className="text-md font-semibold">{event.category?.name}</h2>
                   <span className="text-green-600 text-sm">{event.status}</span>
                 </div>
               </div>
 
-              {/* Center Column: Registration Count */}
-              <div className="text-center">
-                <h3 className="text-xl font-bold">{event.registrationCount}</h3>
-                <p className="text-gray-500 text-sm">Registration Count</p>
-              </div>
-
-              {/* Right Column: Action Buttons */}
-              <div className="flex justify-end space-x-2">
+              {/* Right: Registration Count & Three Dots */}
+              <div className="flex items-center space-x-4">
+                <div className="text-right">
+                  <h3 className="text-xl font-bold">{event.registrationCount}</h3>
+                  <p className="text-gray-500 text-sm">Registration Count</p>
+                </div>
                 <button
-                  onClick={() =>
-                    navigateTo(
-                      `/dashboard/eventEachEdit/editCreateEvent?event_id=${event.id}`
-                    )
-                  }
-                  className="p-3 bg-gray-200 text-gray-400 rounded hover:bg-gray-300"
-                  aria-label="Edit Event"
+                  onClick={(e) => toggleMenu(event.id, e)}
+                  className="p-2 text-gray-500 hover:text-gray-700 focus:outline-none active:translate-x-0 transition-none"
+                  aria-label="Actions"
                 >
-                  <FaEdit />
+                  <FaEllipsisV />
                 </button>
 
-                <button
-                  onClick={() => handleDelete(event.id)}
-                  className="p-3 bg-gray-200 text-gray-400 rounded hover:bg-gray-300"
-                  aria-label="Delete Event"
-                >
-                  <FaTrash />
-                </button>
 
-                <button
-                  onClick={() =>
-                    navigateTo(`/dashboard/dashScreen?event_id=${event.id}`)
-                  }
-                  className="p-3 bg-gray-200 text-gray-400 rounded hover:bg-gray-300"
-                  aria-label="View Event Details"
-                >
-                  <FaExternalLinkAlt />
-                </button>
+                {/* Popup Menu */}
+                {openMenuId === event.id && (
+                  <div
+                    className="absolute right-6 top-14 mt-2 w-40 bg-white border border-gray-200 rounded shadow-lg z-50"
+
+                  >
+                    <button
+                      onClick={(e) => {
+            
+                        handleShare(event.id);
+                      }}
+                      className="flex items-center w-full px-4 py-2 hover:bg-gray-100"
+                    >
+                      <FaExternalLinkAlt className="mr-2" />
+                      Share
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        handleDelete(event.id);
+                        setOpenMenuId(null);
+                      }}
+                      className="flex items-center w-full px-4 py-2 text-red-600 hover:bg-gray-100"
+                    >
+                      <FaTrash className="mr-2" />
+                      Delete
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ))
         ) : (
-          <p className="text-gray-500 text-center">No events found</p>
+          <p className="text-gray-500 text-center col-span-2">No events found</p>
         )}
+      </div>
+
+      {/* Show All Button at Bottom Centre */}
+      <div className="flex justify-center mt-8">
+        <Button
+          variant="outline"
+          className="w-60 h-[60px] px-[50px] py-[15px] bg-white rounded-lg border border-[#2c333d]"
+          // Note: You can add an onClick here if needed for "Show All" functionality.
+        >
+          <span className="text-center text-[#2c333d] text-2xl font-normal font-['Bebas_Neue']">
+            Show All
+          </span>
+        </Button>
       </div>
     </div>
   );

@@ -1,10 +1,13 @@
-import { useState } from "react";
+"use client";
 import Link from "next/link";
 import { FiSearch } from "react-icons/fi";
 
-export default function EventsHeader() {
-  const [activeTab, setActiveTab] = useState("live");
+interface EventsHeaderProps {
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+}
 
+export default function EventsHeader({ activeTab, onTabChange }: EventsHeaderProps) {
   return (
     <div className="flex justify-between items-start p-6 relative">
       {/* Left Section */}
@@ -17,7 +20,7 @@ export default function EventsHeader() {
                 ? "border-1 text-black border-black bg-[#F9FFA1]"
                 : "border-1 text-gray-400"
             }`}
-            onClick={() => setActiveTab("live")}
+            onClick={() => onTabChange("live")}
           >
             Live Events
           </button>
@@ -27,7 +30,7 @@ export default function EventsHeader() {
                 ? "border-1 text-black border-black bg-[#F9FFA1]"
                 : "border-1 text-gray-400"
             }`}
-            onClick={() => setActiveTab("past")}
+            onClick={() => onTabChange("past")}
           >
             Past Events
           </button>
@@ -44,7 +47,6 @@ export default function EventsHeader() {
 
       {/* Right Section */}
       <div className="flex-col flex">
-        {/* Create New Event Button */}
         <Link href="/dashboard/event/createEvent">
           <button className="bg-gray-700 text-xl bebas text-white px-8 py-3 top-16 right-7 absolute rounded-md hover:bg-gray-800">
             CREATE NEW EVENT

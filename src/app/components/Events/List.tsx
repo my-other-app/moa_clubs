@@ -5,14 +5,13 @@ import { StaticImport } from "next/dist/shared/lib/get-img-props";
 import { Key, ReactNode, useState } from "react";
 import { Button } from "@/components/ui/button";
 
-// Define Props Type
+// Define Props Type – note the added is_past property
 interface Event {
   category: {
     name: string;
   } | null;
   poster: {
     thumbnail?: string;
-    // ...other poster properties
   } | null;
   name: ReactNode;
   id: Key;
@@ -20,13 +19,15 @@ interface Event {
   title: string;
   status: string;
   registrationCount: number;
+  is_past: boolean;
 }
 
 interface EventsListProps {
   events: Event[];
+  activeTab: string;
 }
 
-export default function EventsList({ events }: EventsListProps) {
+export default function EventsList({ events, activeTab }: EventsListProps) {
   const { navigateTo } = useNavigate();
   const [openMenuId, setOpenMenuId] = useState<Key | null>(null);
 
@@ -64,6 +65,7 @@ export default function EventsList({ events }: EventsListProps) {
   };
 
   const handleShare = (eventId: Key) => {
+    // Implement share functionality as needed.
     setOpenMenuId(null);
   };
 
@@ -72,12 +74,18 @@ export default function EventsList({ events }: EventsListProps) {
     setOpenMenuId(prev => (prev === eventId ? null : eventId));
   };
 
+  // Filter events based on activeTab: if "past", show events with is_past true;
+  // otherwise, show live events (is_past false)
+  const filteredEvents = events.filter(event => {
+    return activeTab === "past" ? event.is_past === true : event.is_past !== true;
+  });
+
   return (
     <div className="p-6">
       {/* Events List: 2 events per row */}
       <div className="grid grid-cols-2 gap-4">
-        {events.length > 0 ? (
-          events.map((event) => (
+        {filteredEvents.length > 0 ? (
+          filteredEvents.map((event) => (
             <div
               key={event.id}
               className="relative flex items-center justify-between border-2 border-gray-300 rounded-lg p-4 cursor-pointer"
@@ -113,16 +121,15 @@ export default function EventsList({ events }: EventsListProps) {
                   <FaEllipsisV />
                 </button>
 
-
                 {/* Popup Menu */}
                 {openMenuId === event.id && (
                   <div
                     className="absolute right-6 top-14 mt-2 w-40 bg-white border border-gray-200 rounded shadow-lg z-50"
-
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <button
                       onClick={(e) => {
-            
+                        e.stopPropagation();
                         handleShare(event.id);
                       }}
                       className="flex items-center w-full px-4 py-2 hover:bg-gray-100"
@@ -132,6 +139,7 @@ export default function EventsList({ events }: EventsListProps) {
                     </button>
                     <button
                       onClick={(e) => {
+                        e.stopPropagation();
                         handleDelete(event.id);
                         setOpenMenuId(null);
                       }}
@@ -155,7 +163,6 @@ export default function EventsList({ events }: EventsListProps) {
         <Button
           variant="outline"
           className="w-60 h-[60px] px-[50px] py-[15px] bg-white rounded-lg border border-[#2c333d]"
-          // Note: You can add an onClick here if needed for "Show All" functionality.
         >
           <span className="text-center text-[#2c333d] text-2xl font-normal font-['Bebas_Neue']">
             Show All

@@ -199,12 +199,12 @@ export default function DashScreen() {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "registration.csv");
+      link.setAttribute("download", "registration.xlsx");
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      console.error("Error downloading CSV:", error);
+      console.error("Error downloading:", error);
     }
   };
 
@@ -480,7 +480,7 @@ export default function DashScreen() {
                   >
                     <Download className="w-4 h-5 text-white" />
                     <span className="text-white text-xs font-normal">
-                      Download CSV file
+                      Download file
                     </span>
                   </Button>
                 </div>

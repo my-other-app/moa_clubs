@@ -43,7 +43,7 @@ export default function DashScreen() {
     };
   }
 
-  // Registration type updated to include is_attended
+  // Registration type updated to include is_attended and is_paid.
   interface Registration {
     profile: ReactNode;
     ticket_id: ReactNode;
@@ -54,6 +54,7 @@ export default function DashScreen() {
     phone: string;
     institution: string;
     is_attended: boolean;
+    is_paid: boolean;
   }
 
   const [events, setEvents] = useState<Event[]>([]);
@@ -260,6 +261,9 @@ export default function DashScreen() {
       setSelectedEventId(null);
     }
   };
+
+  // Filter registrations to show only those that are paid
+  const paidRegistrations = registrations.filter((reg) => reg.is_paid);
 
   return (
     <div className="flex min-h-screen md:px-12">
@@ -508,12 +512,12 @@ export default function DashScreen() {
                     </tr>
                   </thead>
                   <tbody>
-                    {registrations.length > 0 ? (
-                      registrations.map((reg, index) => (
+                    {paidRegistrations.length > 0 ? (
+                      paidRegistrations.map((reg, index) => (
                         <tr
                           key={index}
                           className={
-                            index !== registrations.length - 1
+                            index !== paidRegistrations.length - 1
                               ? "border-b border-[#979797]"
                               : ""
                           }

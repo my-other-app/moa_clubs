@@ -7,8 +7,8 @@ import { StaticImport } from "next/dist/shared/lib/get-img-props";
 import { ReactNode, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { storage } from "@/app/services/auth.service";
 
-// Import your custom modal
 import DeleteConfirmationModal from "@/app/components/DeleteConfirmationModal";
 
 interface Event {
@@ -30,18 +30,15 @@ interface Event {
 
 interface EventsListProps {
   events: Event[];
-  activeTab: string;
 }
 
-export default function EventsList({ events, activeTab }: EventsListProps) {
+export default function EventsList({ events }: EventsListProps) {
   const { navigateTo } = useNavigate();
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
-  // State for custom delete modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
 
-  // Updated share handler to use the event slug for the URL
   const handleShare = async (event: Event) => {
     const urlToShare = `https://events.myotherapp.com/${event.slug}`;
     if (navigator.share) {
@@ -56,7 +53,6 @@ export default function EventsList({ events, activeTab }: EventsListProps) {
         console.error("Error sharing", error);
       }
     } else {
-      // Fallback: copy the URL to the clipboard
       try {
         await navigator.clipboard.writeText(urlToShare);
         toast.info("Event URL copied to clipboard!");
@@ -68,7 +64,6 @@ export default function EventsList({ events, activeTab }: EventsListProps) {
     setOpenMenuId(null);
   };
 
-  // Open the delete confirmation modal
   const openDeleteModal = (eventId: number, e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedEventId(eventId);
@@ -76,13 +71,11 @@ export default function EventsList({ events, activeTab }: EventsListProps) {
     setOpenMenuId(null);
   };
 
-  // Confirm deletion: do the API call here
   const confirmDelete = async () => {
     if (selectedEventId == null) return;
 
-    const token = localStorage.getItem("accessToken");
+    const token = storage.getAccessToken();
     if (!token) {
-      console.error("Access token not found");
       toast.error("No access token found");
       return;
     }
@@ -110,7 +103,6 @@ export default function EventsList({ events, activeTab }: EventsListProps) {
       toast.error("Error deleting the event");
       console.error("Error deleting the event:", error);
     } finally {
-      // Close the modal
       setShowDeleteModal(false);
       setSelectedEventId(null);
     }
@@ -121,20 +113,15 @@ export default function EventsList({ events, activeTab }: EventsListProps) {
     setOpenMenuId((prev) => (prev === eventId ? null : eventId));
   };
 
-  // Filter events based on activeTab
-  const filteredEvents = events.filter((event) =>
-    activeTab === "past" ? event.is_past === true : event.is_past !== true
-  );
-
+  // No longer filtering client-side - events are already filtered by API
   return (
     <div className="p-6">
-      {/* Events List: 2 events per row */}
       <div className="grid grid-cols-2 gap-4">
-        {filteredEvents.length > 0 ? (
-          filteredEvents.map((event) => (
+        {events.length > 0 ? (
+          events.map((event) => (
             <div
               key={event.id}
-              className="relative flex items-center justify-between border-2 border-gray-300 rounded-lg p-4 cursor-pointer"
+              className="relative flex items-center justify-between border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-gray-400 transition-colors"
               onClick={() =>
                 navigateTo(`/dashboard/dashScreen?event_id=${event.id}`)
               }
@@ -153,7 +140,9 @@ export default function EventsList({ events, activeTab }: EventsListProps) {
                   <h2 className="text-md font-semibold">
                     {event.category?.name}
                   </h2>
-                  <span className="text-green-600 text-sm">{event.status}</span>
+                  <span className={`text-sm ${event.is_past ? 'text-gray-500' : 'text-green-600'}`}>
+                    {event.is_past ? 'Completed' : 'Live'}
+                  </span>
                 </div>
               </div>
 
@@ -161,13 +150,13 @@ export default function EventsList({ events, activeTab }: EventsListProps) {
               <div className="flex items-center space-x-4">
                 <div className="text-right">
                   <h3 className="text-xl font-bold">
-                    {event.registrationCount}
+                    {event.registrationCount || 0}
                   </h3>
-                  <p className="text-gray-500 text-sm">Registration Count</p>
+                  <p className="text-gray-500 text-sm">Registrations</p>
                 </div>
                 <button
                   onClick={(e) => toggleMenu(event.id, e)}
-                  className="p-2 text-gray-500 hover:text-gray-700 focus:outline-none active:translate-x-0 transition-none"
+                  className="p-2 text-gray-500 hover:text-gray-700 focus:outline-none"
                   aria-label="Actions"
                 >
                   <FaEllipsisV />
@@ -206,10 +195,8 @@ export default function EventsList({ events, activeTab }: EventsListProps) {
         )}
       </div>
 
-      {/* Toast notifications */}
       <ToastContainer />
 
-      {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}

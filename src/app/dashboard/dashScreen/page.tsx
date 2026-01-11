@@ -21,87 +21,71 @@ import { useNavigate } from "@/app/utils/navigation";
 import { FaExternalLinkAlt } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { storage } from "@/app/services/auth.service";
+import { fetchEventById } from "@/app/utils/listEvents";
 
-// Import your custom DeleteConfirmationModal
 import DeleteConfirmationModal from "@/app/components/DeleteConfirmationModal";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-const getAccessToken = () => localStorage.getItem("accessToken");
+
+interface EventData {
+  id: number;
+  name: string;
+  slug: string;
+  poster?: {
+    medium: string;
+  };
+  page_views: number;
+  event_datetime: string;
+  duration: number;
+  is_online: boolean;
+}
+
+interface Registration {
+  profile: ReactNode;
+  ticket_id: ReactNode;
+  full_name: ReactNode;
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  institution: string;
+  is_attended: boolean;
+  is_paid: boolean;
+}
 
 export default function DashScreen() {
   const [message, setMessage] = useState("");
-  // State to track which tab is active: "registration" or "attendance"
   const [activeTab, setActiveTab] = useState("registration");
-
-  // Updated interface: added slug property.
-  interface Event {
-    id: number;
-    name: string;
-    slug: string;
-    poster?: {
-      medium: string;
-    };
-  }
-
-  // Registration type updated to include is_attended and is_paid.
-  interface Registration {
-    profile: ReactNode;
-    ticket_id: ReactNode;
-    full_name: ReactNode;
-    id: number;
-    name: string;
-    email: string;
-    phone: string;
-    institution: string;
-    is_attended: boolean;
-    is_paid: boolean;
-  }
-
-  const [events, setEvents] = useState<Event[]>([]);
+  const [currentEvent, setCurrentEvent] = useState<EventData | null>(null);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
-  // Registration limit state, defaulting to 10
   const [regLimit, setRegLimit] = useState(10);
+  const [loadingEvent, setLoadingEvent] = useState(true);
   const [loadingRegistrations, setLoadingRegistrations] = useState(false);
-
-  // State for delete modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
 
   const searchParams = useSearchParams();
   const event_id = searchParams.get("event_id");
-  const parsedEventId = event_id ? Number.parseInt(event_id as string, 10) : 0;
+  const parsedEventId = event_id ? Number.parseInt(event_id, 10) : 0;
 
   const { navigateTo } = useNavigate();
 
-  // Fetch events from API
-  const getEvents = useCallback(async () => {
-    const accessToken = getAccessToken();
-    if (!accessToken) {
-      console.warn("⚠️ No access token found! User might be logged out.");
-      return;
-    }
-    try {
-      const response = await axios.get(
-        `${API_BASE_URL}/api/v1/clubs/events/list`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
-      setEvents(response.data.items);
-    } catch (error) {
-      console.error("❌ Error fetching events:", error);
-    }
-  }, []);
+  // Fetch event details directly by ID
+  const getEventDetails = useCallback(async () => {
+    if (!parsedEventId) return;
 
-  // Fetch registrations from API using the current regLimit
+    setLoadingEvent(true);
+    const eventData = await fetchEventById(parsedEventId);
+    setCurrentEvent(eventData);
+    setLoadingEvent(false);
+  }, [parsedEventId]);
+
+  // Fetch registrations
   const getRegistrations = useCallback(async () => {
-    const accessToken = getAccessToken();
-    if (!accessToken) {
-      console.error("No access token found");
-      return;
-    }
+    const accessToken = storage.getAccessToken();
+    if (!accessToken || !parsedEventId) return;
+
     setLoadingRegistrations(true);
     try {
       const response = await axios.get(
@@ -112,8 +96,7 @@ export default function DashScreen() {
           },
         }
       );
-      // Assuming the API returns an object with an "items" array
-      setRegistrations(response.data.items);
+      setRegistrations(response.data.items || []);
     } catch (error) {
       console.error("Error fetching registrations:", error);
     } finally {
@@ -121,48 +104,43 @@ export default function DashScreen() {
     }
   }, [parsedEventId, regLimit]);
 
-  // Fetch events and registrations on mount or when dependencies change.
   useEffect(() => {
-    getEvents();
-    if (parsedEventId) {
-      getRegistrations();
-    }
-  }, [event_id, parsedEventId, getEvents, getRegistrations]);
+    getEventDetails();
+    getRegistrations();
+  }, [getEventDetails, getRegistrations]);
 
-  // Find the event matching the event_id
-  const currentEvent = events.find((event) => event.id === parsedEventId);
-  console.log(currentEvent);
+  // Check if event is past based on datetime + duration
+  const isEventPast = useCallback(() => {
+    if (!currentEvent) return false;
+    const eventEnd = new Date(currentEvent.event_datetime);
+    eventEnd.setHours(eventEnd.getHours() + (currentEvent.duration || 0));
+    return eventEnd < new Date();
+  }, [currentEvent]);
 
-  // Edit handler: navigate with both event_id and event slug.
   const handleEditClick = () => {
-    if (currentEvent && currentEvent.slug) {
+    if (currentEvent?.slug) {
       navigateTo(
         `/dashboard/eventEachEdit/editCreateEvent?event_id=${parsedEventId}&slug=${currentEvent.slug}`
       );
     } else if (event_id) {
-      // Fallback if slug is missing
       navigateTo(`/dashboard/eventEachEdit/editCreateEvent?event_id=${event_id}`);
-    } else {
-      console.error("Event ID not found in URL");
     }
   };
 
-  // Share handler: share the URL using the event slug if available.
   const handleShare = async () => {
-    let urlToShare = window.location.href;
-    if (currentEvent && currentEvent.slug) {
-      urlToShare = `https://events.myotherapp.com/${currentEvent.slug}`;
-    }
+    const urlToShare = currentEvent?.slug
+      ? `https://events.myotherapp.com/${currentEvent.slug}`
+      : window.location.href;
+
     if (navigator.share) {
       try {
         await navigator.share({
-          title: currentEvent ? currentEvent.name : "Check out this event",
+          title: currentEvent?.name || "Check out this event",
           url: urlToShare,
         });
         toast.success("Event URL shared successfully!");
       } catch (error) {
         toast.error("Error sharing the page.");
-        console.error("Error sharing", error);
       }
     } else {
       try {
@@ -170,7 +148,6 @@ export default function DashScreen() {
         toast.info("URL copied to clipboard!");
       } catch (err) {
         toast.error("Failed to copy URL.");
-        console.error("Failed to copy: ", err);
       }
     }
   };
@@ -182,18 +159,14 @@ export default function DashScreen() {
   };
 
   const handleDownloadCSV = async () => {
-    const accessToken = getAccessToken();
-    if (!accessToken) {
-      console.error("No access token found");
-      return;
-    }
+    const accessToken = storage.getAccessToken();
+    if (!accessToken) return;
+
     try {
       const response = await axios.get(
         `${API_BASE_URL}/api/v1/events/registration/${parsedEventId}/export`,
         {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
+          headers: { Authorization: `Bearer ${accessToken}` },
           responseType: "blob",
         }
       );
@@ -209,28 +182,20 @@ export default function DashScreen() {
     }
   };
 
-  // Increase registration limit by 10 on "Show More" click.
   const handleShowMoreRegistrations = () => {
     setRegLimit((prev) => prev + 10);
   };
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // CUSTOM DELETE MODAL LOGIC
-  // ─────────────────────────────────────────────────────────────────────────────
-
-  // Open the custom modal
   const openDeleteModal = (eventId: number) => {
     setSelectedEventId(eventId);
     setShowDeleteModal(true);
   };
 
-  // Confirm the delete action
   const confirmDelete = async () => {
     if (selectedEventId == null) return;
 
-    const token = localStorage.getItem("accessToken");
+    const token = storage.getAccessToken();
     if (!token) {
-      console.error("Access token not found");
       toast.error("Access token not found");
       return;
     }
@@ -240,21 +205,18 @@ export default function DashScreen() {
         `${API_BASE_URL}/api/v1/events/delete/${selectedEventId}`,
         {
           method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
       if (response.ok) {
         toast.success("Event deleted successfully");
-        window.location.reload();
+        navigateTo("/dashboard/events");
       } else {
         const data = await response.json();
         toast.error(data.message || "Failed to delete the event");
       }
     } catch (error) {
-      console.error("Error deleting the event:", error);
       toast.error("Error deleting the event");
     } finally {
       setShowDeleteModal(false);
@@ -262,8 +224,19 @@ export default function DashScreen() {
     }
   };
 
-  // Filter registrations to show only those that are paid
-  const paidRegistrations = registrations.filter((reg) => reg.is_paid);
+  // Filter registrations based on tab
+  const filteredRegistrations = activeTab === "attendance"
+    ? registrations.filter((reg) => reg.is_attended)
+    : registrations.filter((reg) => reg.is_paid);
+
+  // Calculate unique institutions count
+  const uniqueInstitutions = new Set(
+    registrations.map((reg) => reg.institution).filter(Boolean)
+  ).size;
+
+  const isPast = isEventPast();
+  const totalRegistrations = registrations.filter((r) => r.is_paid).length;
+  const pageViews = currentEvent?.page_views || 0;
 
   return (
     <div className="flex min-h-screen md:px-12">
@@ -274,24 +247,21 @@ export default function DashScreen() {
           {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <h1 className="text-5xl font-['Bebas_Neue'] tracking-wide">
-              {currentEvent ? currentEvent.name : "Loading....."}
+              {loadingEvent ? "Loading..." : currentEvent?.name || "Event Not Found"}
             </h1>
             <div className="flex flex-wrap items-center gap-4">
-              {/* Edit Button */}
               <button
                 onClick={handleEditClick}
                 className="w-12 h-12 p-3 bg-[#f3f3f3] rounded flex justify-center items-center"
               >
                 <Edit className="w-6 h-6 text-[#979797]" />
               </button>
-              {/* Delete Button - open modal instead of window.confirm */}
               <button
                 onClick={() => openDeleteModal(parsedEventId)}
                 className="w-12 h-12 p-3 bg-[#f3f3f3] rounded flex justify-center items-center"
               >
                 <Trash className="w-6 h-6 text-[#979797]" />
               </button>
-              {/* Share Button */}
               <button
                 onClick={handleShare}
                 aria-label="Share this page"
@@ -321,13 +291,7 @@ export default function DashScreen() {
                     >
                       X
                     </button>
-                    <Volunteer
-                      event_id={
-                        Array.isArray(event_id)
-                          ? parseInt(event_id[0], 10)
-                          : parseInt(event_id as string, 10)
-                      }
-                    />
+                    <Volunteer event_id={parsedEventId} />
                   </div>
                 )) as unknown as ReactNode}
               </Popup>
@@ -350,46 +314,54 @@ export default function DashScreen() {
               />
             </div>
 
-            {/* Right Column - Stats and Announcements */}
+            {/* Right Column - Dynamic Stats */}
             <div className="flex-1">
               <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
-                <div className="h-[151px] px-4 sm:px-[60px] py-[29px] bg-[#b4e5bc] rounded-lg flex flex-col justify-center items-center">
+                {/* Status Card */}
+                <div className={`h-[151px] px-4 sm:px-[60px] py-[29px] rounded-lg flex flex-col justify-center items-center ${isPast ? "bg-[#f3aba7]" : "bg-[#b4e5bc]"
+                  }`}>
                   <div className="flex flex-col justify-start items-center gap-2">
                     <div className="inline-flex justify-start items-center gap-2">
-                      <div className="w-4 h-4 bg-[#096b5b] rounded-full" />
-                      <div className="text-[#096b5b] text-[32px] font-medium font-['DM_Sans']">
-                        Live
+                      <div className={`w-4 h-4 rounded-full ${isPast ? "bg-[#cc0000]" : "bg-[#096b5b]"}`} />
+                      <div className={`text-[32px] font-medium font-['DM_Sans'] ${isPast ? "text-[#cc0000]" : "text-[#096b5b]"}`}>
+                        {isPast ? "Ended" : "Live"}
                       </div>
                     </div>
-                    <div className="text-center text-[#096b5b] text-base font-light font-['DM_Sans']">
-                      The event is live and registrations are open
+                    <div className={`text-center text-base font-light font-['DM_Sans'] ${isPast ? "text-[#cc0000]" : "text-[#096b5b]"}`}>
+                      {isPast ? "This event has ended" : "The event is live and registrations are open"}
                     </div>
                   </div>
                 </div>
+
+                {/* Registration Count */}
                 <div className="h-[151px] px-4 sm:px-[60px] py-[27px] bg-[#ccc1f0] rounded-lg flex flex-col justify-center items-center">
                   <div className="flex flex-col justify-start items-center gap-2">
                     <div className="text-[#9747ff] text-4xl font-bold font-['DM_Sans']">
-                      24
+                      {totalRegistrations}
                     </div>
                     <div className="text-center text-[#9747ff] text-base font-light font-['DM_Sans']">
-                      Total Registration Count
+                      Total Registrations
                     </div>
                   </div>
                 </div>
+
+                {/* Page Views */}
                 <div className="h-[151px] px-4 sm:px-[60px] py-10 bg-[#b8dff2] rounded-lg flex flex-col justify-center items-center">
                   <div className="flex flex-col justify-start items-center gap-2">
                     <div className="text-center text-[#0a4e6f] text-[32px] font-bold font-['DM_Sans']">
-                      234
+                      {pageViews}
                     </div>
                     <div className="text-center text-[#0a4e6f] text-base font-light font-['DM_Sans']">
                       Event Visitors
                     </div>
                   </div>
                 </div>
+
+                {/* Institutions */}
                 <div className="h-[151px] px-4 sm:px-[60px] py-10 bg-[#f3aba7] rounded-lg flex flex-col justify-center items-center">
                   <div className="flex flex-col justify-between items-center">
                     <div className="text-[#cc0000] text-[32px] font-bold font-['DM_Sans']">
-                      2
+                      {uniqueInstitutions}
                     </div>
                     <div className="text-center text-[#cc0000] text-base font-light font-['DM_Sans']">
                       Institutions
@@ -432,48 +404,40 @@ export default function DashScreen() {
             <div className="w-full flex flex-col justify-start items-start gap-4">
               <div className="self-stretch flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div className="flex justify-start items-start gap-9">
-                  <div className="flex justify-start items-start gap-9">
+                  <div
+                    onClick={() => setActiveTab("registration")}
+                    className="w-[145px] inline-flex flex-col justify-start items-center gap-1 cursor-pointer"
+                  >
                     <div
-                      onClick={() => setActiveTab("registration")}
-                      className="w-[145px] inline-flex flex-col justify-start items-center gap-1 cursor-pointer"
-                    >
-                      <div
-                        className={`self-stretch text-center text-xl font-medium font-['DM_Sans'] ${
-                          activeTab === "registration"
-                            ? "text-[#2c333d]"
-                            : "text-[#b4b4b4]"
+                      className={`self-stretch text-center text-xl font-medium font-['DM_Sans'] ${activeTab === "registration" ? "text-[#2c333d]" : "text-[#b4b4b4]"
                         }`}
-                      >
-                        Registration
-                      </div>
-                      {activeTab === "registration" && (
-                        <div className="w-[145px] h-0 border-b-[3px] border-[#2c333d]" />
-                      )}
+                    >
+                      Registration
                     </div>
+                    {activeTab === "registration" && (
+                      <div className="w-[145px] h-0 border-b-[3px] border-[#2c333d]" />
+                    )}
+                  </div>
+                  <div
+                    onClick={() => setActiveTab("attendance")}
+                    className="w-[145px] inline-flex flex-col justify-start items-center gap-1 cursor-pointer"
+                  >
                     <div
-                      onClick={() => setActiveTab("attendance")}
-                      className="w-[145px] inline-flex flex-col justify-start items-center gap-1 cursor-pointer"
-                    >
-                      <div
-                        className={`self-stretch text-center text-xl font-medium font-['DM_Sans'] ${
-                          activeTab === "attendance"
-                            ? "text-[#2c333d]"
-                            : "text-[#b4b4b4]"
+                      className={`self-stretch text-center text-xl font-medium font-['DM_Sans'] ${activeTab === "attendance" ? "text-[#2c333d]" : "text-[#b4b4b4]"
                         }`}
-                      >
-                        Attendance
-                      </div>
-                      {activeTab === "attendance" && (
-                        <div className="w-[145px] h-0 border-b-[3px] border-[#2c333d]" />
-                      )}
+                    >
+                      Attendance
                     </div>
+                    {activeTab === "attendance" && (
+                      <div className="w-[145px] h-0 border-b-[3px] border-[#2c333d]" />
+                    )}
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row justify-start items-center gap-[18px] w-full md:w-auto">
                   <div className="relative w-full sm:w-auto">
                     <Search className="absolute left-3 top-3 w-6 h-6 text-[#979797]" />
                     <Input
-                      placeholder="Search for events"
+                      placeholder="Search for participants"
                       className="w-full sm:w-[401px] h-12 pl-12 bg-white rounded-lg border border-[#979797] text-base font-light"
                     />
                   </div>
@@ -507,17 +471,17 @@ export default function DashScreen() {
                         Number
                       </th>
                       <th className="py-3 px-4 text-left text-[#2c333d] text-xl font-light font-['DM_Sans']">
-                        Organization Name
+                        Organization
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {paidRegistrations.length > 0 ? (
-                      paidRegistrations.map((reg, index) => (
+                    {filteredRegistrations.length > 0 ? (
+                      filteredRegistrations.map((reg, index) => (
                         <tr
-                          key={index}
+                          key={reg.id || index}
                           className={
-                            index !== paidRegistrations.length - 1
+                            index !== filteredRegistrations.length - 1
                               ? "border-b border-[#979797]"
                               : ""
                           }
@@ -535,17 +499,14 @@ export default function DashScreen() {
                             {reg.phone}
                           </td>
                           <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">
-                            {reg.profile}
+                            {reg.institution || reg.profile || "-"}
                           </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td
-                          colSpan={5}
-                          className="py-4 px-4 text-center text-[#979797]"
-                        >
-                          No registrations found
+                        <td colSpan={5} className="py-4 px-4 text-center text-[#979797]">
+                          {loadingRegistrations ? "Loading..." : "No registrations found"}
                         </td>
                       </tr>
                     )}
@@ -558,6 +519,7 @@ export default function DashScreen() {
                 <Button
                   variant="outline"
                   onClick={handleShowMoreRegistrations}
+                  disabled={loadingRegistrations}
                   className="w-60 h-[60px] px-[50px] py-[15px] bg-white rounded-lg border border-[#2c333d]"
                 >
                   <span className="text-center text-[#2c333d] text-2xl font-normal font-['Bebas_Neue']">

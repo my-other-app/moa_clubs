@@ -13,20 +13,28 @@ export default function Events() {
   const [events, setEvents] = useState([]);
   const [activeTab, setActiveTab] = useState("live");
   const [limit, setLimit] = useState(10);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Memoized fetch function to fix React hooks warning
+  // Fetch events with server-side filtering based on activeTab
   const getEvents = useCallback(async () => {
     setLoading(true);
-    const fetchedEvents = await fetchEvents(limit);
+    // live = is_ended: false, past = is_ended: true
+    const isEnded = activeTab === "past";
+    const fetchedEvents = await fetchEvents({ limit, isEnded });
     setEvents(fetchedEvents);
     setLoading(false);
-  }, [limit]);
+  }, [limit, activeTab]);
 
-  // Re-fetch events whenever the limit changes
+  // Re-fetch events whenever limit or activeTab changes
   useEffect(() => {
     getEvents();
   }, [getEvents]);
+
+  // Reset limit when tab changes
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setLimit(10); // Reset to first page when switching tabs
+  };
 
   // Increase the limit by 10 on "Show More" click
   const handleShowMore = () => {
@@ -36,8 +44,8 @@ export default function Events() {
   return (
     <div className="pl-20">
       <Sidebar />
-      <EventsHeader activeTab={activeTab} onTabChange={setActiveTab} />
-      {events.length === 0 && !loading ? (
+      <EventsHeader activeTab={activeTab} onTabChange={handleTabChange} />
+      {loading ? (
         <div className="space-y-2 mx-6">
           <Skeleton width="80%" height={80} />
           <Skeleton width="95%" height={30} />
@@ -48,20 +56,29 @@ export default function Events() {
           <Skeleton width="60%" height={40} />
           <Skeleton width="40%" height={80} />
         </div>
+      ) : events.length === 0 ? (
+        <div className="flex justify-center items-center h-64">
+          <p className="text-gray-500 text-lg">
+            No {activeTab === "past" ? "past" : "live"} events found
+          </p>
+        </div>
       ) : (
-        <EventsList events={events} activeTab={activeTab} />
+        <EventsList events={events} />
       )}
-      <div className="flex justify-center mt-8">
-        <Button
-          variant="outline"
-          onClick={handleShowMore}
-          className="w-60 h-[60px] px-[50px] py-[15px] bg-white rounded-lg border border-[#2c333d]"
-        >
-          <span className="text-center text-[#2c333d] text-2xl font-normal font-['Bebas_Neue']">
-            {loading ? "Loading..." : "Show More"}
-          </span>
-        </Button>
-      </div>
+      {events.length > 0 && (
+        <div className="flex justify-center mt-8 pb-8">
+          <Button
+            variant="outline"
+            onClick={handleShowMore}
+            disabled={loading}
+            className="w-60 h-[60px] px-[50px] py-[15px] bg-white rounded-lg border border-[#2c333d]"
+          >
+            <span className="text-center text-[#2c333d] text-2xl font-normal font-['Bebas_Neue']">
+              {loading ? "Loading..." : "Show More"}
+            </span>
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

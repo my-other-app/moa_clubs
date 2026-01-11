@@ -1,60 +1,50 @@
 import axios from "axios";
+import { storage } from "@/app/services/auth.service";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 let isRefreshing = false;
 let refreshSubscribers: ((token: string) => void)[] = [];
 
+// Create Axios Instance for Form Data
 const formAPI = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "multipart/form-data",
-    
   },
   withCredentials: true,
 });
 
-// 🔹 Fetch tokens dynamically from localStorage
-const getToken = () => localStorage.getItem("accessToken");
-const getRefreshToken = () => localStorage.getItem("refreshToken");
-
-// 🔹 Subscribe to token refresh queue
+// Subscribe to token refresh queue
 const subscribeTokenRefresh = (cb: (token: string) => void) => {
   refreshSubscribers.push(cb);
 };
 
-// 🔹 Notify subscribers after token refresh
+// Notify subscribers after token refresh
 const onRefreshed = (token: string) => {
   refreshSubscribers.forEach((cb) => cb(token));
   refreshSubscribers = [];
 };
 
-// 🔹 Request Interceptor: Attach Token Dynamically
+// Request Interceptor: Attach Token Dynamically
 formAPI.interceptors.request.use(
   (config) => {
-    console.log("📤 Sending Request to:", config.url);
-
-    const token = getToken();
+    const token = storage.getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log("✅ Token Attached to Request");
-    } else {
-      console.warn("❌ No Token Found! Redirecting to login...");
     }
-
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// 🔹 Response Interceptor: Handle Token Expiry & Refresh
+// Response Interceptor: Handle Token Expiry & Refresh
 formAPI.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
-      console.warn("🔄 Token Expired! Attempting Refresh...");
       originalRequest._retry = true;
 
       if (isRefreshing) {
@@ -69,8 +59,7 @@ formAPI.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const refreshToken = getRefreshToken();
-        console.log("🔹 Using Refresh Token:", refreshToken ? "Present ✅" : "Not Found ❌");
+        const refreshToken = storage.getRefreshToken();
 
         if (refreshToken) {
           const formdata = new FormData();
@@ -78,9 +67,8 @@ formAPI.interceptors.response.use(
 
           const { data } = await axios.post(`${API_BASE_URL}/api/v1/auth/refresh`, formdata);
 
-          // Store new tokens in localStorage
-          localStorage.setItem("accessToken", data.access_token);
-          localStorage.setItem("refreshToken", data.refresh_token);
+          // Store new tokens
+          storage.setTokens(data.access_token, data.refresh_token);
 
           formAPI.defaults.headers.Authorization = `Bearer ${data.access_token}`;
           onRefreshed(data.access_token);
@@ -88,14 +76,17 @@ formAPI.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
           return axios(originalRequest);
         } else {
-          console.warn("⚠️ No Refresh Token Found! Logging Out...");
-          // window.location.href = "/login"; // Redirect to login page
+          storage.clearTokens();
+          if (typeof window !== "undefined") {
+            window.location.href = "/";
+          }
         }
       } catch (refreshError) {
-        console.error("❌ Token Refresh Failed! Logging Out...", refreshError);
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        // window.location.href = "/login"; // Redirect user to login page
+        console.error("Token refresh failed:", refreshError);
+        storage.clearTokens();
+        if (typeof window !== "undefined") {
+          window.location.href = "/";
+        }
       } finally {
         isRefreshing = false;
       }

@@ -1,5 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useCallback } from "react";
 import EventsHeader from "@/app/components/Events/Header";
 import EventsList from "@/app/components/Events/List";
 import Sidebar from "@/app/components/sidebar";
@@ -14,20 +15,20 @@ export default function Events() {
   const [limit, setLimit] = useState(10);
   const [loading, setLoading] = useState(false);
 
-  // Fetch events with the current limit value.
-  const getEvents = async () => {
+  // Memoized fetch function to fix React hooks warning
+  const getEvents = useCallback(async () => {
     setLoading(true);
     const fetchedEvents = await fetchEvents(limit);
     setEvents(fetchedEvents);
     setLoading(false);
-  };
-
-  // Re-fetch events whenever the limit changes.
-  useEffect(() => {
-    getEvents();
   }, [limit]);
 
-  // Increase the limit by 10 on "Show More" click.
+  // Re-fetch events whenever the limit changes
+  useEffect(() => {
+    getEvents();
+  }, [getEvents]);
+
+  // Increase the limit by 10 on "Show More" click
   const handleShowMore = () => {
     setLimit(prev => prev + 10);
   };

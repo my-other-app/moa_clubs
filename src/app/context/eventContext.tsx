@@ -1,13 +1,15 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+"use client";
 
-// 1) Define the shape of each additional detail:
+import { createContext, useContext, useState, ReactNode } from "react";
+import { storage } from "@/app/services/auth.service";
+
+// Additional detail type
 export type AdditionalDetail = {
   question: string;
   answer: string;
-  // Add any other properties you need
 };
 
-// 2) Update the EventData type:
+// Event data type
 export type EventData = {
   name: string;
   poster: File | string;
@@ -28,10 +30,9 @@ export type EventData = {
   category_id: number;
   interest_ids: string | null;
   max_participants: number | null;
-  additional_details: AdditionalDetail[]; // <-- Use the custom type array
+  additional_details: AdditionalDetail[];
   event_guidelines: string | null;
 };
-
 
 type EventContextType = {
   eventData: EventData | null;
@@ -49,6 +50,7 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     if (!currentData) {
       throw new Error("No event data available");
     }
+
     const formData = new FormData();
     formData.append("name", currentData.name);
     formData.append("poster", currentData.poster);
@@ -67,44 +69,34 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     formData.append("contact_email", currentData.contact_email || "");
     formData.append("url", currentData.url || "");
     formData.append("category_id", currentData.category_id.toString());
-    // formData.append("club_id", currentData.club_id !== null ? currentData.club_id.toString() : "");
     formData.append("interest_ids", currentData.interest_ids || "");
     formData.append("max_participants", currentData.max_participants !== null ? currentData.max_participants.toString() : "");
-    // Send additional_details as a JSON string
     formData.append("additional_details", JSON.stringify(currentData.additional_details || []));
     formData.append("event_guidelines", currentData.event_guidelines || "");
 
-    // Debug: log all FormData entries
-    for (const pair of formData.entries()) {
-      console.log(`${pair[0]}: ${pair[1]}`);
-    }
-
-    const token = localStorage.getItem("accessToken");
+    const token = storage.getAccessToken();
     if (!token) {
       throw new Error("No access token available");
     }
+
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
     if (!API_BASE) {
       throw new Error("API base URL is not defined");
     }
-    try {
-      const response = await fetch(`${API_BASE}/api/v1/events/create`, {
-        method: "POST",
-        headers: {
-          // Let the browser set the Content-Type when using FormData
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-      if (!response.ok) {
-        throw new Error("Failed to create event");
-      }
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error("Error creating event:", error);
-      throw error;
+
+    const response = await fetch(`${API_BASE}/api/v1/events/create`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to create event");
     }
+
+    return response.json();
   };
 
   return (

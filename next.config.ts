@@ -3,9 +3,18 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ["mulearn-backend-test.s3.amazonaws.com","dummyimage.com"], // Add your image domains here
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'mulearn-backend-test.s3.amazonaws.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'dummyimage.com',
+      },
+    ],
   },
-  trailingSlash: false, // Ensure URLs don't have a trailing slash (important for Vercel)
+  trailingSlash: false,
 };
 
 export default nextConfig;

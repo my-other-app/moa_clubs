@@ -1,99 +1,54 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useNavigate } from '@/app/utils/navigation';
+import authService, { storage } from '@/app/services/auth.service';
 
-// 1) Set your API base URL (from .env or hardcode)
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
-
-// 2) accessToken function: logs in with username/password, returns the access token string
-export async function accessToken({
-  username,
-  password,
-}: {
-  username: string;
-  password: string;
-}): Promise<string> {
-  // Construct form data for "application/x-www-form-urlencoded"
-  const formData = new URLSearchParams();
-  formData.append('username', username);
-  formData.append('password', password);
-
-  try {
-    // POST to /api/v1/auth/token with the correct headers
-    const response = await axios.post(`${API_BASE_URL}/api/v1/auth/token`, formData, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-    });
-
-    // Assuming the token is returned as { "access_token": "..." }
-    return response.data.access_token;
-  } catch (error) {
-    console.error('Error fetching access token:', error);
-    // Return an empty string or handle the error differently as needed
-    return '';
-  }
-}
-
-// 3) fetchClub function: uses the token to fetch the club info
-async function fetchClub(token: string) {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/api/v1/clubs/info`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data; // Adjust if your API structure is different
-  } catch (error) {
-    console.error('Error fetching club:', error);
-    return null;
-  }
-}
-
-// 4) Main Welcome component
-//    - Saves username/password in sessionStorage
-//    - Retrieves an access token
-//    - Stores token in localStorage
-//    - Fetches club data
-//    - Navigates based on whether the club has a "name"
 export default function Welcome() {
   const { navigateTo } = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Load saved values from sessionStorage when the component mounts
+  // Load saved email from sessionStorage (NOT password for security)
   useEffect(() => {
-    const savedEmail = sessionStorage.getItem('email');
-    const savedPassword = sessionStorage.getItem('password');
+    const savedEmail = storage.getSessionItem('email');
     if (savedEmail) setEmail(savedEmail);
-    if (savedPassword) setPassword(savedPassword);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError(null);
 
-    // Save form data to sessionStorage
-    sessionStorage.setItem('email', email);
-    sessionStorage.setItem('password', password);
+    // Save email for convenience (NOT password)
+    storage.setSessionItem('email', email);
 
-    // 1) Get the access token
-    const token = await accessToken({ username: email, password });
-    if (!token) {
-      alert('Error: Could not retrieve access token.');
-      return;
-    }
+    try {
+      // Login using centralized auth service
+      const token = await authService.login({ username: email, password });
 
-    // 2) Store token in localStorage
-    localStorage.setItem('accessToken', token);
+      if (!token) {
+        setError('Invalid credentials. Please try again.');
+        setIsLoading(false);
+        return;
+      }
 
-    // 3) Fetch club data using the token
-    const clubData = await fetchClub(token);
+      // Fetch club data
+      const clubData = await authService.fetchClubInfo();
 
-    // 4) Navigate based on whether clubData has a "name"
-    if (clubData && clubData.logo) {
-      navigateTo('/dashboard/events');
-    } else {
-      navigateTo('/register/uploadImage');
+      // Navigate based on club profile completion
+      if (clubData && clubData.logo) {
+        navigateTo('/dashboard/events');
+      } else {
+        navigateTo('/register/uploadImage');
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('An error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -106,6 +61,13 @@ export default function Welcome() {
         <p className="text-gray-700 text-center mb-8">
           We provide you with an end-to-end<br></br> solution for managing events
         </p>
+
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
           <label className="block mb-2 font-light text-sm text-gray-700">Username</label>
           <input
@@ -115,6 +77,7 @@ export default function Welcome() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            disabled={isLoading}
           />
           <label className="block mb-2 font-light text-sm text-gray-700">Password</label>
           <input
@@ -124,12 +87,15 @@ export default function Welcome() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            disabled={isLoading}
           />
           <button
             type="submit"
-            className="w-full bg-[#2C333D] h-15 text-2xl bebas text-white p-2 rounded-lg font-semibold hover:bg-gray-800"
+            disabled={isLoading}
+            className={`w-full bg-[#2C333D] h-15 text-2xl bebas text-white p-2 rounded-lg font-semibold hover:bg-gray-800 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
           >
-            START THE JOURNEY
+            {isLoading ? 'SIGNING IN...' : 'START THE JOURNEY'}
           </button>
         </form>
       </div>

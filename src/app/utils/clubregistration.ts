@@ -1,10 +1,10 @@
 import formAPI from "@/app/api/formAPI";
 import axios from "axios";
+import { storage } from "@/app/services/auth.service";
 
 interface ClubRegistrationData {
   email: string;
   phone: string;
-  password: string;
   name: string;
   logo?: File | null;
   about?: string;
@@ -13,89 +13,72 @@ interface ClubRegistrationData {
   location_link?: string;
   contact_phone?: string;
   contact_email?: string;
-  interest_ids?: string; // Converted to a comma-separated string
+  interest_ids?: string;
 }
 
-// 🔹 Helper function to retrieve sessionStorage values
-const getSessionItem = (key: string): string => {
-  if (typeof window !== "undefined") {
-    return sessionStorage.getItem(key) || "";
-  }
-  return "";
-};
-
-// 🔹 Retrieve Access Token with SSR check
-const getAccessToken = (): string => {
-  if (typeof window !== "undefined") {
-    return localStorage.getItem("accessToken") || "";
-  }
-  return "";
-};
-
 export const registerClub = async (): Promise<unknown> => {
-  const accessToken = getAccessToken();
+  const accessToken = storage.getAccessToken();
   if (!accessToken) {
-    console.warn("⚠️ No access token found! User might be logged out.");
     throw new Error("Authentication error: Access token missing");
   }
 
   // Retrieve stored Blob URL for the logo
-  const logoBlobURL = getSessionItem("clubLogo");
+  const logoBlobURL = storage.getSessionItem("clubLogo");
   let logoFile: File | null = null;
   if (logoBlobURL) {
-    const response = await fetch(logoBlobURL);
-    const blob = await response.blob();
-    logoFile = new File([blob], "club_logo.png", { type: blob.type });
+    try {
+      const response = await fetch(logoBlobURL);
+      const blob = await response.blob();
+      logoFile = new File([blob], "club_logo.png", { type: blob.type });
+    } catch (error) {
+      console.error("Failed to fetch logo:", error);
+    }
   }
 
-  // Parse stored interests (ensuring correct array format)
-  const interestIds: number[] = JSON.parse(getSessionItem("selectedInterests") || "[]");
+  // Parse stored interests
+  const interestIdsRaw = storage.getSessionItem("selectedInterests");
+  const interestIds: number[] = interestIdsRaw ? JSON.parse(interestIdsRaw) : [];
 
-  // Construct raw data object for club update
+  // Construct data object for club update
   const rawData: ClubRegistrationData = {
-    email: getSessionItem("email"),
-    phone: getSessionItem("phone"),
-    password: getSessionItem("password"),
-    location_link: getSessionItem("clubLeadName"),
+    email: storage.getSessionItem("email"),
+    phone: storage.getSessionItem("phone"),
+    location_link: storage.getSessionItem("clubLeadName"),
     logo: logoFile,
-    about: getSessionItem("about"),
-    org_id: getSessionItem("org_id") ? parseInt(getSessionItem("org_id")) || null : null,
+    about: storage.getSessionItem("about"),
+    org_id: storage.getSessionItem("org_id")
+      ? parseInt(storage.getSessionItem("org_id")) || null
+      : null,
     interest_ids: interestIds.length > 0 ? interestIds.join(",") : "",
-    name: getSessionItem("college"),
-    location_name: getSessionItem("location"),
-    contact_phone: getSessionItem("clubLeadPhone"),
-    contact_email: getSessionItem("email"),
+    name: storage.getSessionItem("college"),
+    location_name: storage.getSessionItem("location"),
+    contact_phone: storage.getSessionItem("clubLeadPhone"),
+    contact_email: storage.getSessionItem("email"),
   };
 
-  // Convert rawData to FormData for club update
+  // Convert to FormData
   const formData = new FormData();
   Object.entries(rawData).forEach(([key, value]) => {
     if (value instanceof File) {
       formData.append(key, value);
-    } else if (value) {
+    } else if (value !== null && value !== undefined && value !== "") {
       formData.append(key, value.toString());
     }
   });
 
-  console.log("📤 Final FormData Before Sending (Club Update):");
-  for (const [key, value] of formData.entries()) {
-    console.log(`${key}:`, value);
-  }
-
   try {
     const response = await formAPI.put("/api/v1/clubs/update", formData, {
-      headers: { 
+      headers: {
         "Content-Type": "multipart/form-data",
         Authorization: `Bearer ${accessToken}`,
       },
     });
-    console.log("✅ Club Update Success:", response.data);
     return response.data;
   } catch (error: unknown) {
     if (axios.isAxiosError(error) && error.response) {
-      console.error("❌ Club Update API Error:", error.response.status, error.response.data);
+      console.error("Club update failed:", error.response.status, error.response.data);
     } else {
-      console.error("❌ Club Update API Error:", error);
+      console.error("Club update failed:", error);
     }
     throw error;
   }

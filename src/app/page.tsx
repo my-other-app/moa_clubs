@@ -1,27 +1,14 @@
-"use client"
-import type { NextPage } from 'next';
+"use client";
+
 import Welcome from './components/welcome';
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 
-
-const Home: NextPage = () => {
-  const router = useRouter();
-
-  useEffect(() => {
-    if (window.innerWidth <= 768) {
-      router.replace("/unsupported");
-    }
-  }, [router]);
+export default function Home() {
+  // Note: Mobile redirect is handled by middleware.ts
+  // No need for duplicate client-side redirect
 
   return (
-    <>
-      <main>
-    
-        <Welcome/>
-      </main>
-    </>
+    <main>
+      <Welcome />
+    </main>
   );
-};
-
-export default Home;
+}

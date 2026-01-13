@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { FaTrash, FaExternalLinkAlt, FaEllipsisV } from "react-icons/fa";
+import { FaTrash, FaExternalLinkAlt, FaEllipsisV, FaBullhorn } from "react-icons/fa";
 import { useNavigate } from "@/app/utils/navigation";
 import { StaticImport } from "next/dist/shared/lib/get-img-props";
 import { ReactNode, useState } from "react";
@@ -10,6 +10,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { storage } from "@/app/services/auth.service";
 
 import DeleteConfirmationModal from "@/app/components/DeleteConfirmationModal";
+import SendAnnouncementModal from "@/app/components/Events/SendAnnouncementModal";
 
 interface Event {
   category: {
@@ -38,6 +39,10 @@ export default function EventsList({ events }: EventsListProps) {
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
+
+  // Announcement modal state
+  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
+  const [announcementEvent, setAnnouncementEvent] = useState<Event | null>(null);
 
   const handleShare = async (event: Event) => {
     const urlToShare = `https://events.myotherapp.com/${event.slug}`;
@@ -68,6 +73,13 @@ export default function EventsList({ events }: EventsListProps) {
     e.stopPropagation();
     setSelectedEventId(eventId);
     setShowDeleteModal(true);
+    setOpenMenuId(null);
+  };
+
+  const openAnnouncementModal = (event: Event, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setAnnouncementEvent(event);
+    setShowAnnouncementModal(true);
     setOpenMenuId(null);
   };
 
@@ -165,9 +177,16 @@ export default function EventsList({ events }: EventsListProps) {
                 {/* Popup Menu */}
                 {openMenuId === event.id && (
                   <div
-                    className="absolute right-6 top-14 mt-2 w-40 bg-white border border-gray-200 rounded shadow-lg z-50"
+                    className="absolute right-6 top-14 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg z-50"
                     onClick={(e) => e.stopPropagation()}
                   >
+                    <button
+                      onClick={(e) => openAnnouncementModal(event, e)}
+                      className="flex items-center w-full px-4 py-2 hover:bg-gray-100 text-[#2c333d]"
+                    >
+                      <FaBullhorn className="mr-2" />
+                      Send Announcement
+                    </button>
                     <button
                       onClick={() => handleShare(event)}
                       aria-label="Share this page"
@@ -202,6 +221,19 @@ export default function EventsList({ events }: EventsListProps) {
         onClose={() => setShowDeleteModal(false)}
         onConfirm={confirmDelete}
       />
+
+      {announcementEvent && (
+        <SendAnnouncementModal
+          isOpen={showAnnouncementModal}
+          onClose={() => {
+            setShowAnnouncementModal(false);
+            setAnnouncementEvent(null);
+          }}
+          eventId={announcementEvent.id}
+          eventName={typeof announcementEvent.name === "string" ? announcementEvent.name : "Event"}
+        />
+      )}
     </div>
   );
 }
+

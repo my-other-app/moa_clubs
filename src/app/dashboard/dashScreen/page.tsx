@@ -227,7 +227,7 @@ export default function DashScreen() {
   // Filter registrations based on tab
   const filteredRegistrations = activeTab === "attendance"
     ? registrations.filter((reg) => reg.is_attended)
-    : registrations.filter((reg) => reg.is_paid);
+    : registrations; // Show all registrations, not just paid
 
   // Calculate unique institutions count
   const uniqueInstitutions = new Set(
@@ -235,7 +235,7 @@ export default function DashScreen() {
   ).size;
 
   const isPast = isEventPast();
-  const totalRegistrations = registrations.filter((r) => r.is_paid).length;
+  const totalRegistrations = registrations.length; // Count all registrations
   const pageViews = currentEvent?.page_views || 0;
 
   return (

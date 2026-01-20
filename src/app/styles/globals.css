@@ -1,22 +1,29 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
-
 @plugin 'tailwindcss-animate';
 
 @custom-variant dark (&:is(.dark *));
 @import "tailwindcss";
 
+/* Font family configuration using next/font CSS variables */
+@theme inline {
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-bebas: var(--font-bebas), sans-serif;
+}
+
+/* Default body font is DM Sans */
 body {
-  font-family: "DM Sans", serif;
+  font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
   font-optical-sizing: auto;
   font-weight: 400;
   font-style: normal;
 }
 
+/* Bebas Neue utility class for headings */
 .bebas {
-  font-family: "Bebas Neue", serif;
+  font-family: var(--font-bebas), sans-serif;
   font-weight: 400;
   font-style: normal;
 }
+
 
 :root {
   --background: oklch(1 0 0);

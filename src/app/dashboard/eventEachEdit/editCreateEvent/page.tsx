@@ -130,7 +130,7 @@ export default function CreateEvent() {
 
 
 
-    const interest = [1,2,3] //replace this
+    const interest = [1, 2, 3] //replace this
 
 
 
@@ -188,8 +188,8 @@ export default function CreateEvent() {
           },
         }
       );
-      
-     
+
+
       router.push(`/dashboard/events`);
     } catch (error) {
       console.error("Error updating event:", error);
@@ -198,346 +198,288 @@ export default function CreateEvent() {
   };
 
   return (
-    <>
+    <div className="flex min-h-screen bg-[#2C333D]">
       <Sidebar />
-      <div className="max-w-4xl mx-auto p-6 rounded-lg font-sans">
-        <h1 className="text-3xl font-bold mb-6">Edit Form</h1>
-        <form onSubmit={handleSubmit}>
-          <h2 className="text-lg font-semibold">BASIC INFORMATION</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-4">
-              <div className="flex flex-col">
-                <h3>
-                  Event Title <span className="text-red-500">*</span>
-                </h3>
-                <input
-                  type="text"
-                  placeholder="Enter Your Event Title"
-                  className="p-2 border rounded"
-                  value={eventTitle}
-                  onChange={(e) => setEventTitle(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="flex flex-col">
-                <h3>
-                  Event Category <span className="text-red-500">*</span>
-                </h3>
-                <select
-                  className="p-2 border rounded"
-                  value={selectedCategory ?? ""}
-                  onChange={(e) =>
-                    setSelectedCategory(parseInt(e.target.value, 10))
-                  }
-                  required
-                >
-                  <option value="">Choose Event Category</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={parseInt(category.id, 10)}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex flex-col">
-                <h3>
-                  Event Seats <span className="text-red-500">*</span>
-                </h3>
-                <input
-                  type="text"
-                  placeholder="Enter available seats for the event"
-                  className="p-2 border rounded"
-                  value={eventSeats}
-                  onChange={(e) => setEventSeats(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
+      <div className="flex-1 p-6 md:p-8">
+        <div className="bg-white rounded-2xl p-6 md:p-10 min-h-[calc(100vh-4rem)]">
+          <h1 className="bebas text-[32px] md:text-[40px] tracking-wide text-black mb-6">EDIT EVENT</h1>
+          <form onSubmit={handleSubmit} className="space-y-8">
             <div>
-              <div className="flex flex-col">
-                <h3>
-                  Event Description <span className="text-red-500">*</span>
-                </h3>
-                <textarea
-                  placeholder="Enter Event Description"
-                  className="p-2 border rounded"
-                  value={eventDescription}
-                  onChange={(e) => setEventDescription(e.target.value)}
-                  required
-                ></textarea>
-              </div>
-              <div className="flex flex-col items-center">
-                <label
-                  htmlFor="eventPoster"
-                  className="p-2 rounded cursor-pointer flex items-center justify-center"
-                >
-                  {eventPoster ? (
-                    <Image
-                      src={URL.createObjectURL(eventPoster)}
-                      width={100}
-                      height={100}
-                      alt="Event Poster"
-                      className="w-50 aspect-square h-50 object-cover rounded"
+              <h2 className="bebas text-[18px] tracking-wide text-black mb-4">BASIC INFORMATION</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="flex flex-col">
+                    <label className="text-[12px] text-gray-600 mb-1.5">
+                      Event Title <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter Your Event Title"
+                      className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={eventTitle}
+                      onChange={(e) => setEventTitle(e.target.value)}
+                      required
                     />
-                  ) : (
-                    <div>
-                      <svg
-                        width="100"
-                        height="100"
-                        viewBox="0 0 100 100"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <rect
-                          x="0.25"
-                          y="0.25"
-                          width="99.5"
-                          height="99.5"
-                          rx="49.75"
-                          fill="#F3F3F3"
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="text-[12px] text-gray-600 mb-1.5">
+                      Event Category <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                      value={selectedCategory ?? ""}
+                      onChange={(e) => setSelectedCategory(parseInt(e.target.value, 10))}
+                      required
+                    >
+                      <option value="">Choose Event Category</option>
+                      {categories.map((category) => (
+                        <option key={category.id} value={parseInt(category.id, 10)}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="text-[12px] text-gray-600 mb-1.5">
+                      Event Seats <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter available seats for the event"
+                      className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={eventSeats}
+                      onChange={(e) => setEventSeats(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex flex-col">
+                    <label className="text-[12px] text-gray-600 mb-1.5">
+                      Event Description <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      placeholder="Enter Event Description"
+                      className="min-h-[120px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                      value={eventDescription}
+                      onChange={(e) => setEventDescription(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <label
+                      htmlFor="eventPoster"
+                      className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer flex items-center justify-center hover:border-gray-400 transition-colors"
+                    >
+                      {eventPoster ? (
+                        <Image
+                          src={URL.createObjectURL(eventPoster)}
+                          width={96}
+                          height={96}
+                          alt="Event Poster"
+                          className="rounded-lg object-cover"
                         />
-                        <rect
-                          x="0.25"
-                          y="0.25"
-                          width="99.5"
-                          height="99.5"
-                          rx="49.75"
-                          stroke="#979797"
-                          strokeWidth="0.5"
-                        />
-                        <path
-                          d="M51 32H41.6C38.2397 32 36.5595 32 35.2761 32.654C34.1471 33.2292 33.2292 34.1471 32.654 35.2761C32 36.5595 32 38.2397 32 41.6V58.4C32 61.7603 32 63.4405 32.654 64.7239C33.2292 65.8529 34.1471 66.7708 35.2761 67.346C36.5595 68 38.2397 68 41.6 68H60C61.8599 68 62.7899 68 63.5529 67.7956C65.6235 67.2408 67.2408 65.6235 67.7956 63.5529C68 62.7899 68 61.8599 68 60M64 42V30M58 36H70M47 43C47 45.2091 45.2091 47 43 47C40.7909 47 39 45.2091 39 43C39 40.7909 40.7909 39 43 39C45.2091 39 47 40.7909 47 43ZM55.9801 49.8363L39.0623 65.2161C38.1107 66.0812 37.6349 66.5137 37.5929 66.8884C37.5564 67.2132 37.6809 67.5353 37.9264 67.7511C38.2096 68 38.8526 68 40.1386 68H58.912C61.7903 68 63.2295 68 64.3598 67.5164C65.7789 66.9094 66.9094 65.7789 67.5164 64.3598C68 63.2295 68 61.7903 68 58.912C68 57.9435 68 57.4593 67.8941 57.0083C67.7611 56.4416 67.5059 55.9107 67.1465 55.4528C66.8605 55.0884 66.4824 54.7859 65.7261 54.1809L60.1317 49.7053C59.3748 49.0998 58.9963 48.7971 58.5796 48.6902C58.2123 48.596 57.8257 48.6082 57.4651 48.7254C57.0559 48.8583 56.6973 49.1843 55.9801 49.8363Z"
-                          stroke="#979797"
-                          strokeWidth="4"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </div>
-                  )}
-                  <input
-                    id="eventPoster"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handlePosterUpload}
-                    required
-                  />
-                </label>
-                <h3>
-                  Add Event Poster <span className="text-red-500">*</span>
-                </h3>
+                      ) : (
+                        <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M51 32H41.6C38.2397 32 36.5595 32 35.2761 32.654C34.1471 33.2292 33.2292 34.1471 32.654 35.2761C32 36.5595 32 38.2397 32 41.6V58.4C32 61.7603 32 63.4405 32.654 64.7239C33.2292 65.8529 34.1471 66.7708 35.2761 67.346C36.5595 68 38.2397 68 41.6 68H60C61.8599 68 62.7899 68 63.5529 67.7956C65.6235 67.2408 67.2408 65.6235 67.7956 63.5529C68 62.7899 68 61.8599 68 60M64 42V30M58 36H70" stroke="#979797" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </label>
+                    <input
+                      id="eventPoster"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handlePosterUpload}
+                    />
+                    <p className="text-[12px] text-gray-600 mt-2">Add Event Poster</p>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-          <h2 className="text-lg font-semibold mt-6">DATE AND TIME</h2>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="flex flex-col">
-              <h3>
-                Event date <span className="text-red-500">*</span>
-              </h3>
-              <input
-                type="date"
-                className="p-2 border rounded"
-                value={eventDate}
-                onChange={(e) => setEventDate(e.target.value)}
-                required
-              />
-            </div>
-            <div className="flex flex-col">
-              <h3>
-                Event Start Time <span className="text-red-500">*</span>
-              </h3>
-              <input
-                type="time"
-                className="p-2 border rounded"
-                value={eventStartTime}
-                onChange={(e) => setEventStartTime(e.target.value)}
-                required
-              />
-            </div>
-            <div className="flex flex-col">
-              <h3>
-                Event Duration <span className="text-red-500">*</span>
-              </h3>
-              <input
-                type="number"
-                placeholder="Choose Event Duration Hours"
-                className="p-2 border rounded"
-                value={eventDuration || ""}
-                onChange={(e) => setEventDuration(parseInt(e.target.value, 10))}
-                required
-              />
-            </div>
-            <div className="flex flex-col">
-              <h3>
-                Event Registration Closing Date <span className="text-red-500">*</span>
-              </h3>
-              <input
-                type="date"
-                className="p-2 border rounded"
-                value={eventRegistrationClosingDate}
-                onChange={(e) => setEventRegistrationClosingDate(e.target.value)}
-                required
-              />
-            </div>
-            <div className="flex flex-col">
-              <h3>
-                Event Registration Closing Time <span className="text-red-500">*</span>
-              </h3>
-              <input
-                type="time"
-                className="p-2 border rounded"
-                value={eventRegistrationClosingTime}
-                onChange={(e) => setEventRegistrationClosingTime(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-          <h2 className="text-lg font-semibold mt-6">LOCATION AND MODE</h2>
-          <div className="flex flex-col mb-2">
-            <h3>
-              Event Mode <span className="text-red-500">*</span>
-            </h3>
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            <select
-              className="p-2 border rounded"
-              value={eventMode === true ? "true" : eventMode === false ? "false" : ""}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value === "true") setEventMode(true);
-                else if (value === "false") setEventMode(false);
-                else setEventMode("");
-              }}
-              required
-            >
-              <option value="">Online/Offline</option>
-              <option value="true">Online</option>
-              <option value="false">Offline</option>
-            </select>
-            {eventMode === true ? (
-              <>
+
+            <div>
+              <h2 className="bebas text-[18px] tracking-wide text-black mb-4">DATE AND TIME</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="flex flex-col">
-                  <h3>
-                    Enter Event Platform <span className="text-red-500">*</span>
-                  </h3>
+                  <label className="text-[12px] text-gray-600 mb-1.5">Event Date <span className="text-red-500">*</span></label>
                   <input
-                    type="text"
-                    placeholder="Enter Event Platform"
-                    className="p-2 border rounded"
-                    value={eventLocation}
-                    onChange={(e) => setEventLocation(e.target.value)}
+                    type="date"
+                    className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={eventDate}
+                    onChange={(e) => setEventDate(e.target.value)}
                     required
                   />
                 </div>
                 <div className="flex flex-col">
-                  <h3>
-                    Enter Meet Link <span className="text-red-500">*</span>
-                  </h3>
+                  <label className="text-[12px] text-gray-600 mb-1.5">Start Time <span className="text-red-500">*</span></label>
                   <input
-                    type="url"
-                    placeholder="Enter Meet Link"
-                    className="p-2 border rounded"
-                    value={eventMeetLink}
-                    onChange={(e) => setEventMeetLink(e.target.value)}
-                    required
-                  />
-                </div>
-              </>
-            ) : eventMode === false ? (
-              <>
-                <div className="flex flex-col">
-                  <h3>
-                    Enter Event Location <span className="text-red-500">*</span>
-                  </h3>
-                  <input
-                    type="text"
-                    placeholder="Enter Event Location"
-                    className="p-2 border rounded"
-                    value={eventLocation}
-                    onChange={(e) => setEventLocation(e.target.value)}
+                    type="time"
+                    className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={eventStartTime}
+                    onChange={(e) => setEventStartTime(e.target.value)}
                     required
                   />
                 </div>
                 <div className="flex flex-col">
-                  <h3>
-                    Google Map Link <span className="text-red-500">*</span>
-                  </h3>
+                  <label className="text-[12px] text-gray-600 mb-1.5">Duration (Hours) <span className="text-red-500">*</span></label>
                   <input
-                    type="url"
-                    placeholder="Google Map Link"
-                    className="p-2 border rounded"
-                    value={eventMeetLink}
-                    onChange={(e) => setEventMeetLink(e.target.value)}
+                    type="number"
+                    placeholder="Duration in hours"
+                    className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={eventDuration || ""}
+                    onChange={(e) => setEventDuration(parseInt(e.target.value, 10))}
                     required
                   />
                 </div>
-              </>
-            ) : (
-              <>
                 <div className="flex flex-col">
-                  <h3>Choose Event Mode</h3>
+                  <label className="text-[12px] text-gray-600 mb-1.5">Registration Closing Date <span className="text-red-500">*</span></label>
                   <input
-                    type="text"
-                    placeholder="Choose Event Mode"
-                    className="p-2 border rounded"
-                    value={eventLocation}
-                    onChange={(e) => setEventLocation(e.target.value)}
-                    disabled
+                    type="date"
+                    className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={eventRegistrationClosingDate}
+                    onChange={(e) => setEventRegistrationClosingDate(e.target.value)}
+                    required
                   />
                 </div>
                 <div className="flex flex-col">
-                  <h3>Choose Event Mode</h3>
+                  <label className="text-[12px] text-gray-600 mb-1.5">Registration Closing Time <span className="text-red-500">*</span></label>
                   <input
-                    type="url"
-                    placeholder="Choose Event Mode"
-                    className="p-2 border rounded"
-                    value={eventMeetLink}
-                    onChange={(e) => setEventMeetLink(e.target.value)}
-                    disabled
+                    type="time"
+                    className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={eventRegistrationClosingTime}
+                    onChange={(e) => setEventRegistrationClosingTime(e.target.value)}
+                    required
                   />
                 </div>
-              </>
+              </div>
+            </div>
+
+            <div>
+              <h2 className="bebas text-[18px] tracking-wide text-black mb-4">LOCATION AND MODE</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex flex-col">
+                  <label className="text-[12px] text-gray-600 mb-1.5">Event Mode <span className="text-red-500">*</span></label>
+                  <select
+                    className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    value={eventMode === true ? "true" : eventMode === false ? "false" : ""}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === "true") setEventMode(true);
+                      else if (value === "false") setEventMode(false);
+                      else setEventMode("");
+                    }}
+                    required
+                  >
+                    <option value="">Select Mode</option>
+                    <option value="true">Online</option>
+                    <option value="false">Offline</option>
+                  </select>
+                </div>
+                {eventMode === true && (
+                  <>
+                    <div className="flex flex-col">
+                      <label className="text-[12px] text-gray-600 mb-1.5">Platform <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        placeholder="Enter Event Platform"
+                        className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={eventLocation}
+                        onChange={(e) => setEventLocation(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="flex flex-col">
+                      <label className="text-[12px] text-gray-600 mb-1.5">Meet Link <span className="text-red-500">*</span></label>
+                      <input
+                        type="url"
+                        placeholder="Enter Meet Link"
+                        className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={eventMeetLink}
+                        onChange={(e) => setEventMeetLink(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </>
+                )}
+                {eventMode === false && (
+                  <>
+                    <div className="flex flex-col">
+                      <label className="text-[12px] text-gray-600 mb-1.5">Location <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        placeholder="Enter Event Location"
+                        className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={eventLocation}
+                        onChange={(e) => setEventLocation(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="flex flex-col">
+                      <label className="text-[12px] text-gray-600 mb-1.5">Google Map Link</label>
+                      <input
+                        type="url"
+                        placeholder="Google Map Link"
+                        className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={eventMeetLink}
+                        onChange={(e) => setEventMeetLink(e.target.value)}
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <h2 className="bebas text-[18px] tracking-wide text-black mb-4">PERKS AND FEE</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
+                <div className="flex flex-col">
+                  <label className="text-[12px] text-gray-600 mb-1.5">Registration Fee</label>
+                  <input
+                    type="number"
+                    placeholder="Enter The Fee"
+                    className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={eventFee}
+                    onChange={(e) => setEventFee(parseInt(e.target.value, 10))}
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="text-[12px] text-gray-600 mb-1.5">Prize Worth</label>
+                  <input
+                    type="number"
+                    placeholder="Enter The Prize Worth"
+                    className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={eventPerks}
+                    onChange={(e) => setEventPerks(parseInt(e.target.value, 10))}
+                  />
+                </div>
+              </div>
+              <div className="mt-4">
+                <label className="text-[12px] text-gray-600 mb-1.5 block">Event Guidelines</label>
+                <textarea
+                  placeholder="Enter Event Guidelines"
+                  className="w-full min-h-[100px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  value={eventGuidelines}
+                  onChange={(e) => setEventGuidelines(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {warningMessage && (
+              <div className="text-red-500 text-[14px] text-center">{warningMessage}</div>
             )}
-          </div>
-          <h2 className="text-lg font-semibold mt-6">PERKS AND FEE</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <h3>Event Registration Fee</h3>
-              <input
-                type="number"
-                placeholder="Enter The Fee"
-                className="p-2 border rounded w-full"
-                value={eventFee}
-                onChange={(e) => setEventFee(parseInt(e.target.value, 10))}
-              />
+
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                className="h-[48px] px-12 bg-[#2C333D] hover:bg-[#1F2937] text-white bebas text-[18px] tracking-wide rounded transition-colors"
+              >
+                UPDATE EVENT
+              </button>
             </div>
-            <div>
-              <h3>Prize Worth</h3>
-              <input
-                type="number"
-                placeholder="Enter The Prize Worth"
-                className="p-2 border rounded w-full"
-                value={eventPerks}
-                onChange={(e) => setEventPerks(parseInt(e.target.value, 10))}
-              />
-            </div>
-          </div>
-          <textarea
-            placeholder="Enter Event Guidelines"
-            className="w-full p-2 border rounded mt-4"
-            value={eventGuidelines}
-            onChange={(e) => setEventGuidelines(e.target.value)}
-          ></textarea>
-          {warningMessage && (
-            <div className="text-red-500 mt-4 text-center">{warningMessage}</div>
-          )}
-          <button onClick={handleSubmit} type="submit" className="mt-4 w-full py-2 bg-gray-700 hover:bg-gray-800 text-white">
-            Edit
-          </button>
-        </form>
+          </form>
+        </div>
       </div>
-    </>
+    </div>
   );
 }

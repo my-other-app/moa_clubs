@@ -227,7 +227,7 @@ export default function DashScreen() {
   // Filter registrations based on tab
   const filteredRegistrations = activeTab === "attendance"
     ? registrations.filter((reg) => reg.is_attended)
-    : registrations; // Show all registrations, not just paid
+    : registrations;
 
   // Calculate unique institutions count
   const uniqueInstitutions = new Set(
@@ -235,47 +235,45 @@ export default function DashScreen() {
   ).size;
 
   const isPast = isEventPast();
-  const totalRegistrations = registrations.length; // Count all registrations
+  const totalRegistrations = registrations.length;
   const pageViews = currentEvent?.page_views || 0;
 
   return (
-    <div className="flex min-h-screen md:px-12">
+    <div className="flex min-h-screen bg-[#2C333D]">
       <Sidebar />
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-6 md:p-8">
         <ToastContainer position="top-right" autoClose={3000} />
-        <div className="bg-white rounded-tl-2xl rounded-bl-2xl p-8 min-h-[calc(100vh-3rem)]">
+        <div className="bg-white rounded-2xl p-6 md:p-8 min-h-[calc(100vh-4rem)] shadow-sm">
           {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-            <h1 className="text-5xl font-['Bebas_Neue'] tracking-wide">
+            <h1 className="bebas text-[32px] md:text-[40px] tracking-wide text-black">
               {loadingEvent ? "Loading..." : currentEvent?.name || "Event Not Found"}
             </h1>
-            <div className="flex flex-wrap items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3">
               <button
                 onClick={handleEditClick}
-                className="w-12 h-12 p-3 bg-[#f3f3f3] rounded flex justify-center items-center"
+                className="w-10 h-10 bg-[#f3f3f3] rounded-lg flex justify-center items-center hover:bg-gray-200 transition-colors"
               >
-                <Edit className="w-6 h-6 text-[#979797]" />
+                <Edit className="w-5 h-5 text-[#979797]" />
               </button>
               <button
                 onClick={() => openDeleteModal(parsedEventId)}
-                className="w-12 h-12 p-3 bg-[#f3f3f3] rounded flex justify-center items-center"
+                className="w-10 h-10 bg-[#f3f3f3] rounded-lg flex justify-center items-center hover:bg-gray-200 transition-colors"
               >
-                <Trash className="w-6 h-6 text-[#979797]" />
+                <Trash className="w-5 h-5 text-[#979797]" />
               </button>
               <button
                 onClick={handleShare}
                 aria-label="Share this page"
-                className="w-12 h-12 p-3 bg-[#f3f3f3] rounded flex justify-center items-center"
+                className="w-10 h-10 bg-[#f3f3f3] rounded-lg flex justify-center items-center hover:bg-gray-200 transition-colors"
               >
-                <FaExternalLinkAlt className="text-[#979797]" />
+                <FaExternalLinkAlt className="w-4 h-4 text-[#979797]" />
               </button>
               <Popup
                 trigger={
-                  <button className="p-3 flex items-center gap-2 bg-[#2c333d] text-white rounded-xl">
-                    <Plus className="w-5 h-5" />
-                    <span className="text-base font-medium font-['DM_Sans']">
-                      Add Volunteers
-                    </span>
+                  <button className="h-10 px-4 flex items-center gap-2 bg-[#2c333d] text-white rounded-lg hover:bg-[#1f2937] transition-colors">
+                    <Plus className="w-4 h-4" />
+                    <span className="text-[14px] font-medium">Add Volunteers</span>
                   </button>
                 }
                 modal
@@ -299,234 +297,192 @@ export default function DashScreen() {
           </div>
 
           {/* Main Content */}
-          <div className="flex flex-col lg:flex-row gap-8">
+          <div className="flex flex-col lg:flex-row gap-6">
             {/* Left Column - Event Image */}
-            <div className="flex-shrink-0 w-full lg:w-auto">
+            <div className="flex-shrink-0 w-full lg:w-[400px]">
               <Image
                 src={
                   currentEvent?.poster?.medium ||
-                  "https://dummyimage.com/600x400/000/fff"
+                  "https://dummyimage.com/400x400/000/fff"
                 }
                 alt="Event poster"
-                width={600}
-                height={600}
-                className="rounded-lg w-full lg:w-[600px] h-auto object-cover"
+                width={400}
+                height={400}
+                className="rounded-lg w-full h-auto object-cover"
               />
             </div>
 
-            {/* Right Column - Dynamic Stats */}
+            {/* Right Column - Stats & Announcements */}
             <div className="flex-1">
-              <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
-                {/* Status Card */}
-                <div className={`h-[151px] px-4 sm:px-[60px] py-[29px] rounded-lg flex flex-col justify-center items-center ${isPast ? "bg-[#f3aba7]" : "bg-[#b4e5bc]"
-                  }`}>
-                  <div className="flex flex-col justify-start items-center gap-2">
-                    <div className="inline-flex justify-start items-center gap-2">
-                      <div className={`w-4 h-4 rounded-full ${isPast ? "bg-[#cc0000]" : "bg-[#096b5b]"}`} />
-                      <div className={`text-[32px] font-medium font-['DM_Sans'] ${isPast ? "text-[#cc0000]" : "text-[#096b5b]"}`}>
-                        {isPast ? "Ended" : "Live"}
-                      </div>
-                    </div>
-                    <div className={`text-center text-base font-light font-['DM_Sans'] ${isPast ? "text-[#cc0000]" : "text-[#096b5b]"}`}>
-                      {isPast ? "This event has ended" : "The event is live and registrations are open"}
-                    </div>
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                {/* Status Card - Live/Ended */}
+                <div className={`h-[100px] rounded-lg flex flex-col justify-center items-center ${isPast ? "bg-[#fce8e6]" : "bg-[#d4edda]"}`}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className={`w-2.5 h-2.5 rounded-full ${isPast ? "bg-red-500" : "bg-[#096b5b]"}`} />
+                    <span className={`text-[24px] font-medium ${isPast ? "text-red-500" : "text-[#096b5b]"}`}>
+                      {isPast ? "Ended" : "Live"}
+                    </span>
                   </div>
+                  <p className={`text-[12px] text-center px-2 ${isPast ? "text-red-500" : "text-[#096b5b]"}`}>
+                    {isPast ? "This event has ended" : "The event is live and registrations are open"}
+                  </p>
                 </div>
 
                 {/* Registration Count */}
-                <div className="h-[151px] px-4 sm:px-[60px] py-[27px] bg-[#ccc1f0] rounded-lg flex flex-col justify-center items-center">
-                  <div className="flex flex-col justify-start items-center gap-2">
-                    <div className="text-[#9747ff] text-4xl font-bold font-['DM_Sans']">
-                      {totalRegistrations}
-                    </div>
-                    <div className="text-center text-[#9747ff] text-base font-light font-['DM_Sans']">
-                      Total Registrations
-                    </div>
-                  </div>
+                <div className="h-[100px] bg-[#f3e8ff] rounded-lg flex flex-col justify-center items-center">
+                  <span className="text-[28px] font-bold text-[#9333ea]">{totalRegistrations}</span>
+                  <span className="text-[12px] text-[#9333ea]">Total Registration Count</span>
                 </div>
 
                 {/* Page Views */}
-                <div className="h-[151px] px-4 sm:px-[60px] py-10 bg-[#b8dff2] rounded-lg flex flex-col justify-center items-center">
-                  <div className="flex flex-col justify-start items-center gap-2">
-                    <div className="text-center text-[#0a4e6f] text-[32px] font-bold font-['DM_Sans']">
-                      {pageViews}
-                    </div>
-                    <div className="text-center text-[#0a4e6f] text-base font-light font-['DM_Sans']">
-                      Event Visitors
-                    </div>
-                  </div>
+                <div className="h-[100px] bg-[#dbeafe] rounded-lg flex flex-col justify-center items-center">
+                  <span className="text-[28px] font-bold text-[#1e40af]">{pageViews}</span>
+                  <span className="text-[12px] text-[#1e40af]">Event Visitors</span>
                 </div>
 
                 {/* Institutions */}
-                <div className="h-[151px] px-4 sm:px-[60px] py-10 bg-[#f3aba7] rounded-lg flex flex-col justify-center items-center">
-                  <div className="flex flex-col justify-between items-center">
-                    <div className="text-[#cc0000] text-[32px] font-bold font-['DM_Sans']">
-                      {uniqueInstitutions}
-                    </div>
-                    <div className="text-center text-[#cc0000] text-base font-light font-['DM_Sans']">
-                      Institutions
-                    </div>
-                  </div>
+                <div className="h-[100px] bg-[#fce8e6] rounded-lg flex flex-col justify-center items-center">
+                  <span className="text-[28px] font-bold text-[#dc2626]">{uniqueInstitutions}</span>
+                  <span className="text-[12px] text-[#dc2626]">Institutions</span>
                 </div>
               </div>
 
               {/* Announcements Section */}
-              <div className="w-full flex flex-col justify-start items-start gap-1 mb-8">
-                <div className="text-black text-2xl font-normal font-['Bebas_Neue']">
-                  Make Announcements
-                </div>
-                <div className="self-stretch flex flex-col justify-start items-start gap-1 w-full">
-                  <div className="text-[#2c333d] text-xs font-normal font-['DM_Sans']">
-                    Send message to the registered participants as notifications
-                  </div>
-                  <Textarea
-                    placeholder="Enter the message send"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className="self-stretch min-h-[160px] pl-2 pr-3.5 py-1.5 bg-white rounded-lg border border-[#2c333d] text-base font-medium w-full"
-                  />
-                </div>
+              <div className="w-full">
+                <h2 className="bebas text-[18px] tracking-wide text-black mb-1">MAKE ANNOUNCEMENTS</h2>
+                <p className="text-[11px] text-gray-600 mb-2">
+                  Send message to the registered participants as notifications
+                </p>
+                <Textarea
+                  placeholder="Enter the message send"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  className="w-full min-h-[120px] px-3 py-2 text-[14px] border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
                 <Button
                   variant="outline"
-                  className="w-60 h-[60px] px-[50px] py-[15px] bg-white rounded-lg border border-[#2c333d] mt-4"
+                  className="mt-3 h-[42px] px-8 bebas text-[18px] tracking-wide border-[#2c333d] text-[#2c333d] hover:bg-gray-50"
                   onClick={handleSendMessage}
                 >
-                  <span className="text-center text-[#2c333d] text-2xl font-normal font-['Bebas_Neue']">
-                    Send Message
-                  </span>
+                  SEND MESSAGE
                 </Button>
               </div>
             </div>
           </div>
 
           {/* Registration / Attendance Table */}
-          <div className="mt-12">
-            <div className="w-full flex flex-col justify-start items-start gap-4">
-              <div className="self-stretch flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div className="flex justify-start items-start gap-9">
-                  <div
-                    onClick={() => setActiveTab("registration")}
-                    className="w-[145px] inline-flex flex-col justify-start items-center gap-1 cursor-pointer"
-                  >
-                    <div
-                      className={`self-stretch text-center text-xl font-medium font-['DM_Sans'] ${activeTab === "registration" ? "text-[#2c333d]" : "text-[#b4b4b4]"
-                        }`}
-                    >
-                      Registration
-                    </div>
-                    {activeTab === "registration" && (
-                      <div className="w-[145px] h-0 border-b-[3px] border-[#2c333d]" />
-                    )}
-                  </div>
-                  <div
-                    onClick={() => setActiveTab("attendance")}
-                    className="w-[145px] inline-flex flex-col justify-start items-center gap-1 cursor-pointer"
-                  >
-                    <div
-                      className={`self-stretch text-center text-xl font-medium font-['DM_Sans'] ${activeTab === "attendance" ? "text-[#2c333d]" : "text-[#b4b4b4]"
-                        }`}
-                    >
-                      Attendance
-                    </div>
-                    {activeTab === "attendance" && (
-                      <div className="w-[145px] h-0 border-b-[3px] border-[#2c333d]" />
-                    )}
-                  </div>
-                </div>
-                <div className="flex flex-col sm:flex-row justify-start items-center gap-[18px] w-full md:w-auto">
-                  <div className="relative w-full sm:w-auto">
-                    <Search className="absolute left-3 top-3 w-6 h-6 text-[#979797]" />
-                    <Input
-                      placeholder="Search for participants"
-                      className="w-full sm:w-[401px] h-12 pl-12 bg-white rounded-lg border border-[#979797] text-base font-light"
-                    />
-                  </div>
-                  <Button
-                    variant="default"
-                    className="h-12 px-4 py-2 bg-[#2c333d] rounded-lg flex items-center gap-4 w-full sm:w-auto"
-                    onClick={handleDownloadCSV}
-                  >
-                    <Download className="w-4 h-5 text-white" />
-                    <span className="text-white text-xs font-normal">
-                      Download file
-                    </span>
-                  </Button>
-                </div>
-              </div>
-
-              <div className="w-full overflow-x-auto border border-[#979797] rounded-lg">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-[#b4e5bc]">
-                      <th className="py-3 px-4 text-left text-[#2c333d] text-xl font-light font-['DM_Sans']">
-                        Registration ID
-                      </th>
-                      <th className="py-3 px-4 text-left text-[#2c333d] text-xl font-light font-['DM_Sans']">
-                        Participant Name
-                      </th>
-                      <th className="py-3 px-4 text-left text-[#2c333d] text-xl font-light font-['DM_Sans']">
-                        Email
-                      </th>
-                      <th className="py-3 px-4 text-left text-[#2c333d] text-xl font-light font-['DM_Sans']">
-                        Number
-                      </th>
-                      <th className="py-3 px-4 text-left text-[#2c333d] text-xl font-light font-['DM_Sans']">
-                        Organization
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredRegistrations.length > 0 ? (
-                      filteredRegistrations.map((reg, index) => (
-                        <tr
-                          key={reg.id || index}
-                          className={
-                            index !== filteredRegistrations.length - 1
-                              ? "border-b border-[#979797]"
-                              : ""
-                          }
-                        >
-                          <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">
-                            {reg.id}
-                          </td>
-                          <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">
-                            {reg.full_name}
-                          </td>
-                          <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">
-                            {reg.email}
-                          </td>
-                          <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">
-                            {reg.phone}
-                          </td>
-                          <td className="py-4 px-4 text-[#979797] text-xl font-light font-['DM_Sans']">
-                            {reg.institution || reg.profile || "-"}
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={5} className="py-4 px-4 text-center text-[#979797]">
-                          {loadingRegistrations ? "Loading..." : "No registrations found"}
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Show More Registrations Button */}
-              <div className="flex justify-center w-full mt-4">
-                <Button
-                  variant="outline"
-                  onClick={handleShowMoreRegistrations}
-                  disabled={loadingRegistrations}
-                  className="w-60 h-[60px] px-[50px] py-[15px] bg-white rounded-lg border border-[#2c333d]"
+          <div className="mt-10">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+              {/* Tabs */}
+              <div className="flex items-center gap-6">
+                <button
+                  onClick={() => setActiveTab("registration")}
+                  className={`pb-2 text-[16px] font-medium transition-colors ${activeTab === "registration"
+                    ? "text-[#2c333d] border-b-2 border-[#2c333d]"
+                    : "text-gray-400 hover:text-gray-600"
+                    }`}
                 >
-                  <span className="text-center text-[#2c333d] text-2xl font-normal font-['Bebas_Neue']">
-                    {loadingRegistrations ? "Loading..." : "Show More"}
-                  </span>
+                  Registration
+                </button>
+                <button
+                  onClick={() => setActiveTab("attendance")}
+                  className={`pb-2 text-[16px] font-medium transition-colors ${activeTab === "attendance"
+                    ? "text-[#2c333d] border-b-2 border-[#2c333d]"
+                    : "text-gray-400 hover:text-gray-600"
+                    }`}
+                >
+                  Attendance
+                </button>
+              </div>
+
+              {/* Search & Download */}
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                <div className="relative w-full sm:w-[280px]">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Input
+                    placeholder="Search for participants"
+                    className="w-full h-10 pl-10 text-[14px] border-gray-300 rounded-lg"
+                  />
+                </div>
+                <Button
+                  variant="default"
+                  className="h-10 px-4 bg-[#2c333d] rounded-lg flex items-center gap-2 hover:bg-[#1f2937] w-full sm:w-auto"
+                  onClick={handleDownloadCSV}
+                >
+                  <Download className="w-4 h-4 text-white" />
+                  <span className="text-white text-[13px]">Download CSV file</span>
                 </Button>
               </div>
+            </div>
+
+            {/* Table */}
+            <div className="w-full overflow-x-auto rounded-lg border border-gray-200">
+              <table className="w-full min-w-[800px]">
+                <thead>
+                  <tr className="bg-[#d4edda]">
+                    <th className="py-3 px-4 text-left text-[14px] font-medium text-[#2c333d]">
+                      Registration ID
+                    </th>
+                    <th className="py-3 px-4 text-left text-[14px] font-medium text-[#2c333d]">
+                      Participant Name
+                    </th>
+                    <th className="py-3 px-4 text-left text-[14px] font-medium text-[#2c333d]">
+                      Email
+                    </th>
+                    <th className="py-3 px-4 text-left text-[14px] font-medium text-[#2c333d]">
+                      Number
+                    </th>
+                    <th className="py-3 px-4 text-left text-[14px] font-medium text-[#2c333d]">
+                      College Name
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRegistrations.length > 0 ? (
+                    filteredRegistrations.map((reg, index) => (
+                      <tr
+                        key={reg.id || index}
+                        className={index !== filteredRegistrations.length - 1 ? "border-b border-gray-200" : ""}
+                      >
+                        <td className="py-3 px-4 text-[14px] text-gray-600">
+                          {reg.ticket_id || `NEX${reg.id}AA001`}
+                        </td>
+                        <td className="py-3 px-4 text-[14px] text-gray-600">
+                          {reg.full_name}
+                        </td>
+                        <td className="py-3 px-4 text-[14px] text-gray-600">
+                          {reg.email}
+                        </td>
+                        <td className="py-3 px-4 text-[14px] text-gray-600">
+                          {reg.phone}
+                        </td>
+                        <td className="py-3 px-4 text-[14px] text-gray-600">
+                          {reg.institution || reg.profile || "-"}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="py-8 px-4 text-center text-gray-500 text-[14px]">
+                        {loadingRegistrations ? "Loading..." : "No registrations found"}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Show All Button */}
+            <div className="flex justify-center mt-6">
+              <Button
+                variant="outline"
+                onClick={handleShowMoreRegistrations}
+                disabled={loadingRegistrations}
+                className="h-[42px] px-12 bebas text-[18px] tracking-wide border-[#2c333d] text-[#2c333d] hover:bg-gray-50"
+              >
+                {loadingRegistrations ? "LOADING..." : "SHOW ALL"}
+              </Button>
             </div>
           </div>
         </div>
@@ -541,3 +497,4 @@ export default function DashScreen() {
     </div>
   );
 }
+

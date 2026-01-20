@@ -25,7 +25,7 @@ interface AdditionalDetail {
 export default function EditEvent() {
   const router = useRouter();
   const params = useParams();
-  const eventId = params?.eventId; // expects route param, e.g. /events/edit/10
+  const eventId = params?.eventId;
   const { eventData } = useEvent();
   const [loading, setLoading] = useState<boolean>(false);
   const [options, setOptions] = useState<string[]>([""]);
@@ -34,17 +34,16 @@ export default function EditEvent() {
   const [questionRequired, setQuestionRequired] = useState<boolean>(true);
   const [questions, setQuestions] = useState<Question[]>([]);
 
-  // Initial render debugging
-  console.debug("EditEvent rendered with eventId:", eventId);
-  console.debug("Initial eventData:", eventData);
+  // Second question card state
+  const [options2, setOptions2] = useState<string[]>([""]);
+  const [questionType2, setQuestionType2] = useState<string>("");
+  const [currentQuestion2, setCurrentQuestion2] = useState<string>("");
+  const [questionRequired2, setQuestionRequired2] = useState<boolean>(true);
 
-  // Fetch event data including additional_details on mount (or when eventId changes)
   useEffect(() => {
     const fetchEventDetails = async () => {
-      console.debug("Fetching event details for eventId:", eventId);
       if (!eventId) return;
       const accessToken = localStorage.getItem("access_token");
-      console.debug("Access token found:", accessToken);
       try {
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/events/info/${eventId}`,
@@ -54,16 +53,15 @@ export default function EditEvent() {
             },
           }
         );
-        console.log("Fetched event data:", response.data);
-        // Process additional_details if available
         if (response.data.additional_details) {
-          const fetchedQuestions = response.data.additional_details.map((item: AdditionalDetail) => ({
-            type: item.field_type === "select" ? "multipleChoice" : "shortAnswer",
-            text: item.label,
-            options: item.options || [],
-            required: item.required,
-          }));
-          console.debug("Setting fetched questions:", fetchedQuestions);
+          const fetchedQuestions = response.data.additional_details.map(
+            (item: AdditionalDetail) => ({
+              type: item.field_type === "select" ? "multipleChoice" : "shortAnswer",
+              text: item.label,
+              options: item.options || [],
+              required: item.required,
+            })
+          );
           setQuestions(fetchedQuestions);
         }
       } catch (error) {
@@ -75,59 +73,68 @@ export default function EditEvent() {
   }, [eventId]);
 
   const addOption = () => {
-    const newOptions = [...options, ""];
-    console.debug("Adding new option. Options before:", options, "Options after:", newOptions);
-    setOptions(newOptions);
+    setOptions([...options, ""]);
+  };
+
+  const addOption2 = () => {
+    setOptions2([...options2, ""]);
   };
 
   const handleQuestionTypeChange = (e: ChangeEvent<HTMLSelectElement>) => {
     const selectedType = e.target.value;
-    console.debug("Question type changed to:", selectedType);
     setQuestionType(selectedType);
     setCurrentQuestion("");
     setQuestionRequired(true);
     if (selectedType === "multipleChoice") {
-      console.debug("Resetting options for multiple choice.");
       setOptions([""]);
     } else {
-      console.debug("Clearing options for short answer.");
       setOptions([]);
     }
   };
 
-  const handleAddQuestion = () => {
-    if (currentQuestion.trim() === "") {
-      console.debug("Empty question text, not adding question.");
-      return;
+  const handleQuestionTypeChange2 = (e: ChangeEvent<HTMLSelectElement>) => {
+    const selectedType = e.target.value;
+    setQuestionType2(selectedType);
+    setCurrentQuestion2("");
+    setQuestionRequired2(true);
+    if (selectedType === "multipleChoice") {
+      setOptions2([""]);
+    } else {
+      setOptions2([]);
     }
+  };
+
+  const handleAddQuestion = () => {
+    if (currentQuestion.trim() === "") return;
     const newQuestion: Question = {
       type: questionType,
       text: currentQuestion,
       options: questionType === "multipleChoice" ? options : [],
       required: questionRequired,
     };
-    console.debug("Adding new question:", newQuestion);
-    const updatedQuestions = [...questions, newQuestion];
-    setQuestions(updatedQuestions);
-    console.debug("Questions state after addition:", updatedQuestions);
-    // Reset input fields
+    setQuestions([...questions, newQuestion]);
     setCurrentQuestion("");
     setQuestionType("");
     setOptions([""]);
     setQuestionRequired(true);
   };
 
-  // Delete a question based on its index
-  const handleDeleteQuestion = (index: number) => {
-    console.debug("Deleting question at index:", index);
-    const updatedQuestions = questions.filter((_, i) => i !== index);
-    setQuestions(updatedQuestions);
-    console.debug("Questions state after deletion:", updatedQuestions);
+  const handleAddQuestion2 = () => {
+    if (currentQuestion2.trim() === "") return;
+    const newQuestion: Question = {
+      type: questionType2,
+      text: currentQuestion2,
+      options: questionType2 === "multipleChoice" ? options2 : [],
+      required: questionRequired2,
+    };
+    setQuestions([...questions, newQuestion]);
+    setCurrentQuestion2("");
+    setQuestionType2("");
+    setOptions2([""]);
+    setQuestionRequired2(true);
   };
 
   const handleContinue = async () => {
-    console.debug("Handle continue clicked. Current questions:", questions);
-    // Map questions to the required additional_details format with unique keys
     const additionalDetailsArray = questions.map((q) => ({
       key: uuidv4(),
       label: q.text,
@@ -135,25 +142,19 @@ export default function EditEvent() {
       options: q.type === "multipleChoice" ? q.options : [],
       required: q.required,
       question: q.text,
-      answer: ""
+      answer: "",
     }));
-
-    console.debug("Additional Details Array to be sent:", additionalDetailsArray);
 
     if (!eventData) {
       console.error("No event data found in context");
       return;
     }
 
-    // Create an updated event data object with additional_details as an array.
     const updatedEventData = {
       ...eventData,
       additional_details: additionalDetailsArray,
     };
 
-    console.debug("Updated Event Data:", updatedEventData);
-
-    // Get access token from localStorage
     const accessToken = localStorage.getItem("access_token");
     if (!accessToken) {
       console.error("No access token found");
@@ -162,8 +163,7 @@ export default function EditEvent() {
 
     setLoading(true);
     try {
-      console.debug("Sending PUT request to update event...");
-      const response = await axios.put(
+      await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/events/update/${eventId}`,
         updatedEventData,
         {
@@ -172,164 +172,294 @@ export default function EditEvent() {
           },
         }
       );
-      console.log("Event updated successfully:", response.data);
       router.push("/dashboard/events");
     } catch (error) {
       console.error("Error updating event:", error);
     } finally {
       setLoading(false);
-      console.debug("Loading state set to false");
     }
   };
 
   return (
-    <>
+    <div className="flex min-h-screen bg-[#2C333D]">
       <Sidebar />
-      <div className="px-32 mx-auto p-6">
-        <button
-          onClick={() => {
-            console.debug("Back button clicked");
-            router.back();
-          }}
-          className="flex items-center text-gray-600 hover:text-black mb-4"
-        >
-          <ChevronLeft className="w-5 h-5 mr-1" />
-          Back
-        </button>
-        <h1 className="text-3xl font-bold">Edit Additional Details</h1>
-        <p className="text-gray-500">Manage questions for the registration form</p>
-        <div className="flex flex-row gap-12 items-start">
-          <div className="mt-6 flex-1/2">
-            <div className="mt-6">
-              <h2 className="font-bold text-lg">QUESTIONS</h2>
-              {questions.length === 0 ? (
-                <p className="text-gray-500 mt-2">No questions available.</p>
-              ) : (
-                <ul className="mt-2 space-y-2">
-                  {questions.map((q, index) => (
-                    <li
-                      key={index}
-                      className="p-2 border rounded flex justify-between items-start"
-                    >
-                      <div>
-                        <div className="font-medium">{q.text}</div>
-                        <div className="text-sm text-gray-500">Type: {q.type}</div>
-                        <div className="text-sm text-gray-500">
-                          Required: {q.required ? "Yes" : "No"}
-                        </div>
-                        {q.type === "multipleChoice" && (
-                          <ul className="ml-4 mt-1 space-y-1">
-                            {q.options.map((opt, i) => (
-                              <li key={i} className="text-gray-600">
-                                {opt || `Option ${i + 1}`}
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => handleDeleteQuestion(index)}
-                        className="text-red-500 hover:underline"
-                      >
-                        Delete
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-          <div className="max-w-md mx-auto p-6 border rounded-lg shadow-md mt-6 min-h-[300px] flex-col flex-1/2">
-            <h2 className="text-lg font-bold">CREATE A NEW QUESTION</h2>
-            <div className="mt-4 space-y-4">
-              <div>
-                <label className="block font-medium">Question Type</label>
+      <div className="flex-1 p-6 md:p-8">
+        <div className="bg-white rounded-2xl p-6 md:p-10 min-h-[calc(100vh-4rem)]">
+          {/* Back Button */}
+          <button
+            onClick={() => router.back()}
+            className="flex items-center text-gray-600 hover:text-black mb-4 text-[14px]"
+          >
+            <ChevronLeft className="w-4 h-4 mr-1" />
+            Back
+          </button>
+
+          {/* Page Title */}
+          <h1 className="bebas text-[32px] md:text-[40px] tracking-wide text-black mb-1">
+            EDIT REGISTRATION FORM
+          </h1>
+          <p className="text-[14px] text-gray-500 mb-8">
+            Add questions for the registration Form
+          </p>
+
+          {/* Mandatory Information Section */}
+          <div className="mb-10">
+            <h2 className="bebas text-[18px] tracking-wide text-black mb-4">
+              MANDATORY INFORMATION
+            </h2>
+            <div className="space-y-4 max-w-md">
+              <div className="flex flex-col">
+                <label className="text-[12px] text-gray-600 mb-1.5">
+                  Participant Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter Your Password"
+                  className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled
+                />
+              </div>
+              <div className="flex flex-col">
+                <label className="text-[12px] text-gray-600 mb-1.5">
+                  Participant Email
+                </label>
                 <div className="relative">
                   <select
-                    value={questionType}
-                    onChange={handleQuestionTypeChange}
-                    className="appearance-none mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
+                    className="h-[42px] w-full px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white appearance-none"
+                    disabled
                   >
-                    <option value="">Choose Question Type</option>
-                    <option value="multipleChoice">Multiple Choice</option>
-                    <option value="shortAnswer">Short Answer</option>
+                    <option>Choose Event Type</option>
                   </select>
-                  <ChevronDown className="absolute top-3 right-3 text-gray-500" />
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 </div>
               </div>
-              {questionType && (
-                <>
-                  <div>
-                    <label className="block font-medium">Question</label>
-                    <input
-                      type="text"
-                      placeholder="Enter Your Question"
-                      value={currentQuestion}
-                      onChange={(e) => {
-                        console.debug("Question input changed:", e.target.value);
-                        setCurrentQuestion(e.target.value);
-                      }}
-                      className="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
-                    />
-                  </div>
-                  <div className="mt-4 flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={questionRequired}
-                      onChange={(e) => {
-                        console.debug("Question required toggled to:", e.target.checked);
-                        setQuestionRequired(e.target.checked);
-                      }}
-                      className="mr-2"
-                    />
-                    <label className="font-medium">Is this question required?</label>
-                  </div>
-                  {questionType === "multipleChoice" && (
-                    <div>
-                      {options.map((option, index) => (
-                        <div key={index} className="flex items-center space-x-2 mt-2">
-                          <Circle className="text-gray-500 w-5 h-5" />
-                          <input
-                            type="text"
-                            value={option}
-                            placeholder={`Option ${index + 1}`}
-                            onChange={(e) => {
-                              const newOptions = [...options];
-                              newOptions[index] = e.target.value;
-                              console.debug(`Option ${index + 1} changed to:`, e.target.value);
-                              setOptions(newOptions);
-                            }}
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
-                          />
-                        </div>
-                      ))}
-                      <button
-                        onClick={addOption}
-                        className="mt-2 text-gray-600 font-medium hover:underline"
-                      >
-                        Add another option
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
-              <button
-                onClick={handleAddQuestion}
-                className="w-full px-4 py-2 mt-4 text-lg font-bold border rounded-lg hover:bg-gray-100"
-              >
-                ADD QUESTION
-              </button>
+              <div className="flex flex-col">
+                <label className="text-[12px] text-gray-600 mb-1.5">
+                  Participant Number
+                </label>
+                <div className="relative">
+                  <select
+                    className="h-[42px] w-full px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white appearance-none"
+                    disabled
+                  >
+                    <option>Choose Event Type</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                </div>
+              </div>
             </div>
           </div>
+
+          {/* Question Cards - Side by Side */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+            {/* First Question Card */}
+            <div className="border border-gray-200 rounded-lg p-6">
+              <h3 className="bebas text-[16px] tracking-wide text-black mb-4">
+                CREATE A NEW QUESTION
+              </h3>
+              <div className="space-y-4">
+                <div className="flex flex-col">
+                  <label className="text-[12px] text-gray-600 mb-1.5">
+                    Question Type
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={questionType}
+                      onChange={handleQuestionTypeChange}
+                      className="h-[42px] w-full px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white appearance-none"
+                    >
+                      <option value="">Choose Question Type</option>
+                      <option value="multipleChoice">Multiple Choice</option>
+                      <option value="shortAnswer">Short Answer</option>
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  </div>
+                </div>
+
+                {questionType && (
+                  <>
+                    <div className="flex flex-col">
+                      <label className="text-[12px] text-gray-600 mb-1.5">
+                        Question
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Enter Your Question"
+                        value={currentQuestion}
+                        onChange={(e) => setCurrentQuestion(e.target.value)}
+                        className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    {questionType === "multipleChoice" && (
+                      <div className="space-y-2">
+                        {options.map((option, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <Circle className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                            <input
+                              type="text"
+                              value={option}
+                              placeholder={`Option ${index + 1}`}
+                              onChange={(e) => {
+                                const newOptions = [...options];
+                                newOptions[index] = e.target.value;
+                                setOptions(newOptions);
+                              }}
+                              className="flex-1 h-[38px] px-3 py-2 text-[14px] bg-gray-100 border-0 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                        ))}
+                        <button
+                          onClick={addOption}
+                          className="text-[13px] text-gray-600 underline hover:text-black"
+                        >
+                          Add another option
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                <button
+                  onClick={handleAddQuestion}
+                  className="w-full max-w-[200px] h-[42px] bebas text-[16px] tracking-wide border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                >
+                  ADD QUESTIONS
+                </button>
+              </div>
+            </div>
+
+            {/* Second Question Card */}
+            <div className="border border-gray-200 rounded-lg p-6">
+              <h3 className="bebas text-[16px] tracking-wide text-black mb-4">
+                CREATE A NEW QUESTION
+              </h3>
+              <div className="space-y-4">
+                <div className="flex flex-col">
+                  <label className="text-[12px] text-gray-600 mb-1.5">
+                    Question Type
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={questionType2}
+                      onChange={handleQuestionTypeChange2}
+                      className="h-[42px] w-full px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white appearance-none"
+                    >
+                      <option value="">Choose Question Type</option>
+                      <option value="multipleChoice">Multiple Choice</option>
+                      <option value="shortAnswer">Short Answer</option>
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  </div>
+                </div>
+
+                {questionType2 && (
+                  <>
+                    <div className="flex flex-col">
+                      <label className="text-[12px] text-gray-600 mb-1.5">
+                        Question
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Enter Your Question"
+                        value={currentQuestion2}
+                        onChange={(e) => setCurrentQuestion2(e.target.value)}
+                        className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    {questionType2 === "multipleChoice" && (
+                      <div className="space-y-2">
+                        {options2.map((option, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <Circle className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                            <input
+                              type="text"
+                              value={option}
+                              placeholder={`Option ${index + 1}`}
+                              onChange={(e) => {
+                                const newOptions = [...options2];
+                                newOptions[index] = e.target.value;
+                                setOptions2(newOptions);
+                              }}
+                              className="flex-1 h-[38px] px-3 py-2 text-[14px] bg-gray-100 border-0 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                        ))}
+                        <button
+                          onClick={addOption2}
+                          className="text-[13px] text-gray-600 underline hover:text-black"
+                        >
+                          Add another option
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                <button
+                  onClick={handleAddQuestion2}
+                  className="w-full max-w-[200px] h-[42px] bebas text-[16px] tracking-wide border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                >
+                  ADD QUESTIONS
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Added Questions List */}
+          {questions.length > 0 && (
+            <div className="mb-10">
+              <h3 className="bebas text-[16px] tracking-wide text-black mb-4">
+                ADDED QUESTIONS ({questions.length})
+              </h3>
+              <div className="space-y-3">
+                {questions.map((q, index) => (
+                  <div
+                    key={index}
+                    className="p-4 border border-gray-200 rounded-lg flex justify-between items-start"
+                  >
+                    <div>
+                      <p className="text-[14px] font-medium text-gray-800">{q.text}</p>
+                      <p className="text-[12px] text-gray-500 mt-1">
+                        Type: {q.type === "multipleChoice" ? "Multiple Choice" : "Short Answer"} •
+                        {q.required ? " Required" : " Optional"}
+                      </p>
+                      {q.type === "multipleChoice" && q.options.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {q.options.map((opt, i) => (
+                            <span key={i} className="text-[12px] bg-gray-100 px-2 py-1 rounded">
+                              {opt || `Option ${i + 1}`}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => setQuestions(questions.filter((_, i) => i !== index))}
+                      className="text-[13px] text-red-500 hover:underline"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Continue Button */}
+          <div className="flex justify-end">
+            <button
+              onClick={handleContinue}
+              disabled={loading}
+              className="h-[48px] px-12 bg-[#2C333D] hover:bg-[#1F2937] text-white bebas text-[18px] tracking-wide rounded transition-colors disabled:opacity-50"
+            >
+              {loading ? "PROCESSING..." : "CONTINUE"}
+            </button>
+          </div>
         </div>
-        <button
-          onClick={handleContinue}
-          disabled={loading}
-          className="bottom-10 right-30 absolute w-48 bebas text-2xl self-end mt-4 px-4 py-2 bg-gray-900 text-white rounded-lg"
-        >
-          {loading ? "Processing..." : "FINISH"}
-        </button>
       </div>
-    </>
+    </div>
   );
 }
+

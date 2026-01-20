@@ -157,10 +157,9 @@ export default function CreateEvent() {
       reg_enddate: eventCloseDatetime,
       additional_details: [],
       reg_startdate: "",
-      contact_phone: eventCoordinatorPhone, // Pass the coordinator's phone here
-      contact_email: eventCoordinatorEmail, // Pass the coordinator's email here
+      contact_phone: eventCoordinatorPhone,
+      contact_email: eventCoordinatorEmail,
       interest_ids: null,
-      // club_id: null
     };
 
     // Save event data in context and navigate to the next step
@@ -169,381 +168,369 @@ export default function CreateEvent() {
   };
 
   return (
-    <>
+    <div className="flex min-h-screen bg-[#2C333D]">
       <Sidebar />
-      <div className="max-w-6xl mx-auto my-12 p-6 rounded-lg font-sans">
-        <h1 className="text-4xl font-bold mb-18 bebas">CREATE NEW EVENT</h1>
-        <form onSubmit={handleSubmit}>
-          <h2 className="text-2xl bebas font-semibold mb-6">BASIC INFORMATION</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-            <div className="space-y-4 flex flex-col gap-5">
-              <div className="flex flex-col">
-                <h3 className="text-gray-700 text-sm mb-1">
-                  Event Title<span className="text-red-500">*</span>
-                </h3>
-                <input
-                  type="text"
-                  placeholder="Enter Your Event Title"
-                  className="p-2 border border-gray-400 rounded"
-                  value={eventTitle}
-                  onChange={(e) => setEventTitle(e.target.value)}
-                  required
-                />
-              </div>
+      <div className="flex-1 p-6 md:p-8">
+        <div className="bg-white rounded-2xl p-6 md:p-10 min-h-[calc(100vh-4rem)]">
+          {/* Main Title */}
+          <h1 className="text-[36px] font-normal mb-10 bebas tracking-wide">CREATE NEW EVENT</h1>
 
-              <div className="flex flex-col">
-                <h3 className="text-gray-700 text-sm mb-1">
-                  Event Coordinator Name<span className="text-red-500">*</span>
-                </h3>
-                <input
-                  type="text"
-                  placeholder="Enter Event Coordinator Name"
-                  className="p-2 border border-gray-400 rounded"
-                  value={eventCoordinatorName}
-                  onChange={(e) => setEventCoordinatorName(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="flex flex-col">
-                <h3 className="text-gray-700 text-sm mb-1">
-                  Event Coordinator Phone Number<span className="text-red-500">*</span>
-                </h3>
-                <input
-                  type="text"
-                  placeholder="Enter Event Coordinator Phone Number"
-                  className="p-2 border border-gray-400 rounded"
-                  value={eventCoordinatorPhone}
-                  onChange={(e) => setEventCoordinatorPhone(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="flex flex-col">
-                <h3 className="text-gray-700 text-sm mb-1">
-                  Event Coordinator Email<span className="text-red-500">*</span>
-                </h3>
-                <input
-                  type="email"
-                  placeholder="Enter Event Coordinator Email"
-                  className="p-2 border border-gray-400 rounded"
-                  value={eventCoordinatorEmail}
-                  onChange={(e) => setEventCoordinatorEmail(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-            <div className="flex flex-col min-h-1/1 gap-5">
-              <div className="flex flex-col flex-1 w-1/1">
-                <h3 className="text-gray-700 text-sm mb-1">
-                  Event Description<span className="text-red-500">*</span>
-                </h3>
-                <textarea
-                  placeholder="Enter Event Description"
-                  className="p-2 border border-gray-400 rounded h-1/1"
-                  value={eventDescription}
-                  required
-                  onChange={(e) => setEventDescription(e.target.value)}
-                ></textarea>
-              </div>
-              <div className="flex flex-col">
-                <h3 className="text-gray-700 text-sm mb-1">
-                  Event Category<span className="text-red-500">*</span>
-                </h3>
-                <select
-                  className="p-2 border border-gray-400 rounded"
-                  value={selectedCategory ?? ""}
-                  required
-                  onChange={(e) => setSelectedCategory(parseInt(e.target.value, 10))}
-                >
-                  <option value="" className="text-gray-700">
-                    Choose Event Category
-                  </option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex flex-col">
-                <h3 className="text-gray-700 text-sm mb-1">
-                  Event Seats<span className="text-red-500">*</span>
-                </h3>
-                <input
-                  type="text"
-                  required
-                  placeholder="Enter available seats for the event"
-                  className="p-2 border border-gray-400 rounded"
-                  value={eventSeats}
-                  onChange={(e) => setEventSeats(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="flex flex-col items-center my-auto">
-              <label
-                htmlFor="eventPoster"
-                className="p-2 rounded cursor-pointer flex items-center justify-center"
-              >
-                {eventPoster ? (
-                  <Image
-                    src={URL.createObjectURL(eventPoster)}
-                    width={100}
-                    height={100}
-                    alt="Event Poster"
-                    className="w-50 aspect-square h-50 object-cover rounded"
-                  />
-                ) : (
-                  <div>
-                    <svg
-                      width="100"
-                      height="100"
-                      viewBox="0 0 100 100"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <rect x="0.25" y="0.25" width="99.5" height="99.5" rx="49.75" fill="#F3F3F3" />
-                      <rect
-                        x="0.25"
-                        y="0.25"
-                        width="99.5"
-                        height="99.5"
-                        rx="49.75"
-                        stroke="#979797"
-                        strokeWidth="0.5"
-                      />
-                      <path
-                        d="M51 32H41.6C38.2397 32 36.5595 32 35.2761 32.654C34.1471 33.2292 33.2292 34.1471 32.654 35.2761C32 36.5595 32 38.2397 32 41.6V58.4C32 61.7603 32 63.4405 32.654 64.7239C33.2292 65.8529 34.1471 66.7708 35.2761 67.346C36.5595 68 38.2397 68 41.6 68H60C61.8599 68 62.7899 68 63.5529 67.7956C65.6235 67.2408 67.2408 65.6235 67.7956 63.5529C68 62.7899 68 61.8599 68 60M64 42V30M58 36H70M47 43C47 45.2091 45.2091 47 43 47C40.7909 47 39 45.2091 39 43C39 40.7909 40.7909 39 43 39C45.2091 39 47 40.7909 47 43ZM55.9801 49.8363L39.0623 65.2161C38.1107 66.0812 37.6349 66.5137 37.5929 66.8884C37.5564 67.2132 37.6809 67.5353 37.9264 67.7511C38.2096 68 38.8526 68 40.1386 68H58.912C61.7903 68 63.2295 68 64.3598 67.5164C65.7789 66.9094 66.9094 65.7789 67.5164 64.3598C68 63.2295 68 61.7903 68 58.912C68 57.9435 68 57.4593 67.8941 57.0083C67.7611 56.4416 67.5059 55.9107 67.1465 55.4528C66.8605 55.0884 66.4824 54.7859 65.7261 54.1809L60.1317 49.7053C59.3748 49.0998 58.9963 48.7971 58.5796 48.6902C58.2123 48.596 57.8257 48.6082 57.4651 48.7254C57.0559 48.8583 56.6973 49.1843 55.9801 49.8363Z"
-                        stroke="#979797"
-                        strokeWidth="4"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
+          <form onSubmit={handleSubmit} className="space-y-10">
+            {/* BASIC INFORMATION SECTION */}
+            <div>
+              <h2 className="text-[20px] bebas font-normal mb-5 tracking-wide">BASIC INFORMATION</h2>
+              <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-8">
+                {/* Column 1: Left Input Fields */}
+                <div className="flex flex-col gap-5">
+                  <div className="flex flex-col">
+                    <label className="font-sans text-gray-600 text-[13px] mb-1.5">
+                      Event Title<span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter Your Event Title"
+                      className="font-sans h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={eventTitle}
+                      onChange={(e) => setEventTitle(e.target.value)}
+                      required
+                    />
                   </div>
-                )}
-                <input
-                  id="eventPoster"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handlePosterUpload}
-                />
-              </label>
-              <h3>
-                Add Event Poster<span className="text-red-500">*</span>
-              </h3>
-            </div>
-          </div>
-          <h2 className="font-semibold mt-6 text-2xl bebas mb-6">DATE AND TIME</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-            <div className="flex flex-col">
-              <h3 className="text-gray-700 text-sm mb-1">
-                Event date<span className="text-red-500">*</span>
-              </h3>
-              <input
-                type="date"
-                className="p-2 border border-gray-400 rounded"
-                value={eventDate}
-                onChange={(e) => setEventDate(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col">
-              <h3 className="text-gray-700 text-sm mb-1">
-                Event Start Time<span className="text-red-500">*</span>
-              </h3>
-              <input
-                required
-                type="time"
-                className="p-2 border border-gray-400 rounded"
-                value={eventStartTime}
-                onChange={(e) => setEventStartTime(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col">
-              <h3 className="text-gray-700 text-sm mb-1">
-                Event Duration<span className="text-red-500">*</span>
-              </h3>
-              <input
-                type="number"
-                placeholder="Enter Event Duration Hours"
-                className="p-2 border border-gray-400 rounded"
-                value={eventDuration || ""}
-                onChange={(e) => setEventDuration(parseInt(e.target.value, 10))}
-                required
-              />
-            </div>
-            <div className="flex flex-col">
-              <h3 className="text-gray-700 text-sm mb-1">
-                Event Registration Closing Date<span className="text-red-500">*</span>
-              </h3>
-              <input
-                required
-                type="date"
-                className="p-2 border border-gray-400 rounded"
-                value={eventRegistrationClosingDate}
-                onChange={(e) => setEventRegistrationClosingDate(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col">
-              <h3 className="text-gray-700 text-sm mb-1">
-                Event Registration Closing Time<span className="text-red-500">*</span>
-              </h3>
-              <input
-                required
-                type="time"
-                className="p-2 border border-gray-400 rounded"
-                value={eventRegistrationClosingTime}
-                onChange={(e) => setEventRegistrationClosingTime(e.target.value)}
-              />
-            </div>
-          </div>
-          <h2 className="font-semibold mt-6 text-2xl bebas mb-6">
-            LOCATION AND MODE<span className="text-red-500">*</span>
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-            <select
-              className="p-2 border border-gray-400 rounded"
-              value={eventMode === true ? "true" : eventMode === false ? "false" : ""}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value === "true") setEventMode(true);
-                else if (value === "false") setEventMode(false);
-                else setEventMode("");
-              }}
-            >
-              <option value="">Online/Offline</option>
-              <option value="true">Online</option>
-              <option value="false">Offline</option>
-            </select>
-            {eventMode === true ? (
-              <>
-                <input
-                  required
-                  type="text"
-                  placeholder="Enter Event Platform"
-                  className="p-2 border border-gray-400 rounded"
-                  value={eventLocation}
-                  onChange={(e) => setEventLocation(e.target.value)}
-                />
-                <input
-                  required
-                  type="url"
-                  placeholder="Enter Meet Link"
-                  className="p-2 border border-gray-400 rounded"
-                  value={eventMeetLink}
-                  onChange={(e) => setEventMeetLink(e.target.value)}
-                />
-              </>
-            ) : eventMode === false ? (
-              <>
-                <input
-                  required
-                  type="text"
-                  placeholder="Enter Event Location"
-                  className="p-2 border border-gray-400 rounded"
-                  value={eventLocation}
-                  onChange={(e) => setEventLocation(e.target.value)}
-                />
-                <input
-                  type="url"
-                  placeholder="Google Map Link"
-                  className="p-2 border border-gray-400 rounded"
-                  value={eventMeetLink}
-                  onChange={(e) => setEventMeetLink(e.target.value)}
-                />
-              </>
-            ) : (
-              <>
-                <input
-                  required
-                  type="text"
-                  placeholder="Choose Event Mode"
-                  className="p-2 border border-gray-400 rounded"
-                  value={eventLocation}
-                  onChange={(e) => setEventLocation(e.target.value)}
-                  disabled
-                />
-                <input
-                  required
-                  type="url"
-                  placeholder="Choose Event Mode"
-                  className="p-2 border border-gray-400 rounded"
-                  value={eventMeetLink}
-                  onChange={(e) => setEventMeetLink(e.target.value)}
-                  disabled
-                />
-              </>
-            )}
-          </div>
-          <h2 className="font-semibold mt-6 text-2xl bebas mb-6">PERKS AND FEE</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-            <div>
-              <h3 className="text-gray-700 text-sm mb-1">Event Registration Fee</h3>
-              <input
-                type="number"
-                placeholder="Enter The Fee"
-                className="p-2 border border-gray-400 rounded w-full"
-                value={eventFee}
-                onChange={(e) => setEventFee(parseInt(e.target.value, 10))}
-              />
-            </div>
-            <div>
-              <h3 className="text-gray-700 text-sm mb-1">Prize Worth</h3>
-              <input
-                type="number"
-                placeholder="Enter The Prize Worth"
-                className="p-2 border border-gray-400 rounded w-full"
-                value={eventPerks}
-                onChange={(e) => setEventPerks(parseInt(e.target.value, 10))}
-              />
-            </div>
-          </div>
-          <h2 className="font-semibold mt-6 text-2xl bebas mb-6">GUIDELINES</h2>
-          <h3 className="text-gray-700 text-sm mb-1">Event Guidelines</h3>
-          <textarea
-            placeholder="Enter Event Guidelines"
-            className="w-full p-2 border border-gray-400 rounded min-h-50"
-            value={eventGuidelines}
-            onChange={(e) => setEventGuidelines(e.target.value)}
-          ></textarea>
-          <h2 className="font-semibold mt-6 text-2xl bebas">SELECT AREA RELATED TO THE EVENT</h2>
-          <div className="space-y-4 bg-gray-100 p-5 rounded-xl">
-            {interestCategories.map(({ title, options }) => (
-              <div key={title}>
-                <h3 className="font-semibold text-gray-700 mb-2">{title}</h3>
-                <div className="flex flex-wrap gap-4">
-                  {options.map((option) => (
-                    <button
-                      key={option.id}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        toggleSelection(option);
-                      }}
-                      aria-pressed={selected.some((item) => item.id === option.id)}
-                      disabled={selected.length >= 5 && !selected.some((item) => item.id === option.id)}
-                      className={`px-3 py-1 rounded-full transition ${
-                        selected.some((item) => item.id === option.id)
-                          ? "border-green-600 border-2"
-                          : "bg-white hover:bg-gray-300"
-                      } ${
-                        selected.length >= 5 && !selected.some((item) => item.id === option.id)
-                          ? "opacity-50 cursor-not-allowed"
-                          : ""
-                      }`}
-                    >
-                      {option.name}
-                    </button>
-                  ))}
+
+                  <div className="flex flex-col">
+                    <label className="font-sans text-gray-600 text-[13px] mb-1.5">
+                      Event Type
+                    </label>
+                    <select className="font-sans h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                      <option>Choose Event Type</option>
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col">
+                    <label className="font-sans text-gray-600 text-[13px] mb-1.5">
+                      Tag
+                    </label>
+                    <select className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                      <option>Choose Event Tag</option>
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col">
+                    <label className="font-sans text-gray-600 text-[13px] mb-1.5">
+                      Event Seats<span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter available seats for the event"
+                      className="font-sans h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={eventSeats}
+                      onChange={(e) => setEventSeats(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Column 2: Description and Category */}
+                <div className="flex flex-col gap-5">
+                  <div className="flex flex-col flex-1">
+                    <label className="font-sans text-gray-600 text-[13px] mb-1.5">
+                      Event Description<span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      placeholder="Enter Event Description"
+                      className="font-sans flex-1 px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                      value={eventDescription}
+                      required
+                      onChange={(e) => setEventDescription(e.target.value)}
+                    ></textarea>
+                  </div>
+                </div>
+
+                {/* Column 3: Image Upload */}
+                <div className="flex flex-col items-center justify-center gap-3">
+                  <label htmlFor="eventPoster" className="cursor-pointer flex flex-col items-center">
+                    {eventPoster ? (
+                      <Image
+                        src={URL.createObjectURL(eventPoster)}
+                        width={100}
+                        height={100}
+                        alt="Event Poster"
+                        className="w-[100px] h-[100px] object-cover rounded-full"
+                      />
+                    ) : (
+                      <svg width="100" height="100" viewBox="0 0 100 100" fill="none">
+                        <rect x="0.25" y="0.25" width="99.5" height="99.5" rx="49.75" fill="#F3F3F3" />
+                        <rect x="0.25" y="0.25" width="99.5" height="99.5" rx="49.75" stroke="#979797" strokeWidth="0.5" />
+                        <path
+                          d="M51 32H41.6C38.2397 32 36.5595 32 35.2761 32.654C34.1471 33.2292 33.2292 34.1471 32.654 35.2761C32 36.5595 32 38.2397 32 41.6V58.4C32 61.7603 32 63.4405 32.654 64.7239C33.2292 65.8529 34.1471 66.7708 35.2761 67.346C36.5595 68 38.2397 68 41.6 68H60C61.8599 68 62.7899 68 63.5529 67.7956C65.6235 67.2408 67.2408 65.6235 67.7956 63.5529C68 62.7899 68 61.8599 68 60M64 42V30M58 36H70M47 43C47 45.2091 45.2091 47 43 47C40.7909 47 39 45.2091 39 43C39 40.7909 40.7909 39 43 39C45.2091 39 47 40.7909 47 43ZM55.9801 49.8363L39.0623 65.2161C38.1107 66.0812 37.6349 66.5137 37.5929 66.8884C37.5564 67.2132 37.6809 67.5353 37.9264 67.7511C38.2096 68 38.8526 68 40.1386 68H58.912C61.7903 68 63.2295 68 64.3598 67.5164C65.7789 66.9094 66.9094 65.7789 67.5164 64.3598C68 63.2295 68 61.7903 68 58.912C68 57.9435 68 57.4593 67.8941 57.0083C67.7611 56.4416 67.5059 55.9107 67.1465 55.4528C66.8605 55.0884 66.4824 54.7859 65.7261 54.1809L60.1317 49.7053C59.3748 49.0998 58.9963 48.7971 58.5796 48.6902C58.2123 48.596 57.8257 48.6082 57.4651 48.7254C57.0559 48.8583 56.6973 49.1843 55.9801 49.8363Z"
+                          stroke="#979797"
+                          strokeWidth="4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
+                    <input
+                      id="eventPoster"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handlePosterUpload}
+                    />
+                  </label>
+                  <p className="font-sans text-[13px] text-gray-700">
+                    Add Event Poster<span className="text-red-500">*</span>
+                  </p>
+                  <p className="font-sans text-[11px] text-gray-500">(16:9 ratio)</p>
                 </div>
               </div>
-            ))}
-          </div>
-          <div className="w-full mt-4 flex justify-end">
-            <button type="submit" className="bg-[#2C333D] bebas text-2xl p-2 px-8 text-white rounded">
-              CONTINUE
-            </button>
-          </div>
-        </form>
+            </div>
+
+            {/* DATES AND TIME SECTION */}
+            <div>
+              <h2 className="text-[20px] bebas font-normal mb-5 tracking-wide">DATES AND TIME</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="flex flex-col">
+                  <label className="font-sans text-gray-600 text-[13px] mb-1.5">
+                    From Date<span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    className="font-sans h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={eventDate}
+                    onChange={(e) => setEventDate(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="font-sans text-gray-600 text-[13px] mb-1.5">
+                    From Start Time<span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="time"
+                    className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={eventStartTime}
+                    onChange={(e) => setEventStartTime(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="font-sans text-gray-600 text-[13px] mb-1.5">
+                    Event Duration<span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="Choose Event Duration (Hours)"
+                    className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={eventDuration || ""}
+                    onChange={(e) => setEventDuration(parseInt(e.target.value, 10))}
+                    required
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="font-sans text-gray-600 text-[13px] mb-1.5">
+                    Event Registration closing date<span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={eventRegistrationClosingDate}
+                    onChange={(e) => setEventRegistrationClosingDate(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="font-sans text-gray-600 text-[13px] mb-1.5">
+                    Event Registration closing time<span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="time"
+                    className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={eventRegistrationClosingTime}
+                    onChange={(e) => setEventRegistrationClosingTime(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* LOCATION AND VENUE SECTION */}
+            <div>
+              <h2 className="text-[20px] bebas font-normal mb-5 tracking-wide">LOCATION AND VENUE</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="flex flex-col">
+                  <label className="font-sans text-gray-600 text-[13px] mb-1.5">
+                    Event Place
+                  </label>
+                  <select className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                    <option>Choose/Offline</option>
+                  </select>
+                </div>
+                <div className="flex flex-col">
+                  <label className="font-sans text-gray-600 text-[13px] mb-1.5">
+                    Event Address
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Choose Event Location"
+                    className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="font-sans text-gray-600 text-[13px] mb-1.5">
+                    Map Link
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="Enter Map Link"
+                    className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* PERKS AND FEE SECTION */}
+            <div>
+              <h2 className="text-[20px] bebas font-normal mb-5 tracking-wide">PERKS AND FEE</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex flex-col">
+                  <label className="font-sans text-gray-600 text-[13px] mb-1.5">
+                    Event Registration Fee
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="Choose Event Location"
+                    className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={eventFee}
+                    onChange={(e) => setEventFee(parseInt(e.target.value, 10))}
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="font-sans text-gray-600 text-[13px] mb-1.5">
+                    Pass WORK
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="Choose Event Location"
+                    className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={eventPerks}
+                    onChange={(e) => setEventPerks(parseInt(e.target.value, 10))}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* KEY FEATURES SECTION */}
+            <div>
+              <h2 className="text-[20px] bebas font-normal mb-5 tracking-wide">KEY FEATURES (SPEAKERS AND GUESTS)</h2>
+              <div className="grid grid-cols-1 gap-4">
+                <div className="flex flex-col">
+                  <label className="font-sans text-gray-600 text-[13px] mb-1.5">
+                    Add Guest
+                  </label>
+                  <div className="border border-dashed border-gray-300 rounded p-4 flex items-center justify-center min-h-[100px] bg-gray-50">
+                    <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                      <rect width="64" height="64" rx="32" fill="#F3F3F3" />
+                      <path d="M32 24V40M24 32H40" stroke="#979797" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  </div>
+                </div>
+                <div>
+                  <label className="font-sans text-gray-600 text-[13px] mb-1.5">Name</label>
+                  <input
+                    type="text"
+                    placeholder="Enter Name / Name"
+                    className="font-sans h-[42px] w-full px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="font-sans text-gray-600 text-[13px] mb-1.5">Guests Photo</label>
+                  <input
+                    type="text"
+                    placeholder="Choose file designation"
+                    className="h-[42px] w-full px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                {/* Guest Cards Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div key={i} className="bg-gradient-to-r from-teal-500 to-teal-600 rounded-lg p-4 flex items-center gap-3 text-white">
+                      <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-teal-400"></div>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-sans text-[14px] font-semibold">Mr. Roshan Vijayan</p>
+                        <p className="font-sans text-[12px] opacity-90">Chief Mentor Student</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <button className="bebas mt-4 h-[42px] px-6 border border-gray-300 rounded text-[14px] hover:bg-gray-50 transition-colors">
+                  ADD SPEAKER
+                </button>
+              </div>
+            </div>
+
+            {/* GUIDELINES SECTION */}
+            <div>
+              <h2 className="text-[20px] bebas font-normal mb-5 tracking-wide">GUIDELINES</h2>
+              <div className="flex flex-col">
+                <label className="font-sans text-gray-600 text-[13px] mb-1.5">
+                  Event Guidelines
+                </label>
+                <textarea
+                  placeholder="Enter Event Guidelines"
+                  className="font-sans min-h-[200px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical"
+                  value={eventGuidelines}
+                  onChange={(e) => setEventGuidelines(e.target.value)}
+                ></textarea>
+              </div>
+            </div>
+
+            {/* SELECT AREAS SECTION */}
+            <div>
+              <h2 className="text-[20px] bebas font-normal mb-5 tracking-wide">SELECT AREAS RELATED TO THE EVENT</h2>
+              <div className="space-y-6 bg-gray-100 p-6 rounded-lg">
+                {interestCategories.map(({ title, options }) => (
+                  <div key={title}>
+                    <h3 className="font-sans text-[14px] font-semibold text-gray-700 mb-3">{title}</h3>
+                    <div className="flex flex-wrap gap-3">
+                      {options.map((option) => (
+                        <button
+                          key={option.id}
+                          type="button"
+                          onClick={() => toggleSelection(option)}
+                          disabled={selected.length >= 5 && !selected.some((item) => item.id === option.id)}
+                          className={`font-sans px-4 py-1.5 text-[14px] rounded-full transition-all ${selected.some((item) => item.id === option.id)
+                            ? "bg-white border-2 border-green-600 text-gray-800"
+                            : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                            } ${selected.length >= 5 && !selected.some((item) => item.id === option.id)
+                              ? "opacity-50 cursor-not-allowed"
+                              : ""
+                            }`}
+                        >
+                          {option.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* SUBMIT BUTTON */}
+            <div className="flex justify-end pt-6">
+              <button
+                type="submit"
+                className="bg-[#2C333D] hover:bg-[#1F2937] text-white bebas text-[22px] px-10 py-2.5 rounded tracking-wide transition-colors"
+              >
+                CONTRIBUTE
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </>
+    </div>
   );
 }

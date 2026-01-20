@@ -1,120 +1,128 @@
+"use client";
+
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-
+import { useRouter } from "next/navigation";
 import {
-  FaTicketAlt,
-  FaPen,
-  FaBell,
-  FaBuilding,
-  FaBars,
-  FaTimes,
-  FaSignOutAlt,
-} from "react-icons/fa";
-import {  useRouter } from "next/navigation";
+  LayoutGrid,
+  Pencil,
+  Bell,
+  Building2,
+  LogOut,
+  Menu,
+  X,
+} from "lucide-react";
 
 const Sidebar = () => {
-const router = useRouter();
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const color = searchParams.get("color"); // Read URL query parameter "color"
-  const currentPath = usePathname(); // Current path
+  const color = searchParams.get("color");
+  const currentPath = usePathname();
 
   const [isOpen, setIsOpen] = useState(false);
 
-  // Define active background based on the URL parameter.
-  // You can extend this mapping as needed.
-  const activeBg =
-    color === "red" ? "bg-red-500 text-white" : "bg-[#F9FFA1] text-black";
+  // Active state styling - yellow/gold background
+  const getButtonClasses = (path: string | string[]) => {
+    const isActive = Array.isArray(path)
+      ? path.some((p) => currentPath.startsWith(p))
+      : currentPath.startsWith(path);
 
-  // Handle Logout (replace with your actual logout logic)
+    if (isActive) {
+      return "bg-[#F9FFA1] text-[#2C333D]";
+    }
+    return "bg-[#4A5568] text-white hover:bg-[#5A6578]";
+  };
+
+  // Handle Logout
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     router.push("/");
-    
   };
 
   return (
     <>
       {/* Sidebar Toggle Button - Only visible on small screens */}
       <button
-        className="lg:hidden fixed top-4 left-4 z-50 p-3 bg-gray-800 text-white rounded-full"
+        className="lg:hidden fixed top-4 left-4 z-50 p-3 bg-[#2C333D] text-white rounded-full shadow-lg"
         onClick={() => setIsOpen(!isOpen)}
       >
-        {isOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
+        {isOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-screen bg-gray-700 text-white w-20 flex flex-col items-center justify-center py-4 space-y-6
-          transition-transform duration-300 ${
-            isOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed top-0 left-0 h-screen bg-[#2C333D] w-[72px] flex flex-col items-center py-8 z-40
+          transition-transform duration-300 ${isOpen ? "translate-x-0" : "-translate-x-full"
           } lg:translate-x-0`}
       >
-        <Link href="/dashboard/events">
-          <div
-            className={`cursor-pointer p-3 rounded-full ${
-              currentPath === "/dashboard/events"
-                ? activeBg
-                : "bg-gray-400 hover:bg-gray-500"
-            }`}
-          >
-            <FaTicketAlt size={24} />
-          </div>
-        </Link>
+        {/* Navigation Icons */}
+        <nav className="flex flex-col items-center gap-4 flex-1">
+          {/* Events / Dashboard */}
+          <Link href="/dashboard/events">
+            <div
+              className={`w-11 h-11 rounded-full flex items-center justify-center cursor-pointer transition-colors ${getButtonClasses(
+                "/dashboard/events"
+              )}`}
+            >
+              <LayoutGrid size={20} />
+            </div>
+          </Link>
 
-        <Link href="/dashboard/events">
-          <div
-            className={`cursor-pointer p-3 rounded-full ${
-              currentPath === "/events"
-                ? activeBg
-                : "bg-gray-400 hover:bg-gray-500"
-            }`}
-          >
-            <FaPen size={24} />
-          </div>
-        </Link>
+          {/* Create/Edit */}
+          <Link href="/dashboard/event/createEvent">
+            <div
+              className={`w-11 h-11 rounded-full flex items-center justify-center cursor-pointer transition-colors ${getButtonClasses(
+                ["/dashboard/event/createEvent", "/dashboard/eventEachEdit"]
+              )}`}
+            >
+              <Pencil size={20} />
+            </div>
+          </Link>
 
-        <Link href="/dashboard/events">
-          <div
-            className={`cursor-pointer p-3 rounded-full ${
-              currentPath === "/notifications"
-                ? activeBg
-                : "bg-gray-400 hover:bg-gray-500"
-            }`}
-          >
-            <FaBell size={24} />
-          </div>
-        </Link>
+          {/* Notifications */}
+          <Link href="/dashboard/notifications">
+            <div
+              className={`w-11 h-11 rounded-full flex items-center justify-center cursor-pointer transition-colors ${getButtonClasses(
+                "/dashboard/notifications"
+              )}`}
+            >
+              <Bell size={20} />
+            </div>
+          </Link>
 
-        <Link href="/dashboard/clubProfile">
-          <div
-            className={`cursor-pointer p-3 rounded-full ${
-              currentPath === "/dashboard/clubProfile"
-                ? activeBg
-                : "bg-gray-400 hover:bg-gray-500"
-            }`}
-          >
-            <FaBuilding size={24} />
-          </div>
-        </Link>
+          {/* Club Profile */}
+          <Link href="/dashboard/clubProfile">
+            <div
+              className={`w-11 h-11 rounded-full flex items-center justify-center cursor-pointer transition-colors ${getButtonClasses(
+                "/dashboard/clubProfile"
+              )}`}
+            >
+              <Building2 size={20} />
+            </div>
+          </Link>
 
-        {/* Logout Button */}
-        <div
-          className="cursor-pointer p-3 rounded-full bg-gray-400 hover:bg-gray-500"
-          onClick={handleLogout}
-        >
-          <FaSignOutAlt size={24} />
-        </div>
+          {/* Logout */}
+          <button
+            onClick={handleLogout}
+            className="w-11 h-11 rounded-full flex items-center justify-center cursor-pointer transition-colors bg-[#4A5568] text-white hover:bg-red-500"
+          >
+            <LogOut size={20} />
+          </button>
+        </nav>
       </aside>
 
       {/* Overlay (for closing sidebar on mobile) */}
       {isOpen && (
         <div
-          className="fixed inset-0 lg:hidden"
+          className="fixed inset-0 bg-black/50 lg:hidden z-30"
           onClick={() => setIsOpen(false)}
-        ></div>
+        />
       )}
+
+      {/* Spacer for content to account for sidebar width on desktop */}
+      <div className="hidden lg:block w-[72px] flex-shrink-0" />
     </>
   );
 };

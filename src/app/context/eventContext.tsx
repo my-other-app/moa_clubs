@@ -9,6 +9,13 @@ export type AdditionalDetail = {
   answer: string;
 };
 
+// Speaker/Guest type
+export type EventSpeaker = {
+  name: string;
+  designation: string;
+  photo_url?: string;
+};
+
 // Event data type
 export type EventData = {
   name: string;
@@ -32,6 +39,8 @@ export type EventData = {
   max_participants: number | null;
   additional_details: AdditionalDetail[];
   event_guidelines: string | null;
+  event_tag: string | null;
+  speakers: EventSpeaker[];
 };
 
 type EventContextType = {
@@ -73,6 +82,8 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     formData.append("max_participants", currentData.max_participants !== null ? currentData.max_participants.toString() : "");
     formData.append("additional_details", JSON.stringify(currentData.additional_details || []));
     formData.append("event_guidelines", currentData.event_guidelines || "");
+    formData.append("event_tag", currentData.event_tag || "");
+    formData.append("speakers", JSON.stringify(currentData.speakers || []));
 
     const token = storage.getAccessToken();
     if (!token) {

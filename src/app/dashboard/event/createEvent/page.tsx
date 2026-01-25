@@ -12,6 +12,37 @@ type Category = {
   name: string;
 };
 
+// Guest/Speaker interface
+interface Guest {
+  id: string;
+  name: string;
+  designation: string;
+  photo: File | null;
+}
+
+// Event type options
+const eventTypeOptions = [
+  { id: 1, name: "Workshop" },
+  { id: 2, name: "Seminar" },
+  { id: 3, name: "Competition" },
+  { id: 4, name: "Hackathon" },
+  { id: 5, name: "Cultural Event" },
+  { id: 6, name: "Sports Event" },
+  { id: 7, name: "Networking" },
+  { id: 8, name: "Conference" },
+];
+
+// Event tag options
+const eventTagOptions = [
+  { id: 1, name: "Free" },
+  { id: 2, name: "Paid" },
+  { id: 3, name: "Online" },
+  { id: 4, name: "Offline" },
+  { id: 5, name: "Hybrid" },
+  { id: 6, name: "Featured" },
+  { id: 7, name: "Limited Seats" },
+];
+
 const interestCategories = [
   {
     title: "Academic",
@@ -96,6 +127,47 @@ export default function CreateEvent() {
   const [eventPerks, setEventPerks] = useState<number>(0);
   const [eventGuidelines, setEventGuidelines] = useState("");
 
+  // Event Type and Tag state
+  const [eventType, setEventType] = useState<number | null>(null);
+  const [eventTag, setEventTag] = useState<number | null>(null);
+
+  // Speakers/Guests state
+  const [guests, setGuests] = useState<Guest[]>([]);
+  const [guestName, setGuestName] = useState("");
+  const [guestDesignation, setGuestDesignation] = useState("");
+  const [guestPhoto, setGuestPhoto] = useState<File | null>(null);
+
+  // Add guest handler
+  const handleAddGuest = () => {
+    if (!guestName.trim()) {
+      window.alert("Please enter guest name");
+      return;
+    }
+    const newGuest: Guest = {
+      id: Date.now().toString(),
+      name: guestName.trim(),
+      designation: guestDesignation.trim() || "Guest Speaker",
+      photo: guestPhoto,
+    };
+    setGuests([...guests, newGuest]);
+    setGuestName("");
+    setGuestDesignation("");
+    setGuestPhoto(null);
+  };
+
+  // Remove guest handler
+  const handleRemoveGuest = (guestId: string) => {
+    setGuests(guests.filter(g => g.id !== guestId));
+  };
+
+  // Handle guest photo upload
+  const handleGuestPhotoUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setGuestPhoto(file);
+    }
+  };
+
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   useEffect(() => {
@@ -159,7 +231,13 @@ export default function CreateEvent() {
       reg_startdate: "",
       contact_phone: eventCoordinatorPhone,
       contact_email: eventCoordinatorEmail,
-      interest_ids: null,
+      interest_ids: selected.length > 0 ? selected.map(s => s.id).join(",") : null,
+      event_tag: eventTag ? eventTagOptions.find(t => t.id === eventTag)?.name || null : null,
+      speakers: guests.map(g => ({
+        name: g.name,
+        designation: g.designation,
+        photo_url: undefined, // Photo handling would need separate upload
+      })),
     };
 
     // Save event data in context and navigate to the next step
@@ -200,8 +278,17 @@ export default function CreateEvent() {
                     <label className="font-sans text-gray-600 text-[13px] mb-1.5">
                       Event Type
                     </label>
-                    <select className="font-sans h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-                      <option>Choose Event Type</option>
+                    <select
+                      className="font-sans h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                      value={eventType ?? ""}
+                      onChange={(e) => setEventType(e.target.value ? parseInt(e.target.value) : null)}
+                    >
+                      <option value="">Choose Event Type</option>
+                      {eventTypeOptions.map((type) => (
+                        <option key={type.id} value={type.id}>
+                          {type.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
@@ -209,8 +296,17 @@ export default function CreateEvent() {
                     <label className="font-sans text-gray-600 text-[13px] mb-1.5">
                       Tag
                     </label>
-                    <select className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-                      <option>Choose Event Tag</option>
+                    <select
+                      className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                      value={eventTag ?? ""}
+                      onChange={(e) => setEventTag(e.target.value ? parseInt(e.target.value) : null)}
+                    >
+                      <option value="">Choose Event Tag</option>
+                      {eventTagOptions.map((tag) => (
+                        <option key={tag.id} value={tag.id}>
+                          {tag.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
@@ -242,6 +338,25 @@ export default function CreateEvent() {
                       required
                       onChange={(e) => setEventDescription(e.target.value)}
                     ></textarea>
+                  </div>
+
+                  <div className="flex flex-col">
+                    <label className="font-sans text-gray-600 text-[13px] mb-1.5">
+                      Category<span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      className="font-sans h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                      value={selectedCategory ?? ""}
+                      onChange={(e) => setSelectedCategory(e.target.value ? parseInt(e.target.value) : null)}
+                      required
+                    >
+                      <option value="">Choose Category</option>
+                      {categories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
@@ -422,53 +537,132 @@ export default function CreateEvent() {
             {/* KEY FEATURES SECTION */}
             <div>
               <h2 className="text-[20px] bebas font-normal mb-5 tracking-wide">KEY FEATURES (SPEAKERS AND GUESTS)</h2>
-              <div className="grid grid-cols-1 gap-4">
-                <div className="flex flex-col">
-                  <label className="font-sans text-gray-600 text-[13px] mb-1.5">
-                    Add Guest
-                  </label>
-                  <div className="border border-dashed border-gray-300 rounded p-4 flex items-center justify-center min-h-[100px] bg-gray-50">
-                    <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-                      <rect width="64" height="64" rx="32" fill="#F3F3F3" />
-                      <path d="M32 24V40M24 32H40" stroke="#979797" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
-                  </div>
-                </div>
-                <div>
-                  <label className="font-sans text-gray-600 text-[13px] mb-1.5">Name</label>
-                  <input
-                    type="text"
-                    placeholder="Enter Name / Name"
-                    className="font-sans h-[42px] w-full px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="font-sans text-gray-600 text-[13px] mb-1.5">Guests Photo</label>
-                  <input
-                    type="text"
-                    placeholder="Choose file designation"
-                    className="h-[42px] w-full px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Add Guest Form */}
+                <div className="border border-gray-200 rounded-lg p-5 bg-gray-50">
+                  <h3 className="font-sans text-[14px] font-semibold mb-4">Add New Speaker/Guest</h3>
 
-                {/* Guest Cards Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div key={i} className="bg-gradient-to-r from-teal-500 to-teal-600 rounded-lg p-4 flex items-center gap-3 text-white">
-                      <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                        <div className="w-8 h-8 rounded-full bg-teal-400"></div>
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-sans text-[14px] font-semibold">Mr. Roshan Vijayan</p>
-                        <p className="font-sans text-[12px] opacity-90">Chief Mentor Student</p>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="font-sans text-gray-600 text-[13px] mb-1.5 block">
+                        Guest Photo
+                      </label>
+                      <div className="flex items-center gap-4">
+                        {guestPhoto ? (
+                          <Image
+                            src={URL.createObjectURL(guestPhoto)}
+                            width={60}
+                            height={60}
+                            alt="Guest Photo"
+                            className="w-[60px] h-[60px] object-cover rounded-full border-2 border-teal-500"
+                          />
+                        ) : (
+                          <div className="w-[60px] h-[60px] rounded-full bg-gray-200 flex items-center justify-center">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                              <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" fill="#9CA3AF" />
+                            </svg>
+                          </div>
+                        )}
+                        <label className="cursor-pointer px-4 py-2 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50">
+                          Choose Photo
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleGuestPhotoUpload}
+                          />
+                        </label>
                       </div>
                     </div>
-                  ))}
+
+                    <div>
+                      <label className="font-sans text-gray-600 text-[13px] mb-1.5 block">
+                        Name<span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Enter guest name"
+                        className="font-sans h-[42px] w-full px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={guestName}
+                        onChange={(e) => setGuestName(e.target.value)}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-sans text-gray-600 text-[13px] mb-1.5 block">
+                        Designation
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Chief Guest, Speaker, Mentor"
+                        className="h-[42px] w-full px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={guestDesignation}
+                        onChange={(e) => setGuestDesignation(e.target.value)}
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleAddGuest}
+                      className="bebas w-full h-[42px] bg-[#2C333D] text-white rounded text-[16px] hover:bg-[#1F2937] transition-colors"
+                    >
+                      ADD SPEAKER
+                    </button>
+                  </div>
                 </div>
 
-                <button className="bebas mt-4 h-[42px] px-6 border border-gray-300 rounded text-[14px] hover:bg-gray-50 transition-colors">
-                  ADD SPEAKER
-                </button>
+                {/* Guest Cards List */}
+                <div>
+                  <h3 className="font-sans text-[14px] font-semibold mb-4">
+                    Added Speakers/Guests ({guests.length})
+                  </h3>
+
+                  {guests.length === 0 ? (
+                    <div className="border border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center text-gray-400">
+                      <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                        <path d="M24 24C28.42 24 32 20.42 32 16C32 11.58 28.42 8 24 8C19.58 8 16 11.58 16 16C16 20.42 19.58 24 24 24ZM24 28C18.66 28 8 30.68 8 36V40H40V36C40 30.68 29.34 28 24 28Z" fill="#D1D5DB" />
+                      </svg>
+                      <p className="mt-2 text-sm">No speakers added yet</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto">
+                      {guests.map((guest) => (
+                        <div
+                          key={guest.id}
+                          className="bg-gradient-to-r from-teal-500 to-teal-600 rounded-lg p-4 flex items-center gap-3 text-white"
+                        >
+                          <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                            {guest.photo ? (
+                              <Image
+                                src={URL.createObjectURL(guest.photo)}
+                                width={48}
+                                height={48}
+                                alt={guest.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-teal-400"></div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-sans text-[14px] font-semibold">{guest.name}</p>
+                            <p className="font-sans text-[12px] opacity-90">{guest.designation}</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveGuest(guest.id)}
+                            className="p-2 hover:bg-white/20 rounded-full transition-colors"
+                            title="Remove guest"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                              <path d="M12.7 4.7L11.3 3.3L8 6.6L4.7 3.3L3.3 4.7L6.6 8L3.3 11.3L4.7 12.7L8 9.4L11.3 12.7L12.7 11.3L9.4 8L12.7 4.7Z" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 

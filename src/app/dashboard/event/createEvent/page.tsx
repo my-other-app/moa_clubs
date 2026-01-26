@@ -236,7 +236,8 @@ export default function CreateEvent() {
       speakers: guests.map(g => ({
         name: g.name,
         designation: g.designation,
-        photo_url: undefined, // Photo handling would need separate upload
+        photo: g.photo, // Pass the file object
+        photo_url: undefined,
       })),
     };
 

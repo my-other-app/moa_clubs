@@ -13,7 +13,9 @@ export type AdditionalDetail = {
 export type EventSpeaker = {
   name: string;
   designation: string;
+  photo?: File | null;
   photo_url?: string;
+  photo_index?: number;
 };
 
 // Event data type
@@ -83,7 +85,30 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     formData.append("additional_details", JSON.stringify(currentData.additional_details || []));
     formData.append("event_guidelines", currentData.event_guidelines || "");
     formData.append("event_tag", currentData.event_tag || "");
-    formData.append("speakers", JSON.stringify(currentData.speakers || []));
+
+    // Handle speakers and their photos
+    const speakers = currentData.speakers || [];
+    const processedSpeakers = [];
+    let photoIndex = 0;
+
+    for (const speaker of speakers) {
+      const speakerData: any = {
+        name: speaker.name,
+        designation: speaker.designation,
+      };
+
+      if (speaker.photo) {
+        formData.append("speaker_photos", speaker.photo);
+        speakerData.photo_index = photoIndex;
+        photoIndex++;
+      } else if (speaker.photo_url) {
+        speakerData.photo_url = speaker.photo_url;
+      }
+
+      processedSpeakers.push(speakerData);
+    }
+
+    formData.append("speakers", JSON.stringify(processedSpeakers));
 
     const token = storage.getAccessToken();
     if (!token) {

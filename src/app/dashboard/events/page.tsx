@@ -21,7 +21,7 @@ interface Event {
   poster: {
     thumbnail?: string;
   } | null;
-  registrationCount: number;
+  registration_count: number;
   is_past: boolean;
 }
 
@@ -137,8 +137,8 @@ export default function Events() {
                 <button
                   onClick={() => handleTabChange("live")}
                   className={`px-4 py-2 text-[14px] rounded border transition-colors ${activeTab === "live"
-                      ? "border-gray-800 text-gray-800 bg-white"
-                      : "border-gray-300 text-gray-400 hover:border-gray-400"
+                    ? "border-gray-800 text-gray-800 bg-white"
+                    : "border-gray-300 text-gray-400 hover:border-gray-400"
                     }`}
                 >
                   Live Events
@@ -146,8 +146,8 @@ export default function Events() {
                 <button
                   onClick={() => handleTabChange("past")}
                   className={`px-4 py-2 text-[14px] rounded border transition-colors ${activeTab === "past"
-                      ? "border-gray-800 text-gray-800 bg-white"
-                      : "border-gray-300 text-gray-400 hover:border-gray-400"
+                    ? "border-gray-800 text-gray-800 bg-white"
+                    : "border-gray-300 text-gray-400 hover:border-gray-400"
                     }`}
                 >
                   Past Events
@@ -218,7 +218,7 @@ export default function Events() {
 
                   {/* Center: Registration Count */}
                   <div className="text-center">
-                    <p className="text-[20px] font-bold text-gray-800">{event.registrationCount || 0}</p>
+                    <p className="text-[20px] font-bold text-gray-800">{event.registration_count || 0}</p>
                     <p className="text-[12px] text-gray-500">Registration Count</p>
                   </div>
 

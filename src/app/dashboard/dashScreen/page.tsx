@@ -55,7 +55,11 @@ interface Registration {
 }
 
 export default function DashScreen() {
-  const [message, setMessage] = useState("");
+  const [announcementTitle, setAnnouncementTitle] = useState("");
+  const [announcementBody, setAnnouncementBody] = useState("");
+  const [announcementImage, setAnnouncementImage] = useState("");
+  const [audience, setAudience] = useState("all");
+  const [sendingAnnouncement, setSendingAnnouncement] = useState(false);
   const [activeTab, setActiveTab] = useState("registration");
   const [currentEvent, setCurrentEvent] = useState<EventData | null>(null);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
@@ -152,10 +156,42 @@ export default function DashScreen() {
     }
   };
 
-  const handleSendMessage = () => {
-    if (!message.trim()) return;
-    console.log("Sending message:", message);
-    setMessage("");
+  const handleSendMessage = async () => {
+    if (!announcementTitle.trim() || !announcementBody.trim()) {
+      toast.error("Please enter both title and message");
+      return;
+    }
+
+    const accessToken = storage.getAccessToken();
+    if (!accessToken || !parsedEventId) return;
+
+    setSendingAnnouncement(true);
+    try {
+      await axios.post(
+        `${API_BASE_URL}/api/v1/clubs/notifications/events/${parsedEventId}/send`,
+        {
+          title: announcementTitle,
+          body: announcementBody,
+          image_url: announcementImage || null,
+          audience: audience,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+      toast.success("Announcement sent successfully!");
+      setAnnouncementTitle("");
+      setAnnouncementBody("");
+      setAnnouncementImage("");
+      setAudience("all");
+    } catch (error) {
+      console.error("Error sending announcement:", error);
+      toast.error("Failed to send announcement");
+    } finally {
+      setSendingAnnouncement(false);
+    }
   };
 
   const handleDownloadCSV = async () => {
@@ -348,24 +384,57 @@ export default function DashScreen() {
                 </div>
               </div>
 
-              {/* Announcements Section */}
-              <div className="w-full">
-                <h2 className="bebas text-[18px] tracking-wide text-black mb-1">MAKE ANNOUNCEMENTS</h2>
-                <p className="text-[11px] text-gray-600 mb-2">
-                  Send message to the registered participants as notifications
-                </p>
-                <Textarea
-                  placeholder="Enter the message send"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="w-full min-h-[120px] px-3 py-2 text-[14px] border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+              <div className="w-full space-y-4">
+                <div>
+                  <h2 className="bebas text-[18px] tracking-wide text-black mb-1">MAKE ANNOUNCEMENTS</h2>
+                  <p className="text-[11px] text-gray-600 mb-4">
+                    Send message to the registered participants as notifications
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <Input
+                    placeholder="Announcement Title"
+                    value={announcementTitle}
+                    onChange={(e) => setAnnouncementTitle(e.target.value)}
+                    className="w-full h-10 text-[14px] border-gray-300 rounded-lg"
+                  />
+
+                  <Textarea
+                    placeholder="Enter the message to send"
+                    value={announcementBody}
+                    onChange={(e) => setAnnouncementBody(e.target.value)}
+                    className="w-full min-h-[100px] px-3 py-2 text-[14px] border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+
+                  <Input
+                    placeholder="Image URL (Optional)"
+                    value={announcementImage}
+                    onChange={(e) => setAnnouncementImage(e.target.value)}
+                    className="w-full h-10 text-[14px] border-gray-300 rounded-lg"
+                  />
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[12px] font-medium text-gray-700">Target Audience</label>
+                    <select
+                      value={audience}
+                      onChange={(e) => setAudience(e.target.value)}
+                      className="w-full h-10 px-3 text-[14px] border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="all">All Registrants</option>
+                      <option value="attendees">Attendees Only</option>
+                      <option value="non_attendees">Non-Attendees Only</option>
+                    </select>
+                  </div>
+                </div>
+
                 <Button
                   variant="outline"
-                  className="mt-3 h-[42px] px-8 bebas text-[18px] tracking-wide border-[#2c333d] text-[#2c333d] hover:bg-gray-50"
+                  className="mt-2 h-[42px] px-8 bebas text-[18px] tracking-wide border-[#2c333d] text-[#2c333d] hover:bg-gray-50 w-full md:w-auto"
                   onClick={handleSendMessage}
+                  disabled={sendingAnnouncement}
                 >
-                  SEND MESSAGE
+                  {sendingAnnouncement ? "SENDING..." : "SEND ANNOUNCEMENT"}
                 </Button>
               </div>
             </div>

@@ -522,7 +522,7 @@ export default function CreateEvent() {
                 </div>
                 <div className="flex flex-col">
                   <label className="font-sans text-gray-600 text-[13px] mb-1.5">
-                    Pass WORK
+                    Prize Worth
                   </label>
                   <input
                     type="number"

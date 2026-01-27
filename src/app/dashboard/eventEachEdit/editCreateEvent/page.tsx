@@ -6,7 +6,7 @@ import Sidebar from "@/app/components/sidebar";
 import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
-import { ChevronLeft, ChevronDown, Circle, Trash2, Plus, X } from "lucide-react";
+import { ChevronLeft, ChevronDown, Circle, Trash2, Plus, X, Pencil } from "lucide-react";
 
 type Category = {
   id: string;
@@ -108,6 +108,7 @@ export default function EditEvent() {
   const [guestName, setGuestName] = useState("");
   const [guestDesignation, setGuestDesignation] = useState("");
   const [guestPhoto, setGuestPhoto] = useState<File | null>(null);
+  const [editingGuestId, setEditingGuestId] = useState<string | null>(null);
 
   // Questions
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -115,6 +116,7 @@ export default function EditEvent() {
   const [currentQuestion, setCurrentQuestion] = useState<string>("");
   const [questionRequired, setQuestionRequired] = useState<boolean>(true);
   const [options, setOptions] = useState<string[]>([""]);
+  const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
 
   // Warning message
   const [warningMessage, setWarningMessage] = useState<string>("");
@@ -239,13 +241,44 @@ export default function EditEvent() {
       window.alert("Please enter guest name");
       return;
     }
-    const newGuest: Guest = {
-      id: uuidv4(),
-      name: guestName.trim(),
-      designation: guestDesignation.trim() || "Guest Speaker",
-      photo: guestPhoto,
-    };
-    setGuests([...guests, newGuest]);
+
+    if (editingGuestId) {
+      setGuests(guests.map(g => {
+        if (g.id === editingGuestId) {
+          return {
+            ...g,
+            name: guestName.trim(),
+            designation: guestDesignation.trim() || "Guest Speaker",
+            photo: guestPhoto || g.photo, // Keep existing photo if no new one uploaded
+          };
+        }
+        return g;
+      }));
+      setEditingGuestId(null);
+    } else {
+      const newGuest: Guest = {
+        id: uuidv4(),
+        name: guestName.trim(),
+        designation: guestDesignation.trim() || "Guest Speaker",
+        photo: guestPhoto,
+      };
+      setGuests([...guests, newGuest]);
+    }
+
+    setGuestName("");
+    setGuestDesignation("");
+    setGuestPhoto(null);
+  };
+
+  const handleEditGuest = (guest: Guest) => {
+    setEditingGuestId(guest.id);
+    setGuestName(guest.name);
+    setGuestDesignation(guest.designation);
+    setGuestPhoto(null); // Reset photo input, we'll keep existing if not changed
+  };
+
+  const handleCancelEditGuest = () => {
+    setEditingGuestId(null);
     setGuestName("");
     setGuestDesignation("");
     setGuestPhoto(null);
@@ -281,14 +314,52 @@ export default function EditEvent() {
 
   const handleAddQuestion = () => {
     if (currentQuestion.trim() === "") return;
-    const newQuestion: Question = {
-      id: uuidv4(),
-      type: questionType,
-      text: currentQuestion,
-      options: questionType === "multipleChoice" ? options.filter(o => o.trim() !== "") : [],
-      required: questionRequired,
-    };
-    setQuestions([...questions, newQuestion]);
+
+    if (editingQuestionId) {
+      setQuestions(questions.map(q => {
+        if (q.id === editingQuestionId) {
+          return {
+            ...q,
+            type: questionType,
+            text: currentQuestion,
+            options: questionType === "multipleChoice" ? options.filter(o => o.trim() !== "") : [],
+            required: questionRequired,
+          };
+        }
+        return q;
+      }));
+      setEditingQuestionId(null);
+    } else {
+      const newQuestion: Question = {
+        id: uuidv4(),
+        type: questionType,
+        text: currentQuestion,
+        options: questionType === "multipleChoice" ? options.filter(o => o.trim() !== "") : [],
+        required: questionRequired,
+      };
+      setQuestions([...questions, newQuestion]);
+    }
+
+    setCurrentQuestion("");
+    setQuestionType("");
+    setOptions([""]);
+    setQuestionRequired(true);
+  };
+
+  const handleEditQuestion = (question: Question) => {
+    setEditingQuestionId(question.id);
+    setQuestionType(question.type);
+    setCurrentQuestion(question.text);
+    setQuestionRequired(question.required);
+    if (question.type === "multipleChoice") {
+      setOptions(question.options.length > 0 ? question.options : [""]);
+    } else {
+      setOptions([""]);
+    }
+  };
+
+  const handleCancelEditQuestion = () => {
+    setEditingQuestionId(null);
     setCurrentQuestion("");
     setQuestionType("");
     setOptions([""]);
@@ -687,13 +758,24 @@ export default function EditEvent() {
                         />
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={handleAddGuest}
-                      className="w-full h-[42px] bg-[#2C333D] text-white bebas text-[16px] rounded hover:bg-[#1F2937] transition-colors"
-                    >
-                      ADD SPEAKER
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={handleAddGuest}
+                        className="flex-1 h-[42px] bg-[#2C333D] text-white bebas text-[16px] rounded hover:bg-[#1F2937] transition-colors"
+                      >
+                        {editingGuestId ? "UPDATE SPEAKER" : "ADD SPEAKER"}
+                      </button>
+                      {editingGuestId && (
+                        <button
+                          type="button"
+                          onClick={handleCancelEditGuest}
+                          className="px-4 h-[42px] border border-gray-300 text-gray-600 bebas text-[16px] rounded hover:bg-gray-50 transition-colors"
+                        >
+                          CANCEL
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -720,9 +802,14 @@ export default function EditEvent() {
                             <p className="text-[14px] font-medium">{guest.name}</p>
                             <p className="text-[12px] text-gray-500">{guest.designation}</p>
                           </div>
-                          <button type="button" onClick={() => handleRemoveGuest(guest.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-full">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <div className="flex gap-1">
+                            <button type="button" onClick={() => handleEditGuest(guest)} className="text-blue-500 hover:bg-blue-50 p-2 rounded-full">
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <button type="button" onClick={() => handleRemoveGuest(guest.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-full">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -839,13 +926,24 @@ export default function EditEvent() {
                           </div>
                         )}
 
-                        <button
-                          type="button"
-                          onClick={handleAddQuestion}
-                          className="w-full h-[42px] bg-[#2C333D] text-white bebas text-[16px] rounded hover:bg-[#1F2937] transition-colors mt-2"
-                        >
-                          ADD QUESTION
-                        </button>
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            type="button"
+                            onClick={handleAddQuestion}
+                            className="flex-1 h-[42px] bg-[#2C333D] text-white bebas text-[16px] rounded hover:bg-[#1F2937] transition-colors"
+                          >
+                            {editingQuestionId ? "UPDATE QUESTION" : "ADD QUESTION"}
+                          </button>
+                          {editingQuestionId && (
+                            <button
+                              type="button"
+                              onClick={handleCancelEditQuestion}
+                              className="px-4 h-[42px] border border-gray-300 text-gray-600 bebas text-[16px] rounded hover:bg-gray-50 transition-colors"
+                            >
+                              CANCEL
+                            </button>
+                          )}
+                        </div>
                       </>
                     )}
                   </div>
@@ -861,13 +959,22 @@ export default function EditEvent() {
                     <div className="space-y-3 max-h-[400px] overflow-y-auto">
                       {questions.map((q) => (
                         <div key={q.id} className="bg-white border border-gray-200 rounded-lg p-3 relative group">
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveQuestion(q.id)}
-                            className="absolute top-2 right-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
+                          <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              type="button"
+                              onClick={() => handleEditQuestion(q)}
+                              className="text-blue-500 hover:bg-blue-50 p-1 rounded"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveQuestion(q.id)}
+                              className="text-gray-400 hover:text-red-500 p-1 rounded"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
                           <p className="text-[14px] font-medium pr-6">{q.text}</p>
                           <div className="flex gap-3 mt-1 text-[12px] text-gray-500">
                             <span>{q.type === 'multipleChoice' ? 'Multiple Choice' : 'Short Answer'}</span>

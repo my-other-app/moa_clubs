@@ -9,7 +9,21 @@ import {
   useState,
 } from "react";
 import Image from "next/image";
-import { Edit, Trash, Download, Search, Plus } from "lucide-react";
+import { Edit, Trash, Download, Search, Plus, TrendingUp, Users, DollarSign, MousePointerClick, UserCheck, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  AreaChart,
+  Area,
+} from "recharts";
 import Sidebar from "@/app/components/sidebar";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -39,6 +53,7 @@ interface EventData {
   event_datetime: string;
   duration: number;
   is_online: boolean;
+  reg_fee: number;
 }
 
 interface Registration {
@@ -54,6 +69,23 @@ interface Registration {
   is_paid: boolean;
 }
 
+interface AnalyticsData {
+  total_registrations: number;
+  total_revenue: number;
+  attendance_rate: number;
+  conversion_rate: number;
+  payment_status: { paid: number; unpaid: number };
+  attendance_status: { attended: number; absent: number };
+  top_institutions: { name: string; value: number }[];
+  registration_time: {
+    morning: number;
+    afternoon: number;
+    evening: number;
+    night: number;
+  };
+  attendance_over_time: { time: string; count: number }[];
+}
+
 export default function DashScreen() {
   const [announcementTitle, setAnnouncementTitle] = useState("");
   const [announcementBody, setAnnouncementBody] = useState("");
@@ -63,11 +95,15 @@ export default function DashScreen() {
   const [activeTab, setActiveTab] = useState("registration");
   const [currentEvent, setCurrentEvent] = useState<EventData | null>(null);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
-  const [regLimit, setRegLimit] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [hasNextPage, setHasNextPage] = useState(false);
   const [loadingEvent, setLoadingEvent] = useState(true);
   const [loadingRegistrations, setLoadingRegistrations] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
 
   const searchParams = useSearchParams();
   const event_id = searchParams.get("event_id");
@@ -92,26 +128,55 @@ export default function DashScreen() {
 
     setLoadingRegistrations(true);
     try {
+      const offset = (currentPage - 1) * itemsPerPage;
       const response = await axios.get(
-        `${API_BASE_URL}/api/v1/events/registration/${parsedEventId}/list?limit=${regLimit}`,
+        `${API_BASE_URL}/api/v1/events/registration/${parsedEventId}/list?limit=${itemsPerPage}&offset=${offset}`,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
         }
       );
-      setRegistrations(response.data.items || []);
+
+      const items = response.data.items || [];
+      setRegistrations(items);
+
+      // Check if there might be a next page
+      // If we got fewer items than requested, we're definitely at the end
+      // If we got exactly itemsPerPage, there *might* be more (or might not)
+      // The backend response usually has a 'next' field or we can check length
+      setHasNextPage(items.length === itemsPerPage);
+
     } catch (error) {
       console.error("Error fetching registrations:", error);
     } finally {
       setLoadingRegistrations(false);
     }
-  }, [parsedEventId, regLimit]);
+  }, [parsedEventId, currentPage, itemsPerPage]);
+
+  // Fetch analytics
+  const getAnalytics = useCallback(async () => {
+    const accessToken = storage.getAccessToken();
+    if (!accessToken || !parsedEventId) return;
+
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/api/v1/events/registration/${parsedEventId}/analytics`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+      setAnalytics(response.data);
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+    }
+  }, [parsedEventId]);
 
   useEffect(() => {
     getEventDetails();
     getRegistrations();
-  }, [getEventDetails, getRegistrations]);
+    getAnalytics();
+  }, [getEventDetails, getRegistrations, getAnalytics]);
 
   // Check if event is past based on datetime + duration
   const isEventPast = useCallback(() => {
@@ -167,7 +232,7 @@ export default function DashScreen() {
 
     setSendingAnnouncement(true);
     try {
-      await axios.post(
+      const response = await axios.post(
         `${API_BASE_URL}/api/v1/clubs/notifications/events/${parsedEventId}/send`,
         {
           title: announcementTitle,
@@ -181,7 +246,12 @@ export default function DashScreen() {
           },
         }
       );
-      toast.success("Announcement sent successfully!");
+
+      if (response.data.success) {
+        toast.success(response.data.message || "Announcement sent successfully!");
+      } else {
+        toast.warning(response.data.message || "Announcement sent but no recipients found");
+      }
       setAnnouncementTitle("");
       setAnnouncementBody("");
       setAnnouncementImage("");
@@ -218,8 +288,16 @@ export default function DashScreen() {
     }
   };
 
-  const handleShowMoreRegistrations = () => {
-    setRegLimit((prev) => prev + 10);
+  const handleNextPage = () => {
+    if (hasNextPage) {
+      setCurrentPage((prev) => prev + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prev) => prev - 1);
+    }
   };
 
   const openDeleteModal = (eventId: number) => {
@@ -271,8 +349,36 @@ export default function DashScreen() {
   ).size;
 
   const isPast = isEventPast();
-  const totalRegistrations = registrations.length;
+  const totalRegistrations = analytics?.total_registrations || 0;
   const pageViews = currentEvent?.page_views || 0;
+  const revenue = analytics?.total_revenue || 0;
+  const conversionRate = analytics?.conversion_rate || 0;
+  const attendanceRate = analytics?.attendance_rate || 0;
+  const attendedCount = analytics?.attendance_status.attended || 0;
+
+  // Prepare data for charts
+  const paymentData = [
+    { name: 'Paid', value: analytics?.payment_status.paid || 0 },
+    { name: 'Unpaid', value: analytics?.payment_status.unpaid || 0 },
+  ];
+
+  const attendanceData = [
+    { name: 'Attended', value: analytics?.attendance_status.attended || 0 },
+    { name: 'Absent', value: analytics?.attendance_status.absent || 0 },
+  ];
+
+  const institutionData = analytics?.top_institutions || [];
+
+  const timeData = [
+    { name: 'Morning', value: analytics?.registration_time.morning || 0, color: '#FFBB28' },   // Yellow/Sun
+    { name: 'Afternoon', value: analytics?.registration_time.afternoon || 0, color: '#FF8042' }, // Orange
+    { name: 'Evening', value: analytics?.registration_time.evening || 0, color: '#8884d8' },   // Purple/Twilight
+    { name: 'Night', value: analytics?.registration_time.night || 0, color: '#0088FE' },     // Blue/Night
+  ];
+
+  const attendanceTrendData = analytics?.attendance_over_time || [];
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
   return (
     <div className="flex min-h-screen bg-[#2C333D]">
@@ -351,38 +457,198 @@ export default function DashScreen() {
             {/* Right Column - Stats & Announcements */}
             <div className="flex-1">
               {/* Stats Grid */}
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                {/* Status Card - Live/Ended */}
-                <div className={`h-[100px] rounded-lg flex flex-col justify-center items-center ${isPast ? "bg-[#fce8e6]" : "bg-[#d4edda]"}`}>
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className={`w-2.5 h-2.5 rounded-full ${isPast ? "bg-red-500" : "bg-[#096b5b]"}`} />
-                    <span className={`text-[24px] font-medium ${isPast ? "text-red-500" : "text-[#096b5b]"}`}>
-                      {isPast ? "Ended" : "Live"}
+              {/* Stats Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                {/* Status Card */}
+                <div className={`p-4 rounded-xl flex flex-col justify-between h-[110px] ${isPast ? "bg-red-50" : "bg-emerald-50"}`}>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${isPast ? "bg-red-500" : "bg-emerald-500"}`} />
+                    <span className={`text-sm font-medium ${isPast ? "text-red-700" : "text-emerald-700"}`}>
+                      {isPast ? "Event Ended" : "Live Event"}
                     </span>
                   </div>
-                  <p className={`text-[12px] text-center px-2 ${isPast ? "text-red-500" : "text-[#096b5b]"}`}>
-                    {isPast ? "This event has ended" : "The event is live and registrations are open"}
-                  </p>
+                  <div>
+                    <p className={`text-2xl font-bold ${isPast ? "text-red-900" : "text-emerald-900"}`}>
+                      {isPast ? "Closed" : "Active"}
+                    </p>
+                    <p className={`text-xs ${isPast ? "text-red-600" : "text-emerald-600"}`}>
+                      {isPast ? "Registrations closed" : "Accepting registrations"}
+                    </p>
+                  </div>
                 </div>
 
-                {/* Registration Count */}
-                <div className="h-[100px] bg-[#f3e8ff] rounded-lg flex flex-col justify-center items-center">
-                  <span className="text-[28px] font-bold text-[#9333ea]">{totalRegistrations}</span>
-                  <span className="text-[12px] text-[#9333ea]">Total Registration Count</span>
+                {/* Total Registrations */}
+                <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col justify-between h-[110px]">
+                  <div className="flex items-center gap-2 text-blue-600">
+                    <Users className="w-4 h-4" />
+                    <span className="text-sm font-medium">Registrations</span>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-gray-900">{totalRegistrations}</p>
+                    <p className="text-xs text-gray-500">Total participants</p>
+                  </div>
                 </div>
 
-                {/* Page Views */}
-                <div className="h-[100px] bg-[#dbeafe] rounded-lg flex flex-col justify-center items-center">
-                  <span className="text-[28px] font-bold text-[#1e40af]">{pageViews}</span>
-                  <span className="text-[12px] text-[#1e40af]">Event Visitors</span>
+                {/* Revenue - Only show if there is a registration fee */}
+                {(currentEvent?.reg_fee || 0) > 0 && (
+                  <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col justify-between h-[110px]">
+                    <div className="flex items-center gap-2 text-green-600">
+                      <DollarSign className="w-4 h-4" />
+                      <span className="text-sm font-medium">Revenue</span>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-gray-900">₹{revenue.toLocaleString()}</p>
+                      <p className="text-xs text-gray-500">Total earnings</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Attendance Rate - Only show for past events */}
+                {isPast && (
+                  <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col justify-between h-[110px]">
+                    <div className="flex items-center gap-2 text-indigo-600">
+                      <UserCheck className="w-4 h-4" />
+                      <span className="text-sm font-medium">Attendance</span>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-gray-900">{attendanceRate}%</p>
+                      <p className="text-xs text-gray-500">{attendedCount} attended</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Conversion Rate - Show for live events or if we have space (e.g. free past event) */}
+                {(!isPast || (currentEvent?.reg_fee || 0) === 0) && (
+                  <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col justify-between h-[110px]">
+                    <div className="flex items-center gap-2 text-purple-600">
+                      <MousePointerClick className="w-4 h-4" />
+                      <span className="text-sm font-medium">Conversion</span>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-gray-900">{conversionRate}%</p>
+                      <p className="text-xs text-gray-500">{pageViews} page views</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Charts Section */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                {/* Institution Distribution */}
+                <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-4">Top Institutions</h3>
+                  <div className="h-[200px] w-full">
+                    {institutionData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={institutionData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={80}
+                            paddingAngle={5}
+                            dataKey="value"
+                          >
+                            {institutionData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+                        No data available
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    {institutionData.map((entry, index) => (
+                      <div key={index} className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                          <span className="text-gray-600 truncate max-w-[150px]">{entry.name}</span>
+                        </div>
+                        <span className="font-medium text-gray-900">{entry.value}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
-                {/* Institutions */}
-                <div className="h-[100px] bg-[#fce8e6] rounded-lg flex flex-col justify-center items-center">
-                  <span className="text-[28px] font-bold text-[#dc2626]">{uniqueInstitutions}</span>
-                  <span className="text-[12px] text-[#dc2626]">Institutions</span>
+                {/* Second Chart: Attendance (Past) or Payment (Live/Paid) */}
+                <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-4">
+                    {isPast ? "Attendance Overview" : "Payment Status"}
+                  </h3>
+                  <div className="h-[250px] w-full">
+                    {isPast ? (
+                      // Attendance Chart for Past Events
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={attendanceData}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                          <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                          <YAxis axisLine={false} tickLine={false} />
+                          <Tooltip cursor={{ fill: 'transparent' }} />
+                          <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={40}>
+                            {attendanceData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={index === 0 ? '#22c55e' : '#94a3b8'} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      // Payment Chart for Live Events
+                      paymentData.some(d => d.value > 0) ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={paymentData}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                            <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                            <YAxis axisLine={false} tickLine={false} />
+                            <Tooltip cursor={{ fill: 'transparent' }} />
+                            <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={40}>
+                              {paymentData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={index === 0 ? '#22c55e' : '#ef4444'} />
+                              ))}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+                          No data available
+                        </div>
+                      )
+                    )}
+                  </div>
                 </div>
               </div>
+
+              {/* Attendance Trends (Only show if there is data) */}
+              {attendanceTrendData.length > 0 && (
+                <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm mb-8">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-4">Attendance Trends (Check-ins per Hour)</h3>
+                  <div className="h-[250px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={attendanceTrendData}>
+                        <defs>
+                          <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
+                            <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                        <XAxis dataKey="time" axisLine={false} tickLine={false} />
+                        <YAxis axisLine={false} tickLine={false} />
+                        <Tooltip
+                          cursor={{ stroke: '#8884d8', strokeWidth: 1 }}
+                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                        />
+                        <Area type="monotone" dataKey="count" stroke="#8884d8" fillOpacity={1} fill="url(#colorCount)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
 
               <div className="w-full space-y-4">
                 <div>
@@ -542,15 +808,30 @@ export default function DashScreen() {
               </table>
             </div>
 
-            {/* Show All Button */}
-            <div className="flex justify-center mt-6">
+            {/* Pagination Controls */}
+            <div className="flex justify-center items-center gap-4 mt-6">
               <Button
                 variant="outline"
-                onClick={handleShowMoreRegistrations}
-                disabled={loadingRegistrations}
-                className="h-[42px] px-12 bebas text-[18px] tracking-wide border-[#2c333d] text-[#2c333d] hover:bg-gray-50"
+                onClick={handlePrevPage}
+                disabled={currentPage === 1 || loadingRegistrations}
+                className="h-[40px] px-4 border-[#2c333d] text-[#2c333d] hover:bg-gray-50 flex items-center gap-2"
               >
-                {loadingRegistrations ? "LOADING..." : "SHOW ALL"}
+                <ChevronLeft className="w-4 h-4" />
+                Previous
+              </Button>
+
+              <span className="text-[14px] font-medium text-gray-700">
+                Page {currentPage}
+              </span>
+
+              <Button
+                variant="outline"
+                onClick={handleNextPage}
+                disabled={!hasNextPage || loadingRegistrations}
+                className="h-[40px] px-4 border-[#2c333d] text-[#2c333d] hover:bg-gray-50 flex items-center gap-2"
+              >
+                Next
+                <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
           </div>

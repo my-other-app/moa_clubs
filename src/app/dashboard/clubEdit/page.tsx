@@ -94,14 +94,24 @@ export default function EditClub() {
         });
         const data = response.data;
         setClubName(data.name || "");
-        setClubOrganization(data.org ? Number(data.org) : 0);
+        setClubOrganization(data.org?.id ? Number(data.org.id) : 0);
         setClubLocation(data.location_name || "");
         setClubDescription(data.about || "");
         if (data.logo && data.logo.medium) {
           setClubLogoPreview(data.logo.medium);
         }
         if (data.interests) {
-          setSelectedInterests(data.interests.map((interest: { id: number }) => interest.id));
+          // Map API interests to the full objects from interestCategories
+          const initialSelected: { id: number; name: string; emoji: string }[] = [];
+          const allOptions = interestCategories.flatMap(cat => cat.options);
+
+          data.interests.forEach((intr: { id: number }) => {
+            const found = allOptions.find(opt => opt.id === intr.id);
+            if (found) {
+              initialSelected.push(found);
+            }
+          });
+          setSelected(initialSelected);
         }
         setInstagramLink(data.socials?.instagram || "");
         setYoutubeLink(data.socials?.youtube || "");
@@ -130,14 +140,22 @@ export default function EditClub() {
 
     const formData = new FormData();
     formData.append("name", clubName);
-    formData.append("org_id", clubOrganization.toString());
+    if (clubOrganization > 0) {
+      formData.append("org_id", clubOrganization.toString());
+    }
     formData.append("location_name", clubLocation);
     formData.append("location_link", "");
     formData.append("about", clubDescription);
     if (clubLogo) {
       formData.append("logo", clubLogo);
     }
-    formData.append("interest_ids", JSON.stringify(selectedInterests));
+    // Use 'selected' state to get IDs
+    const interestIds = selected.map(item => item.id);
+    formData.append("interest_ids", interestIds.join(","));
+    formData.append("instagram", instagramLink);
+    formData.append("youtube", youtubeLink);
+    formData.append("linkedin", linkedInLink);
+    formData.append("website", websiteLink);
 
     try {
       const accessToken = localStorage.getItem("accessToken");
@@ -322,8 +340,8 @@ export default function EditClub() {
                             onClick={() => toggleSelection(option)}
                             disabled={isDisabled}
                             className={`px-3 py-1.5 rounded-full text-[13px] transition-all ${isSelected
-                                ? "border-2 border-green-500 bg-white"
-                                : "bg-white border border-gray-200 hover:border-gray-300"
+                              ? "border-2 border-green-500 bg-white"
+                              : "bg-white border border-gray-200 hover:border-gray-300"
                               } ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
                           >
                             {option.emoji} {option.name}

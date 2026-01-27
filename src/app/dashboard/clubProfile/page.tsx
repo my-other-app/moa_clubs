@@ -30,11 +30,17 @@ interface Club {
   };
   id: number;
   name: string;
-  description?: string;
+  about?: string;
   location_name: string;
   logo: ClubLogo;
   interests?: Interest[];
-  org_name?: string;
+  org?: {
+    name: string;
+  };
+  total_events?: number;
+  live_events?: number;
+  past_events?: number;
+  rating?: number;
 }
 
 interface ReadMoreProps {
@@ -104,15 +110,7 @@ export default function ClubProfile() {
     fetchClub();
   }, [token, API_BASE_URL]);
 
-  const clubDescription =
-    club?.description ||
-    `Innovation, Entrepreneurship, Disruption. That's what we stand for at IEDC CET – the Innovation & Entrepreneurship Development Centre of College of Engineering Trivandrum. ✨✨
-
-We are a thriving community of dreamers, doers, and disruptors who believe in turning ideas into impact. Whether it's startup bootcamps, hackathons, investor meetups, or mentorship programs, we create the perfect launchpad for students to explore entrepreneurship, technology, and innovation.
-
-At IEDC CET, you'll find like-minded innovators, real-world learning experiences, and the right support to take your startup ideas from zero to one. 🚀
-
-So, if you're ready to build, break, and innovate, this is where you belong!`;
+  const clubDescription = club?.about || "No description available.";
 
   return (
     <div className="flex min-h-screen bg-[#2C333D]">
@@ -176,10 +174,31 @@ So, if you're ready to build, break, and innovate, this is where you belong!`;
                 </div>
               </div>
 
+              {/* Statistics Dashboard */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 text-center">
+                  <p className="text-[24px] font-bold text-blue-600">{club.total_events || 0}</p>
+                  <p className="text-[12px] text-gray-600 uppercase tracking-wide">Total Events</p>
+                </div>
+                <div className="bg-green-50 p-4 rounded-lg border border-green-100 text-center">
+                  <p className="text-[24px] font-bold text-green-600">{club.live_events || 0}</p>
+                  <p className="text-[12px] text-gray-600 uppercase tracking-wide">Live Events</p>
+                </div>
+                <div className="bg-purple-50 p-4 rounded-lg border border-purple-100 text-center">
+                  <p className="text-[24px] font-bold text-purple-600">{club.past_events || 0}</p>
+                  <p className="text-[12px] text-gray-600 uppercase tracking-wide">Past Events</p>
+                </div>
+                <div className="bg-amber-50 p-4 rounded-lg border border-amber-100 text-center">
+                  <p className="text-[24px] font-bold text-amber-600">{club.rating || 0} <span className="text-[14px] text-gray-500 font-normal">/ 5</span></p>
+                  <p className="text-[12px] text-gray-600 uppercase tracking-wide">Overall Rating</p>
+                </div>
+              </div>
+
               {/* Content Row: Description on left, Info on right */}
               <div className="flex flex-col lg:flex-row gap-4">
                 {/* Left: Club Description with Read More */}
                 <div className="border border-gray-300 rounded-lg p-5 flex-1 lg:flex-[3]">
+                  <h3 className="bebas text-[18px] tracking-wide text-black mb-3">ABOUT CLUB</h3>
                   <ReadMore text={clubDescription} wordLimit={75} />
                 </div>
 
@@ -193,7 +212,7 @@ So, if you're ready to build, break, and innovate, this is where you belong!`;
                         <span className="text-[12px] text-gray-500">College</span>
                       </div>
                       <p className="bebas text-[14px] text-black tracking-wide leading-tight">
-                        {club.org_name || "COLLEGE OF ENGINEERING TRIV..."}
+                        {club.org?.name || "COLLEGE OF ENGINEERING TRIV..."}
                       </p>
                     </div>
                     <div className="p-4 border border-gray-300 rounded-lg">

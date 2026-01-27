@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import Image from "next/image";
-import { Edit, Trash, Download, Search, Plus, TrendingUp, Users, DollarSign, MousePointerClick, UserCheck, ChevronLeft, ChevronRight } from "lucide-react";
+import { Edit, Trash, Download, Search, Plus, TrendingUp, Users, DollarSign, MousePointerClick, UserCheck, ChevronLeft, ChevronRight, Star } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -86,6 +86,22 @@ interface AnalyticsData {
   attendance_over_time: { time: string; count: number }[];
 }
 
+interface Review {
+  id: string;
+  rating: number;
+  review: string | null;
+  user: {
+    id: number;
+    full_name: string;
+    profile: {
+      avatar: {
+        medium: string;
+      } | null;
+    } | null;
+  };
+  created_at: string;
+}
+
 export default function DashScreen() {
   const [announcementTitle, setAnnouncementTitle] = useState("");
   const [announcementBody, setAnnouncementBody] = useState("");
@@ -104,12 +120,27 @@ export default function DashScreen() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
 
   const searchParams = useSearchParams();
   const event_id = searchParams.get("event_id");
   const parsedEventId = event_id ? Number.parseInt(event_id, 10) : 0;
 
   const { navigateTo } = useNavigate();
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+      setCurrentPage(1); // Reset to first page on search
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Fetch event details directly by ID
   const getEventDetails = useCallback(async () => {
@@ -129,30 +160,38 @@ export default function DashScreen() {
     setLoadingRegistrations(true);
     try {
       const offset = (currentPage - 1) * itemsPerPage;
-      const response = await axios.get(
-        `${API_BASE_URL}/api/v1/events/registration/${parsedEventId}/list?limit=${itemsPerPage}&offset=${offset}`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
+      let url = `${API_BASE_URL}/api/v1/events/registration/${parsedEventId}/list?limit=${itemsPerPage}&offset=${offset}`;
+
+      if (debouncedSearchQuery) {
+        url += `&search=${encodeURIComponent(debouncedSearchQuery)}`;
+      }
+
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
 
       const items = response.data.items || [];
-      setRegistrations(items);
+      const total = response.data.total || 0;
 
-      // Check if there might be a next page
-      // If we got fewer items than requested, we're definitely at the end
-      // If we got exactly itemsPerPage, there *might* be more (or might not)
-      // The backend response usually has a 'next' field or we can check length
-      setHasNextPage(items.length === itemsPerPage);
+      setRegistrations(items);
+      setTotalCount(total);
+
+      // Improved hasNextPage logic using total count if available
+      if (response.data.total !== undefined) {
+        setHasNextPage(offset + items.length < response.data.total);
+      } else {
+        // Fallback for legacy API
+        setHasNextPage(items.length === itemsPerPage);
+      }
 
     } catch (error) {
       console.error("Error fetching registrations:", error);
     } finally {
       setLoadingRegistrations(false);
     }
-  }, [parsedEventId, currentPage, itemsPerPage]);
+  }, [parsedEventId, currentPage, itemsPerPage, debouncedSearchQuery]);
 
   // Fetch analytics
   const getAnalytics = useCallback(async () => {
@@ -172,11 +211,33 @@ export default function DashScreen() {
     }
   }, [parsedEventId]);
 
+  // Fetch reviews
+  const getReviews = useCallback(async () => {
+    const accessToken = storage.getAccessToken();
+    if (!accessToken || !parsedEventId) return;
+
+    setLoadingReviews(true);
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/api/v1/events/ratings/${parsedEventId}?limit=100`, // Fetching up to 100 reviews for now
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+      setReviews(response.data.items || []);
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+    } finally {
+      setLoadingReviews(false);
+    }
+  }, [parsedEventId]);
+
   useEffect(() => {
     getEventDetails();
     getRegistrations();
     getAnalytics();
-  }, [getEventDetails, getRegistrations, getAnalytics]);
+    getReviews();
+  }, [getEventDetails, getRegistrations, getAnalytics, getReviews]);
 
   // Check if event is past based on datetime + duration
   const isEventPast = useCallback(() => {
@@ -624,31 +685,59 @@ export default function DashScreen() {
               </div>
 
               {/* Attendance Trends (Only show if there is data) */}
-              {attendanceTrendData.length > 0 && (
-                <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm mb-8">
-                  <h3 className="text-sm font-semibold text-gray-700 mb-4">Attendance Trends (Check-ins per Hour)</h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                {attendanceTrendData.length > 0 && (
+                  <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-4">Attendance Trends (Check-ins per Hour)</h3>
+                    <div className="h-[250px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={attendanceTrendData}>
+                          <defs>
+                            <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
+                              <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                          <XAxis dataKey="time" axisLine={false} tickLine={false} />
+                          <YAxis axisLine={false} tickLine={false} />
+                          <Tooltip
+                            cursor={{ stroke: '#8884d8', strokeWidth: 1 }}
+                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                          />
+                          <Area type="monotone" dataKey="count" stroke="#8884d8" fillOpacity={1} fill="url(#colorCount)" />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                )}
+
+                {/* Registration Time Analysis */}
+                <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-4">Registration Time Analysis</h3>
                   <div className="h-[250px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={attendanceTrendData}>
-                        <defs>
-                          <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-                            <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                        <XAxis dataKey="time" axisLine={false} tickLine={false} />
-                        <YAxis axisLine={false} tickLine={false} />
-                        <Tooltip
-                          cursor={{ stroke: '#8884d8', strokeWidth: 1 }}
-                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                        />
-                        <Area type="monotone" dataKey="count" stroke="#8884d8" fillOpacity={1} fill="url(#colorCount)" />
-                      </AreaChart>
-                    </ResponsiveContainer>
+                    {timeData.some(d => d.value > 0) ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={timeData}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                          <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                          <YAxis axisLine={false} tickLine={false} />
+                          <Tooltip cursor={{ fill: 'transparent' }} />
+                          <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={40}>
+                            {timeData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+                        No data available
+                      </div>
+                    )}
                   </div>
                 </div>
-              )}
+              </div>
 
               <div className="w-full space-y-4">
                 <div>
@@ -729,6 +818,16 @@ export default function DashScreen() {
                 >
                   Attendance
                 </button>
+                <button
+                  onClick={() => setActiveTab("reviews")}
+                  className={`pb-2 text-[16px] font-medium transition-colors ${activeTab === "reviews"
+                    ? "text-[#2c333d] border-b-2 border-[#2c333d]"
+                    : "text-gray-400 hover:text-gray-600"
+                    }`}
+                >
+                  Reviews
+                </button>
+
               </div>
 
               {/* Search & Download */}
@@ -737,6 +836,8 @@ export default function DashScreen() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <Input
                     placeholder="Search for participants"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full h-10 pl-10 text-[14px] border-gray-300 rounded-lg"
                   />
                 </div>
@@ -751,62 +852,111 @@ export default function DashScreen() {
               </div>
             </div>
 
-            {/* Table */}
-            <div className="w-full overflow-x-auto rounded-lg border border-gray-200">
-              <table className="w-full min-w-[800px]">
-                <thead>
-                  <tr className="bg-[#d4edda]">
-                    <th className="py-3 px-4 text-left text-[14px] font-medium text-[#2c333d]">
-                      Registration ID
-                    </th>
-                    <th className="py-3 px-4 text-left text-[14px] font-medium text-[#2c333d]">
-                      Participant Name
-                    </th>
-                    <th className="py-3 px-4 text-left text-[14px] font-medium text-[#2c333d]">
-                      Email
-                    </th>
-                    <th className="py-3 px-4 text-left text-[14px] font-medium text-[#2c333d]">
-                      Number
-                    </th>
-                    <th className="py-3 px-4 text-left text-[14px] font-medium text-[#2c333d]">
-                      College Name
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredRegistrations.length > 0 ? (
-                    filteredRegistrations.map((reg, index) => (
-                      <tr
-                        key={reg.id || index}
-                        className={index !== filteredRegistrations.length - 1 ? "border-b border-gray-200" : ""}
-                      >
-                        <td className="py-3 px-4 text-[14px] text-gray-600">
-                          {reg.ticket_id || `NEX${reg.id}AA001`}
-                        </td>
-                        <td className="py-3 px-4 text-[14px] text-gray-600">
-                          {reg.full_name}
-                        </td>
-                        <td className="py-3 px-4 text-[14px] text-gray-600">
-                          {reg.email}
-                        </td>
-                        <td className="py-3 px-4 text-[14px] text-gray-600">
-                          {reg.phone}
-                        </td>
-                        <td className="py-3 px-4 text-[14px] text-gray-600">
-                          {reg.institution || reg.profile || "-"}
+            {activeTab !== "reviews" && (
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-100">
+                      <th className="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
+                      <th className="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+                      <th className="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Phone</th>
+                      <th className="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Institution</th>
+                      <th className="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Attendance</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {filteredRegistrations.length > 0 ? (
+                      filteredRegistrations.map((reg) => (
+                        <tr key={reg.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="p-4 text-sm font-medium text-gray-900">{reg.name}</td>
+                          <td className="p-4 text-sm text-gray-600">{reg.email}</td>
+                          <td className="p-4 text-sm text-gray-600">{reg.phone}</td>
+                          <td className="p-4 text-sm text-gray-600">{reg.institution}</td>
+                          <td className="p-4 text-sm">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${reg.is_paid ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                              {reg.is_paid ? "Paid" : "Unpaid"}
+                            </span>
+                          </td>
+                          <td className="p-4 text-sm">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${reg.is_attended ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"}`}>
+                              {reg.is_attended ? "Attended" : "Pending"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={6} className="p-8 text-center text-gray-500">
+                          No registrations found.
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={5} className="py-8 px-4 text-center text-gray-500 text-[14px]">
-                        {loadingRegistrations ? "Loading..." : "No registrations found"}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Reviews Tab */}
+            {activeTab === "reviews" && (
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                {loadingReviews ? (
+                  <div className="p-8 text-center text-gray-500">Loading reviews...</div>
+                ) : reviews.length === 0 ? (
+                  <div className="p-8 text-center text-gray-500">No reviews yet.</div>
+                ) : (
+                  <div className="divide-y divide-gray-100">
+                    {reviews.map((review) => (
+                      <div key={review.id} className="p-6 hover:bg-gray-50 transition-colors">
+                        <div className="flex items-start gap-4">
+                          {/* User Avatar */}
+                          <div className="flex-shrink-0">
+                            {review.user.profile?.avatar?.medium ? (
+                              <Image
+                                src={review.user.profile.avatar.medium}
+                                alt={review.user.full_name}
+                                width={40}
+                                height={40}
+                                className="w-10 h-10 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold">
+                                {review.user.full_name.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Review Content */}
+                          <div className="flex-1">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h4 className="text-sm font-bold text-gray-900">{review.user.full_name}</h4>
+                                <div className="flex items-center gap-1 mt-1">
+                                  {[...Array(5)].map((_, i) => (
+                                    <Star
+                                      key={i}
+                                      className={`w-3 h-3 ${i < review.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`}
+                                    />
+                                  ))}
+                                  <span className="text-xs text-gray-500 ml-2">
+                                    {new Date(review.created_at).toLocaleDateString()}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            {review.review && (
+                              <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+                                {review.review}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Pagination Controls */}
             <div className="flex justify-center items-center gap-4 mt-6">
@@ -835,16 +985,17 @@ export default function DashScreen() {
               </Button>
             </div>
           </div>
-        </div>
-      </div>
+        </div >
+      </div >
 
       {/* Delete Confirmation Modal */}
-      <DeleteConfirmationModal
+      < DeleteConfirmationModal
         isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
+        onClose={() => setShowDeleteModal(false)
+        }
         onConfirm={confirmDelete}
       />
-    </div>
+    </div >
   );
 }
 

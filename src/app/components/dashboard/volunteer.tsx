@@ -57,7 +57,7 @@ export default function Volunteer({ event_id }: VolunteerProps) {
           event_id: event_id,
           full_name: volunteerName,
           email_id: volunteerEmail,
-          user_id: volunteerPhone,
+          phone: volunteerPhone,
         };
 
         await axios.post(

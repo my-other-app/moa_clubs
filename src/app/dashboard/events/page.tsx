@@ -22,6 +22,7 @@ interface Event {
     thumbnail?: string;
   } | null;
   registration_count: number;
+  attended_count: number;
   is_past: boolean;
 }
 
@@ -194,51 +195,63 @@ export default function Events() {
                 <div
                   key={event.id}
                   onClick={() => navigateTo(`/dashboard/dashScreen?event_id=${event.id}`)}
-                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 transition-colors"
+                  className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] items-center gap-4 p-4 border border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 transition-colors bg-white"
                 >
                   {/* Left: Image + Event Info */}
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 min-w-0">
                     <Image
                       src={event.poster?.thumbnail || "/default-thumbnail.png"}
                       alt={event.name}
-                      width={56}
-                      height={56}
-                      className="rounded-lg object-cover"
+                      width={64}
+                      height={64}
+                      className="rounded-lg object-cover w-16 h-16 flex-shrink-0 bg-gray-100"
                     />
-                    <div>
-                      <h3 className="text-[16px] font-medium text-gray-800">{event.name}</h3>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <div className={`w-2 h-2 rounded-full ${event.is_past ? "bg-gray-400" : "bg-green-500"}`} />
-                        <span className={`text-[12px] ${event.is_past ? "text-gray-500" : "text-green-600"}`}>
+                    <div className="min-w-0">
+                      <h3 className="text-[16px] font-semibold text-gray-900 truncate pr-4" title={event.name}>
+                        {event.name}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${event.is_past ? "bg-gray-100 text-gray-600" : "bg-green-50 text-green-700"
+                          }`}>
+                          <div className={`w-1.5 h-1.5 rounded-full ${event.is_past ? "bg-gray-500" : "bg-green-500"}`} />
                           {event.is_past ? "Completed" : "Live"}
-                        </span>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Center: Registration Count */}
-                  <div className="text-center">
-                    <p className="text-[20px] font-bold text-gray-800">{event.registration_count || 0}</p>
-                    <p className="text-[12px] text-gray-500">Registration Count</p>
+                  {/* Center: Stats */}
+                  <div className="flex items-center gap-8 md:gap-12 w-full md:w-[300px] justify-start md:justify-center pl-[80px] md:pl-0 border-t md:border-t-0 pt-4 md:pt-0 border-gray-100 md:border-gray-0">
+                    <div className="text-left md:text-center min-w-[80px]">
+                      <p className="text-[20px] font-bold text-gray-900">{event.registration_count || 0}</p>
+                      <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Registrations</p>
+                    </div>
+                    <div className="text-left md:text-center min-w-[80px]">
+                      <p className="text-[20px] font-bold text-gray-900">{event.attended_count || 0}</p>
+                      <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Checked In</p>
+                    </div>
                   </div>
 
                   {/* Right: Action Buttons */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-4 md:pt-0 border-gray-100 md:border-gray-0">
                     <button
                       onClick={(e) => handleEditEvent(event.id, event.slug, e)}
-                      className="w-10 h-10 border border-gray-200 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors"
+                      className="w-9 h-9 border border-gray-200 rounded-lg flex items-center justify-center hover:bg-gray-50 hover:text-blue-600 transition-colors"
+                      title="Edit Event"
                     >
                       <Edit className="w-4 h-4 text-gray-500" />
                     </button>
                     <button
                       onClick={(e) => openDeleteModal(event.id, e)}
-                      className="w-10 h-10 border border-gray-200 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors"
+                      className="w-9 h-9 border border-gray-200 rounded-lg flex items-center justify-center hover:bg-red-50 hover:border-red-100 hover:text-red-600 transition-colors group"
+                      title="Delete Event"
                     >
-                      <Trash2 className="w-4 h-4 text-gray-500" />
+                      <Trash2 className="w-4 h-4 text-gray-500 group-hover:text-red-600" />
                     </button>
                     <button
                       onClick={(e) => handleShare(event, e)}
-                      className="w-10 h-10 border border-gray-200 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors"
+                      className="w-9 h-9 border border-gray-200 rounded-lg flex items-center justify-center hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                      title="Share Event"
                     >
                       <ExternalLink className="w-4 h-4 text-gray-500" />
                     </button>

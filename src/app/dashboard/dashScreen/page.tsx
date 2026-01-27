@@ -399,6 +399,40 @@ export default function DashScreen() {
     }
   };
 
+  const toggleAttendance = async (registrationId: number, currentStatus: boolean) => {
+    const accessToken = storage.getAccessToken();
+    if (!accessToken || !parsedEventId) return;
+
+    // Optimistic update
+    setRegistrations((prev) =>
+      prev.map((reg) =>
+        reg.id === registrationId ? { ...reg, is_attended: !currentStatus } : reg
+      )
+    );
+
+    try {
+      await axios.post(
+        `${API_BASE_URL}/api/v1/events/registration/${parsedEventId}/attendance/${registrationId}`,
+        { is_attended: !currentStatus },
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+      toast.success(`Attendance marked as ${!currentStatus ? "Attended" : "Pending"}`);
+      // Refresh analytics to update charts
+      getAnalytics();
+    } catch (error) {
+      console.error("Error updating attendance:", error);
+      toast.error("Failed to update attendance");
+      // Revert optimistic update
+      setRegistrations((prev) =>
+        prev.map((reg) =>
+          reg.id === registrationId ? { ...reg, is_attended: currentStatus } : reg
+        )
+      );
+    }
+  };
+
   // Filter registrations based on tab
   const filteredRegistrations = activeTab === "attendance"
     ? registrations.filter((reg) => reg.is_attended)
@@ -879,9 +913,15 @@ export default function DashScreen() {
                             </span>
                           </td>
                           <td className="p-4 text-sm">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${reg.is_attended ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"}`}>
-                              {reg.is_attended ? "Attended" : "Pending"}
-                            </span>
+                            <button
+                              onClick={() => toggleAttendance(reg.id, reg.is_attended)}
+                              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer ${reg.is_attended
+                                ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                }`}
+                            >
+                              {reg.is_attended ? "Attended" : "Mark Present"}
+                            </button>
                           </td>
                         </tr>
                       ))

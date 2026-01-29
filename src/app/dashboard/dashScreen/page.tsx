@@ -123,6 +123,13 @@ export default function DashScreen() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
 
+  // Attendees state (separate from registrations for proper pagination)
+  const [attendees, setAttendees] = useState<Registration[]>([]);
+  const [attendeesTotalCount, setAttendeesTotalCount] = useState(0);
+  const [attendeesPage, setAttendeesPage] = useState(1);
+  const [attendeesHasNextPage, setAttendeesHasNextPage] = useState(false);
+  const [loadingAttendees, setLoadingAttendees] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
 
@@ -137,6 +144,7 @@ export default function DashScreen() {
     const timer = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
       setCurrentPage(1); // Reset to first page on search
+      setAttendeesPage(1); // Reset attendees page too
     }, 500);
 
     return () => clearTimeout(timer);
@@ -193,6 +201,39 @@ export default function DashScreen() {
     }
   }, [parsedEventId, currentPage, itemsPerPage, debouncedSearchQuery]);
 
+  // Fetch attendees (checked-in users only)
+  const getAttendees = useCallback(async () => {
+    const accessToken = storage.getAccessToken();
+    if (!accessToken || !parsedEventId) return;
+
+    setLoadingAttendees(true);
+    try {
+      const offset = (attendeesPage - 1) * itemsPerPage;
+      let url = `${API_BASE_URL}/api/v1/events/registration/${parsedEventId}/attendees?limit=${itemsPerPage}&offset=${offset}`;
+
+      if (debouncedSearchQuery) {
+        url += `&search=${encodeURIComponent(debouncedSearchQuery)}`;
+      }
+
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const items = response.data.items || [];
+      const total = response.data.total || 0;
+
+      setAttendees(items);
+      setAttendeesTotalCount(total);
+      setAttendeesHasNextPage(offset + items.length < total);
+    } catch (error) {
+      console.error("Error fetching attendees:", error);
+    } finally {
+      setLoadingAttendees(false);
+    }
+  }, [parsedEventId, attendeesPage, itemsPerPage, debouncedSearchQuery]);
+
   // Fetch analytics
   const getAnalytics = useCallback(async () => {
     const accessToken = storage.getAccessToken();
@@ -238,6 +279,13 @@ export default function DashScreen() {
     getAnalytics();
     getReviews();
   }, [getEventDetails, getRegistrations, getAnalytics, getReviews]);
+
+  // Fetch attendees when switching to attendance tab or when attendees page changes
+  useEffect(() => {
+    if (activeTab === "attendance") {
+      getAttendees();
+    }
+  }, [activeTab, getAttendees]);
 
   // Check if event is past based on datetime + duration
   const isEventPast = useCallback(() => {
@@ -350,14 +398,26 @@ export default function DashScreen() {
   };
 
   const handleNextPage = () => {
-    if (hasNextPage) {
-      setCurrentPage((prev) => prev + 1);
+    if (activeTab === "attendance") {
+      if (attendeesHasNextPage) {
+        setAttendeesPage((prev) => prev + 1);
+      }
+    } else {
+      if (hasNextPage) {
+        setCurrentPage((prev) => prev + 1);
+      }
     }
   };
 
   const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage((prev) => prev - 1);
+    if (activeTab === "attendance") {
+      if (attendeesPage > 1) {
+        setAttendeesPage((prev) => prev - 1);
+      }
+    } else {
+      if (currentPage > 1) {
+        setCurrentPage((prev) => prev - 1);
+      }
     }
   };
 
@@ -403,12 +463,21 @@ export default function DashScreen() {
     const accessToken = storage.getAccessToken();
     if (!accessToken || !parsedEventId) return;
 
-    // Optimistic update
+    // Optimistic update for registrations
     setRegistrations((prev) =>
       prev.map((reg) =>
         reg.id === registrationId ? { ...reg, is_attended: !currentStatus } : reg
       )
     );
+
+    // Also update attendees list if on attendance tab
+    if (activeTab === "attendance") {
+      setAttendees((prev) =>
+        prev.map((reg) =>
+          reg.id === registrationId ? { ...reg, is_attended: !currentStatus } : reg
+        )
+      );
+    }
 
     try {
       await axios.post(
@@ -421,6 +490,10 @@ export default function DashScreen() {
       toast.success(`Attendance marked as ${!currentStatus ? "Attended" : "Pending"}`);
       // Refresh analytics to update charts
       getAnalytics();
+      // Refresh attendees list if we're on attendance tab (to update count)
+      if (activeTab === "attendance") {
+        getAttendees();
+      }
     } catch (error) {
       console.error("Error updating attendance:", error);
       toast.error("Failed to update attendance");
@@ -430,13 +503,22 @@ export default function DashScreen() {
           reg.id === registrationId ? { ...reg, is_attended: currentStatus } : reg
         )
       );
+      // Revert attendees update if on attendance tab
+      if (activeTab === "attendance") {
+        setAttendees((prev) =>
+          prev.map((reg) =>
+            reg.id === registrationId ? { ...reg, is_attended: currentStatus } : reg
+          )
+        );
+      }
     }
   };
 
-  // Filter registrations based on tab
-  const filteredRegistrations = activeTab === "attendance"
-    ? registrations.filter((reg) => reg.is_attended)
-    : registrations;
+  // Get the data to display based on active tab
+  const displayData = activeTab === "attendance" ? attendees : registrations;
+  const isLoading = activeTab === "attendance" ? loadingAttendees : loadingRegistrations;
+  const displayPage = activeTab === "attendance" ? attendeesPage : currentPage;
+  const displayHasNextPage = activeTab === "attendance" ? attendeesHasNextPage : hasNextPage;
 
   // Calculate unique institutions count
   const uniqueInstitutions = new Set(
@@ -900,8 +982,8 @@ export default function DashScreen() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {filteredRegistrations.length > 0 ? (
-                      filteredRegistrations.map((reg) => (
+                    {displayData.length > 0 ? (
+                      displayData.map((reg) => (
                         <tr key={reg.id} className="hover:bg-gray-50 transition-colors">
                           <td className="p-4 text-sm font-medium text-gray-900">{reg.name}</td>
                           <td className="p-4 text-sm text-gray-600">{reg.email}</td>
@@ -928,7 +1010,7 @@ export default function DashScreen() {
                     ) : (
                       <tr>
                         <td colSpan={6} className="p-8 text-center text-gray-500">
-                          No registrations found.
+                          {activeTab === "attendance" ? "No attendees found." : "No registrations found."}
                         </td>
                       </tr>
                     )}
@@ -1003,7 +1085,7 @@ export default function DashScreen() {
               <Button
                 variant="outline"
                 onClick={handlePrevPage}
-                disabled={currentPage === 1 || loadingRegistrations}
+                disabled={displayPage === 1 || isLoading}
                 className="h-[40px] px-4 border-[#2c333d] text-[#2c333d] hover:bg-gray-50 flex items-center gap-2"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -1011,13 +1093,13 @@ export default function DashScreen() {
               </Button>
 
               <span className="text-[14px] font-medium text-gray-700">
-                Page {currentPage}
+                Page {displayPage}
               </span>
 
               <Button
                 variant="outline"
                 onClick={handleNextPage}
-                disabled={!hasNextPage || loadingRegistrations}
+                disabled={!displayHasNextPage || isLoading}
                 className="h-[40px] px-4 border-[#2c333d] text-[#2c333d] hover:bg-gray-50 flex items-center gap-2"
               >
                 Next

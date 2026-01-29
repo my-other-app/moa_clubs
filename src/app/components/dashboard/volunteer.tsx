@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
+import { Loader2, Trash2, UserPlus } from "lucide-react";
 
 interface Volunteer {
   user_id: string;
@@ -19,6 +21,9 @@ export default function Volunteer({ event_id }: VolunteerProps) {
   const [volunteerName, setVolunteerName] = useState("");
   const [volunteerEmail, setVolunteerEmail] = useState("");
   const [volunteerPhone, setVolunteerPhone] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [addingVolunteer, setAddingVolunteer] = useState(false);
+  const [deletingEmail, setDeletingEmail] = useState<string | null>(null);
 
   // Get access token from localStorage
   const token =
@@ -29,6 +34,7 @@ export default function Volunteer({ event_id }: VolunteerProps) {
 
   // Fetch volunteers for the current event
   const fetchVolunteers = useCallback(async () => {
+    setLoading(true);
     try {
       const response = await axios.get(
         `${API_BASE_URL}/api/v1/events/volunteer/list/${event_id}`,
@@ -36,10 +42,12 @@ export default function Volunteer({ event_id }: VolunteerProps) {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      // Assume response.data is an array of volunteers
       setVolunteers(response.data);
     } catch (error) {
       console.error("Error fetching volunteers:", error);
+      toast.error("Failed to load volunteers");
+    } finally {
+      setLoading(false);
     }
   }, [API_BASE_URL, event_id, token]);
 
@@ -51,118 +59,166 @@ export default function Volunteer({ event_id }: VolunteerProps) {
 
   // Add a volunteer using the POST endpoint
   const addVolunteer = async () => {
-    if (volunteerName && volunteerEmail && volunteerPhone) {
-      try {
-        const payload = {
-          event_id: event_id,
-          full_name: volunteerName,
-          email_id: volunteerEmail,
-          phone: volunteerPhone,
-        };
+    if (!volunteerName.trim() || !volunteerEmail.trim()) {
+      toast.error("Please enter name and email");
+      return;
+    }
 
-        await axios.post(
-          `${API_BASE_URL}/api/v1/events/volunteer/add`,
-          payload,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        // Refresh the list after successful add
-        fetchVolunteers();
-        // Clear input fields
-        setVolunteerName("");
-        setVolunteerEmail("");
-        setVolunteerPhone("");
-      } catch (error) {
-        console.error("Error adding volunteer:", error);
+    setAddingVolunteer(true);
+    try {
+      const payload = {
+        event_id: event_id,
+        full_name: volunteerName.trim(),
+        email_id: volunteerEmail.trim(),
+        phone: volunteerPhone.trim() || undefined,
+      };
+
+      await axios.post(
+        `${API_BASE_URL}/api/v1/events/volunteer/add`,
+        payload,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      toast.success("Volunteer added successfully");
+      // Refresh the list after successful add
+      fetchVolunteers();
+      // Clear input fields
+      setVolunteerName("");
+      setVolunteerEmail("");
+      setVolunteerPhone("");
+    } catch (error: unknown) {
+      console.error("Error adding volunteer:", error);
+      if (axios.isAxiosError(error) && error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error("Failed to add volunteer");
       }
+    } finally {
+      setAddingVolunteer(false);
     }
   };
 
-  // Remove a volunteer using the DELETE endpoint by using their email as the unique identifier
+  // Remove a volunteer using the DELETE endpoint
   const deleteVolunteer = async (email: string) => {
+    setDeletingEmail(email);
     try {
       await axios.delete(`${API_BASE_URL}/api/v1/events/volunteer/remove`, {
         headers: { Authorization: `Bearer ${token}` },
         data: { event_id: event_id, email_id: email },
       });
+      toast.success("Volunteer removed successfully");
       // Refresh the volunteer list after removal
       fetchVolunteers();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error removing volunteer:", error);
+      if (axios.isAxiosError(error) && error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error("Failed to remove volunteer");
+      }
+    } finally {
+      setDeletingEmail(null);
     }
   };
 
   return (
-    <div className="">
-      <h2 className="text-3xl bebas font-semibold mt-6 mx-4">ADD VOLUNTEERS</h2>
-      <div className="flex justify-between">
+    <div className="p-2">
+      <h2 className="text-2xl bebas font-semibold mb-4">MANAGE VOLUNTEERS</h2>
+
+      <div className="flex flex-col lg:flex-row gap-6">
         {/* Volunteer Form */}
-        <div className="flex flex-col gap-4 items-center w-full p-3 flex-1/2">
-          <input
-            type="text"
-            value={volunteerName}
-            onChange={(e) => setVolunteerName(e.target.value)}
-            placeholder="Enter The Name"
-            className="p-2 border rounded w-full"
-            required
-          />
-          <input
-            type="email"
-            value={volunteerEmail}
-            onChange={(e) => setVolunteerEmail(e.target.value)}
-            placeholder="Enter Email"
-            className="p-2 border rounded w-full"
-            required
-          />
-          <button
-            onClick={addVolunteer}
-            className="mt-2 px-4 py-2 border border-black text-black hover:bg-black hover:text-white rounded text-2xl bebas"
-          >
-            ADD VOLUNTEER
-          </button>
-        </div>
-        {/* Volunteer List (scrollable) */}
-        <div className="mt-4 flex flex-col gap-1 overflow-y-auto max-h-52 flex-1/2">
-          {volunteers.map((v, index) => (
-            <div
-              key={v.email || index} // using email as a unique key
-              className="h-24 p-4 bg-teal-600 rounded-lg flex items-center gap-3.5"
+        <div className="flex-1 bg-gray-50 rounded-xl p-4">
+          <h3 className="text-sm font-medium text-gray-700 mb-3">Add New Volunteer</h3>
+          <div className="flex flex-col gap-3">
+            <input
+              type="text"
+              value={volunteerName}
+              onChange={(e) => setVolunteerName(e.target.value)}
+              placeholder="Full Name *"
+              className="p-3 border border-gray-200 rounded-lg w-full focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none"
+              disabled={addingVolunteer}
+            />
+            <input
+              type="email"
+              value={volunteerEmail}
+              onChange={(e) => setVolunteerEmail(e.target.value)}
+              placeholder="Email Address *"
+              className="p-3 border border-gray-200 rounded-lg w-full focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none"
+              disabled={addingVolunteer}
+            />
+            <input
+              type="tel"
+              value={volunteerPhone}
+              onChange={(e) => setVolunteerPhone(e.target.value)}
+              placeholder="Phone Number (optional)"
+              className="p-3 border border-gray-200 rounded-lg w-full focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none"
+              disabled={addingVolunteer}
+            />
+            <button
+              onClick={addVolunteer}
+              disabled={addingVolunteer || !volunteerName.trim() || !volunteerEmail.trim()}
+              className="mt-2 px-4 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-medium"
             >
-              <div className="w-64 flex flex-col gap-1">
-                <div className="text-white text-base font-light font-['DM Sans']">
-                  {v.full_name}
-                </div>
-                <div className="text-white text-base font-light font-['DM Sans']">
-                  {v.email}
-                </div>
-                <div className="text-white text-base font-light font-['DM Sans']">
-                  {v.user_id}
-                </div>
+              {addingVolunteer ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                <>
+                  <UserPlus className="w-4 h-4" />
+                  Add Volunteer
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Volunteer List */}
+        <div className="flex-1">
+          <h3 className="text-sm font-medium text-gray-700 mb-3">
+            Current Volunteers ({volunteers.length})
+          </h3>
+          <div className="flex flex-col gap-2 max-h-64 overflow-y-auto">
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
               </div>
-              <div
-                onClick={() => deleteVolunteer(v.email)}
-                className="cursor-pointer"
-              >
-                <svg
-                  width="48"
-                  height="48"
-                  viewBox="0 0 48 49"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
+            ) : volunteers.length === 0 ? (
+              <div className="text-center py-8 text-gray-400">
+                No volunteers added yet
+              </div>
+            ) : (
+              volunteers.map((v, index) => (
+                <div
+                  key={v.email || index}
+                  className="p-4 bg-teal-600 rounded-lg flex items-center justify-between gap-3"
                 >
-                  <rect y="0.5" width="48" height="48" rx="16" fill="#F3F3F3" />
-                  <path
-                    d="M21 15.5H27M15 18.5H33M31 18.5L30.2987 29.0193C30.1935 30.5975 30.1409 31.3867 29.8 31.985C29.4999 32.5118 29.0472 32.9353 28.5017 33.1997C27.882 33.5 27.0911 33.5 25.5093 33.5H22.4907C20.9089 33.5 20.118 33.5 19.4983 33.1997C18.9528 32.9353 18.5001 32.5118 18.2 31.985C17.8591 31.3867 17.8065 30.5975 17.7013 29.0193L17 18.5M22 23V28M26 23V28"
-                    stroke="black"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-            </div>
-          ))}
+                  <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                    <div className="text-white font-medium truncate">
+                      {v.full_name || "Unnamed"}
+                    </div>
+                    <div className="text-teal-100 text-sm truncate">
+                      {v.email}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => deleteVolunteer(v.email)}
+                    disabled={deletingEmail === v.email}
+                    className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50"
+                    aria-label="Remove volunteer"
+                  >
+                    {deletingEmail === v.email ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    ) : (
+                      <Trash2 className="w-4 h-4 text-white" />
+                    )}
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
     </div>

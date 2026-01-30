@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import Image from "next/image";
-import { Edit, Trash, Download, Search, Plus, TrendingUp, Users, DollarSign, MousePointerClick, UserCheck, ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { Edit, Trash, Download, Search, Plus, TrendingUp, Users, DollarSign, MousePointerClick, UserCheck, ChevronLeft, ChevronRight, Star, Bell, Eye, Send } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -122,6 +122,13 @@ export default function DashScreen() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
+
+  // Notification stats state
+  const [notificationStats, setNotificationStats] = useState<{
+    total_sent: number;
+    total_read: number;
+    read_percentage: number;
+  } | null>(null);
 
   // Attendees state (separate from registrations for proper pagination)
   const [attendees, setAttendees] = useState<Registration[]>([]);
@@ -273,12 +280,31 @@ export default function DashScreen() {
     }
   }, [parsedEventId]);
 
+  // Fetch notification stats
+  const getNotificationStats = useCallback(async () => {
+    const accessToken = storage.getAccessToken();
+    if (!accessToken || !parsedEventId) return;
+
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/api/v1/clubs/notifications/events/${parsedEventId}/stats`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+      setNotificationStats(response.data);
+    } catch (error) {
+      console.error("Error fetching notification stats:", error);
+    }
+  }, [parsedEventId]);
+
   useEffect(() => {
     getEventDetails();
     getRegistrations();
     getAnalytics();
     getReviews();
-  }, [getEventDetails, getRegistrations, getAnalytics, getReviews]);
+    getNotificationStats();
+  }, [getEventDetails, getRegistrations, getAnalytics, getReviews, getNotificationStats]);
 
   // Fetch attendees when switching to attendance tab or when attendees page changes
   useEffect(() => {
@@ -358,6 +384,8 @@ export default function DashScreen() {
 
       if (response.data.success) {
         toast.success(response.data.message || "Announcement sent successfully!");
+        // Refresh notification stats after sending
+        getNotificationStats();
       } else {
         toast.warning(response.data.message || "Announcement sent but no recipients found");
       }
@@ -855,7 +883,58 @@ export default function DashScreen() {
                 </div>
               </div>
 
-              <div className="w-full space-y-4">
+              <div className="w-full space-y-6">
+                {/* Notification Analytics Section */}
+                {notificationStats && notificationStats.total_sent > 0 && (
+                  <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-5 rounded-xl border border-indigo-100">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Bell className="w-5 h-5 text-indigo-600" />
+                      <h3 className="text-sm font-semibold text-indigo-900">Notification Analytics</h3>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4 mb-4">
+                      <div className="bg-white/80 backdrop-blur p-3 rounded-lg">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <Send className="w-3.5 h-3.5 text-indigo-500" />
+                          <span className="text-xs text-indigo-600 font-medium">Sent</span>
+                        </div>
+                        <p className="text-2xl font-bold text-indigo-900">{notificationStats.total_sent}</p>
+                      </div>
+
+                      <div className="bg-white/80 backdrop-blur p-3 rounded-lg">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <Eye className="w-3.5 h-3.5 text-emerald-500" />
+                          <span className="text-xs text-emerald-600 font-medium">Read</span>
+                        </div>
+                        <p className="text-2xl font-bold text-emerald-900">{notificationStats.total_read}</p>
+                      </div>
+
+                      <div className="bg-white/80 backdrop-blur p-3 rounded-lg">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <TrendingUp className="w-3.5 h-3.5 text-purple-500" />
+                          <span className="text-xs text-purple-600 font-medium">Rate</span>
+                        </div>
+                        <p className="text-2xl font-bold text-purple-900">{notificationStats.read_percentage}%</p>
+                      </div>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-xs text-gray-600">
+                        <span>Engagement Rate</span>
+                        <span className="font-medium">{notificationStats.total_read} of {notificationStats.total_sent} opened</span>
+                      </div>
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
+                          style={{ width: `${notificationStats.read_percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Announcement Form */}
                 <div>
                   <h2 className="bebas text-[18px] tracking-wide text-black mb-1">MAKE ANNOUNCEMENTS</h2>
                   <p className="text-[11px] text-gray-600 mb-4">

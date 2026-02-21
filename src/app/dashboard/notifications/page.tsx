@@ -3,7 +3,7 @@
 import axios from "axios";
 import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
-import { Bell, Send, Eye, TrendingUp, Calendar, Search, ExternalLink } from "lucide-react";
+import { Bell, Send, Eye, TrendingUp, Calendar, Search, ExternalLink, Loader2 } from "lucide-react";
 import Sidebar from "@/app/components/sidebar";
 import { Input } from "@/components/ui/input";
 import { storage } from "@/app/services/auth.service";
@@ -11,6 +11,7 @@ import { useNavigate } from "@/app/utils/navigation";
 import { formatDistanceToNow } from "date-fns";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const PAGE_SIZE = 50;
 
 interface NotificationHistoryItem {
     id: string;
@@ -33,35 +34,59 @@ interface NotificationHistoryResponse {
 export default function NotificationsPage() {
     const [notifications, setNotifications] = useState<NotificationHistoryItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
     const [total, setTotal] = useState(0);
+    const [offset, setOffset] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
 
     const { navigateTo } = useNavigate();
 
     // Fetch notification history
-    const fetchNotifications = useCallback(async () => {
+    const fetchNotifications = useCallback(async (currentOffset: number, append: boolean = false) => {
         const accessToken = storage.getAccessToken();
         if (!accessToken) return;
 
-        setLoading(true);
+        if (append) {
+            setLoadingMore(true);
+        } else {
+            setLoading(true);
+        }
+
         try {
             const response = await axios.get<NotificationHistoryResponse>(
-                `${API_BASE_URL}/api/v1/clubs/notifications/history?limit=50&offset=0`,
+                `${API_BASE_URL}/api/v1/clubs/notifications/history?limit=${PAGE_SIZE}&offset=${currentOffset}`,
                 {
                     headers: { Authorization: `Bearer ${accessToken}` },
                 }
             );
-            setNotifications(response.data.items);
+
+            if (append) {
+                setNotifications(prev => [...prev, ...response.data.items]);
+            } else {
+                setNotifications(response.data.items);
+            }
             setTotal(response.data.total);
+            setHasMore(response.data.items.length === PAGE_SIZE);
         } catch (error) {
             console.error("Error fetching notifications:", error);
         } finally {
             setLoading(false);
+            setLoadingMore(false);
         }
     }, []);
 
+    // Load more notifications
+    const loadMore = useCallback(() => {
+        if (!loadingMore && hasMore) {
+            const newOffset = offset + PAGE_SIZE;
+            setOffset(newOffset);
+            fetchNotifications(newOffset, true);
+        }
+    }, [loadingMore, hasMore, offset, fetchNotifications]);
+
     useEffect(() => {
-        fetchNotifications();
+        fetchNotifications(0, false);
     }, [fetchNotifications]);
 
     // Filter notifications by search
@@ -236,6 +261,26 @@ export default function NotificationsPage() {
                             ))
                         )}
                     </div>
+
+                    {/* Load More Button */}
+                    {!loading && hasMore && notifications.length > 0 && (
+                        <div className="flex justify-center mt-8">
+                            <button
+                                onClick={loadMore}
+                                disabled={loadingMore}
+                                className="h-[44px] px-8 bebas text-[16px] tracking-wide border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 flex items-center gap-2"
+                            >
+                                {loadingMore ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        LOADING...
+                                    </>
+                                ) : (
+                                    "SHOW MORE"
+                                )}
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

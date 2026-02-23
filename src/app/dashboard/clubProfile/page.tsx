@@ -6,6 +6,7 @@ import axios from "axios";
 import Sidebar from "@/app/components/sidebar";
 import Link from "next/link";
 import { Instagram, Youtube, Linkedin, Globe, GraduationCap, MapPin } from "lucide-react";
+import ChangePasswordModal from "@/app/components/ChangePasswordModal";
 
 interface ClubLogo {
   thumbnail: string;
@@ -84,6 +85,7 @@ const tagColors: Record<string, string> = {
 export default function ClubProfile() {
   const [club, setClub] = useState<Club | null>(null);
   const [token, setToken] = useState<string>("");
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   useEffect(() => {
@@ -167,7 +169,10 @@ export default function ClubProfile() {
                         EDIT PROFILE
                       </button>
                     </Link>
-                    <button className="flex-1 lg:flex-none w-full lg:w-[180px] h-[42px] border border-gray-300 text-gray-700 bebas text-[16px] tracking-wide rounded hover:bg-gray-50 transition-colors">
+                    <button
+                      onClick={() => setIsPasswordModalOpen(true)}
+                      className="flex-1 lg:flex-none w-full lg:w-[180px] h-[42px] border border-gray-300 text-gray-700 bebas text-[16px] tracking-wide rounded hover:bg-gray-50 transition-colors"
+                    >
                       CHANGE PASSWORD
                     </button>
                   </div>
@@ -189,7 +194,7 @@ export default function ClubProfile() {
                   <p className="text-[12px] text-gray-600 uppercase tracking-wide">Past Events</p>
                 </div>
                 <div className="bg-amber-50 p-4 rounded-lg border border-amber-100 text-center">
-                  <p className="text-[24px] font-bold text-amber-600">{club.rating || 0} <span className="text-[14px] text-gray-500 font-normal">/ 5</span></p>
+                  <p className="text-[24px] font-bold text-amber-600">{club.rating ? club.rating.toFixed(1) : 0} <span className="text-[14px] text-gray-500 font-normal">/ 5</span></p>
                   <p className="text-[12px] text-gray-600 uppercase tracking-wide">Overall Rating</p>
                 </div>
               </div>
@@ -298,6 +303,12 @@ export default function ClubProfile() {
           )}
         </div>
       </div>
+
+      {/* Modals and Overlays */}
+      <ChangePasswordModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+      />
     </div>
   );
 }

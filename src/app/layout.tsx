@@ -20,8 +20,8 @@ const dmSans = DM_Sans({
 });
 
 export const metadata = {
-  title: "My Other App",
-  description: "Nextjs + TypeScript MyOtherAPP",
+  title: "My Other App - Club Dashboard",
+  description: "Manage your club, host engaging events, and grow your community on My Other App.",
 };
 
 export default function RootLayout({

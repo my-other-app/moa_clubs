@@ -6,7 +6,7 @@ import { fetchEvents } from "@/app/utils/listEvents";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import Link from "next/link";
-import { Search, Edit, Trash2, ExternalLink } from "lucide-react";
+import { Search, Edit, Trash2, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { useNavigate } from "@/app/utils/navigation";
 import { toast, ToastContainer } from "react-toastify";
@@ -29,21 +29,43 @@ interface Event {
 export default function Events() {
   const [events, setEvents] = useState<Event[]>([]);
   const [activeTab, setActiveTab] = useState("live");
-  const [limit, setLimit] = useState(10);
+  const [page, setPage] = useState(1);
+  const [size, setSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
 
   const { navigateTo } = useNavigate();
 
+  // Debounce search input
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (searchQuery !== debouncedSearch) {
+        setDebouncedSearch(searchQuery);
+        setPage(1); // Reset page on new search
+      }
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchQuery, debouncedSearch]);
+
   const getEvents = useCallback(async () => {
     setLoading(true);
     const isEnded = activeTab === "past";
-    const fetchedEvents = await fetchEvents({ limit, isEnded });
-    setEvents(fetchedEvents);
+    const offset = (page - 1) * size;
+    const response = await fetchEvents({ limit: size, offset, isEnded, search: debouncedSearch });
+    if (response) {
+      setEvents(response.items || []);
+      const calculatedPages = response.total ? Math.ceil(response.total / size) : 1;
+      setTotalPages(calculatedPages);
+    } else {
+      setEvents([]);
+      setTotalPages(1);
+    }
     setLoading(false);
-  }, [limit, activeTab]);
+  }, [size, page, activeTab, debouncedSearch]);
 
   useEffect(() => {
     getEvents();
@@ -51,11 +73,7 @@ export default function Events() {
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
-    setLimit(10);
-  };
-
-  const handleShowMore = () => {
-    setLimit((prev) => prev + 10);
+    setPage(1);
   };
 
   const handleShare = async (event: Event, e: React.MouseEvent) => {
@@ -114,10 +132,7 @@ export default function Events() {
     navigateTo(`/dashboard/eventEachEdit/editCreateEvent?event_id=${eventId}&slug=${slug}`);
   };
 
-  // Filter events based on search query
-  const filteredEvents = events.filter((event) =>
-    event.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+
 
   return (
     <div className="flex min-h-screen bg-[#2C333D]">
@@ -180,10 +195,27 @@ export default function Events() {
           {loading ? (
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} height={80} className="rounded-lg" />
+                <div key={i} className="flex flex-col md:flex-row items-center gap-4 p-4 border border-gray-200 rounded-lg bg-white">
+                  <div className="flex items-center gap-4 min-w-0 w-full md:w-auto">
+                    <Skeleton width={64} height={64} className="rounded-lg" />
+                    <div className="min-w-0 flex-1">
+                      <Skeleton width={150} height={20} className="mb-2" />
+                      <Skeleton width={80} height={16} className="rounded-full" />
+                    </div>
+                  </div>
+                  <div className="hidden md:flex items-center gap-8 justify-center flex-1">
+                    <Skeleton width={60} height={40} />
+                    <Skeleton width={60} height={40} />
+                  </div>
+                  <div className="hidden md:flex items-center gap-2 justify-end">
+                    <Skeleton width={36} height={36} className="rounded-lg" />
+                    <Skeleton width={36} height={36} className="rounded-lg" />
+                    <Skeleton width={36} height={36} className="rounded-lg" />
+                  </div>
+                </div>
               ))}
             </div>
-          ) : filteredEvents.length === 0 ? (
+          ) : events.length === 0 ? (
             <div className="flex items-center justify-center h-64">
               <p className="text-gray-500 text-[14px]">
                 No {activeTab === "past" ? "past" : "live"} events found
@@ -191,7 +223,7 @@ export default function Events() {
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredEvents.map((event) => (
+              {events.map((event) => (
                 <div
                   key={event.id}
                   onClick={() => navigateTo(`/dashboard/dashScreen?event_id=${event.id}`)}
@@ -261,16 +293,45 @@ export default function Events() {
             </div>
           )}
 
-          {/* Show More Button */}
-          {filteredEvents.length > 0 && (
-            <div className="flex justify-center mt-8">
-              <button
-                onClick={handleShowMore}
-                disabled={loading}
-                className="h-[42px] px-12 bebas text-[18px] tracking-wide border border-[#2C333D] text-[#2C333D] rounded hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                {loading ? "LOADING..." : "SHOW MORE"}
-              </button>
+          {/* Pagination Controls */}
+          {events.length > 0 && !loading && (
+            <div className="flex-none border-t border-gray-200 mt-6 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center space-x-2 text-sm text-gray-500">
+                <span>Rows per page:</span>
+                <select
+                  className="h-8 w-16 rounded border border-gray-300 bg-white px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={size}
+                  onChange={(e) => {
+                    setSize(Number(e.target.value));
+                    setPage(1);
+                  }}
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+              <div className="flex items-center justify-end space-x-2">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-3 py-1 flex items-center border border-gray-200 rounded text-sm disabled:opacity-50 hover:bg-gray-50 text-gray-700 font-medium"
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Previous
+                </button>
+                <div className="text-sm font-medium text-gray-700 px-4">
+                  Page {page} of {totalPages}
+                </div>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                  className="px-3 py-1 flex items-center border border-gray-200 rounded text-sm disabled:opacity-50 hover:bg-gray-50 text-gray-700 font-medium"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </button>
+              </div>
             </div>
           )}
         </div>

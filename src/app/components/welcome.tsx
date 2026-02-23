@@ -11,11 +11,15 @@ export default function Welcome() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load saved email from sessionStorage (NOT password for security)
+  // Auto-redirect if already logged in, otherwise load email from session
   useEffect(() => {
+    if (authService.isAuthenticated()) {
+      navigateTo('/dashboard/events');
+      return;
+    }
     const savedEmail = storage.getSessionItem('email');
     if (savedEmail) setEmail(savedEmail);
-  }, []);
+  }, [navigateTo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,6 +76,7 @@ export default function Welcome() {
           <label className="block mb-2 font-light text-sm text-gray-700">Username</label>
           <input
             type="text"
+            autoComplete="username"
             placeholder="Enter Your username"
             className="w-full p-2 border rounded-lg mb-4 "
             value={email}
@@ -82,6 +87,7 @@ export default function Welcome() {
           <label className="block mb-2 font-light text-sm text-gray-700">Password</label>
           <input
             type="password"
+            autoComplete="current-password"
             placeholder="Enter Password"
             className="w-full p-2 border rounded-lg mb-6"
             value={password}

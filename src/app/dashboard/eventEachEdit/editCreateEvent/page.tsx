@@ -603,7 +603,7 @@ export default function EditEvent() {
                   />
                 </div>
                 <div className="flex flex-col">
-                  <label className="text-[13px] text-gray-600 mb-1.5">Start Time <span className="text-red-500">*</span></label>
+                  <label className="text-[13px] text-gray-600 mb-1.5">Event Time <span className="text-red-500">*</span></label>
                   <input
                     type="time"
                     className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -668,9 +668,10 @@ export default function EditEvent() {
                   </select>
                 </div>
                 <div className="flex flex-col">
-                  <label className="text-[13px] text-gray-600 mb-1.5">{eventMode === true ? "Platform" : "Location"} <span className="text-red-500">*</span></label>
+                  <label className="text-[13px] text-gray-600 mb-1.5">{eventMode === true ? "Platform" : "Event Address"} <span className="text-red-500">*</span></label>
                   <input
                     type="text"
+                    placeholder={eventMode === true ? "e.g., Google Meet, Zoom" : "Enter Event Location"}
                     className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={eventLocation}
                     onChange={(e) => setEventLocation(e.target.value)}
@@ -681,6 +682,7 @@ export default function EditEvent() {
                   <label className="text-[13px] text-gray-600 mb-1.5">{eventMode === true ? "Meet Link" : "Map Link"} <span className="text-red-500">*</span></label>
                   <input
                     type="url"
+                    placeholder="Enter Link"
                     className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={eventMeetLink}
                     onChange={(e) => setEventMeetLink(e.target.value)}
@@ -698,18 +700,22 @@ export default function EditEvent() {
                   <label className="text-[13px] text-gray-600 mb-1.5">Registration Fee</label>
                   <input
                     type="number"
+                    min="0"
+                    placeholder="Enter Registration Fee (0 for Free)"
                     className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={eventFee}
-                    onChange={(e) => setEventFee(parseInt(e.target.value, 10))}
+                    onChange={(e) => setEventFee(Math.max(0, parseInt(e.target.value || "0", 10)))}
                   />
                 </div>
                 <div className="flex flex-col">
                   <label className="text-[13px] text-gray-600 mb-1.5">Prize Worth</label>
                   <input
                     type="number"
+                    min="0"
+                    placeholder="Enter Prize Worth (0 for None)"
                     className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={eventPerks}
-                    onChange={(e) => setEventPerks(parseInt(e.target.value, 10))}
+                    onChange={(e) => setEventPerks(Math.max(0, parseInt(e.target.value || "0", 10)))}
                   />
                 </div>
               </div>

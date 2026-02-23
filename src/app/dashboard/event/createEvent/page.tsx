@@ -20,28 +20,7 @@ interface Guest {
   photo: File | null;
 }
 
-// Event type options
-const eventTypeOptions = [
-  { id: 1, name: "Workshop" },
-  { id: 2, name: "Seminar" },
-  { id: 3, name: "Competition" },
-  { id: 4, name: "Hackathon" },
-  { id: 5, name: "Cultural Event" },
-  { id: 6, name: "Sports Event" },
-  { id: 7, name: "Networking" },
-  { id: 8, name: "Conference" },
-];
 
-// Event tag options
-const eventTagOptions = [
-  { id: 1, name: "Free" },
-  { id: 2, name: "Paid" },
-  { id: 3, name: "Online" },
-  { id: 4, name: "Offline" },
-  { id: 5, name: "Hybrid" },
-  { id: 6, name: "Featured" },
-  { id: 7, name: "Limited Seats" },
-];
 
 const interestCategories = [
   {
@@ -127,9 +106,7 @@ export default function CreateEvent() {
   const [eventPerks, setEventPerks] = useState<number>(0);
   const [eventGuidelines, setEventGuidelines] = useState("");
 
-  // Event Type and Tag state
-  const [eventType, setEventType] = useState<number | null>(null);
-  const [eventTag, setEventTag] = useState<number | null>(null);
+
 
   // Speakers/Guests state
   const [guests, setGuests] = useState<Guest[]>([]);
@@ -232,7 +209,7 @@ export default function CreateEvent() {
       contact_phone: eventCoordinatorPhone,
       contact_email: eventCoordinatorEmail,
       interest_ids: selected.length > 0 ? selected.map(s => s.id).join(",") : null,
-      event_tag: eventTag ? eventTagOptions.find(t => t.id === eventTag)?.name || null : null,
+      event_tag: null,
       speakers: guests.map(g => ({
         name: g.name,
         designation: g.designation,
@@ -277,46 +254,11 @@ export default function CreateEvent() {
 
                   <div className="flex flex-col">
                     <label className="font-sans text-gray-600 text-[13px] mb-1.5">
-                      Event Type
-                    </label>
-                    <select
-                      className="font-sans h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                      value={eventType ?? ""}
-                      onChange={(e) => setEventType(e.target.value ? parseInt(e.target.value) : null)}
-                    >
-                      <option value="">Choose Event Type</option>
-                      {eventTypeOptions.map((type) => (
-                        <option key={type.id} value={type.id}>
-                          {type.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="flex flex-col">
-                    <label className="font-sans text-gray-600 text-[13px] mb-1.5">
-                      Tag
-                    </label>
-                    <select
-                      className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                      value={eventTag ?? ""}
-                      onChange={(e) => setEventTag(e.target.value ? parseInt(e.target.value) : null)}
-                    >
-                      <option value="">Choose Event Tag</option>
-                      {eventTagOptions.map((tag) => (
-                        <option key={tag.id} value={tag.id}>
-                          {tag.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="flex flex-col">
-                    <label className="font-sans text-gray-600 text-[13px] mb-1.5">
                       Event Seats<span className="text-red-500">*</span>
                     </label>
                     <input
-                      type="text"
+                      type="number"
+                      min="1"
                       placeholder="Enter available seats for the event"
                       className="font-sans h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={eventSeats}
@@ -407,7 +349,7 @@ export default function CreateEvent() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="flex flex-col">
                   <label className="font-sans text-gray-600 text-[13px] mb-1.5">
-                    From Date<span className="text-red-500">*</span>
+                    Event Date<span className="text-red-500">*</span>
                   </label>
                   <input
                     type="date"
@@ -419,7 +361,7 @@ export default function CreateEvent() {
                 </div>
                 <div className="flex flex-col">
                   <label className="font-sans text-gray-600 text-[13px] mb-1.5">
-                    From Start Time<span className="text-red-500">*</span>
+                    Event Time<span className="text-red-500">*</span>
                   </label>
                   <input
                     type="time"
@@ -475,30 +417,46 @@ export default function CreateEvent() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="flex flex-col">
                   <label className="font-sans text-gray-600 text-[13px] mb-1.5">
-                    Event Place
+                    Event Mode<span className="text-red-500">*</span>
                   </label>
-                  <select className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-                    <option>Choose/Offline</option>
+                  <select
+                    className="font-sans h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    value={eventMode === true ? "online" : eventMode === false ? "offline" : ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "online") setEventMode(true);
+                      else if (val === "offline") setEventMode(false);
+                      else setEventMode("");
+                    }}
+                    required
+                  >
+                    <option value="">Select Mode</option>
+                    <option value="offline">Offline / Venue</option>
+                    <option value="online">Online</option>
                   </select>
                 </div>
                 <div className="flex flex-col">
                   <label className="font-sans text-gray-600 text-[13px] mb-1.5">
-                    Event Address
+                    {eventMode === true ? "Platform" : "Event Address"}
                   </label>
                   <input
                     type="text"
-                    placeholder="Choose Event Location"
-                    className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder={eventMode === true ? "e.g., Google Meet, Zoom" : "Enter Event Location"}
+                    className="font-sans h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={eventLocation}
+                    onChange={(e) => setEventLocation(e.target.value)}
                   />
                 </div>
                 <div className="flex flex-col">
                   <label className="font-sans text-gray-600 text-[13px] mb-1.5">
-                    Map Link
+                    {eventMode === true ? "Meet Link" : "Map Link"}
                   </label>
                   <input
                     type="url"
-                    placeholder="Enter Map Link"
-                    className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter Link"
+                    className="font-sans h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={eventMeetLink}
+                    onChange={(e) => setEventMeetLink(e.target.value)}
                   />
                 </div>
               </div>
@@ -514,10 +472,11 @@ export default function CreateEvent() {
                   </label>
                   <input
                     type="number"
-                    placeholder="Choose Event Location"
+                    min="0"
+                    placeholder="Enter Registration Fee (0 for Free)"
                     className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={eventFee}
-                    onChange={(e) => setEventFee(parseInt(e.target.value, 10))}
+                    onChange={(e) => setEventFee(Math.max(0, parseInt(e.target.value || "0", 10)))}
                   />
                 </div>
                 <div className="flex flex-col">
@@ -526,10 +485,11 @@ export default function CreateEvent() {
                   </label>
                   <input
                     type="number"
-                    placeholder="Choose Event Location"
+                    min="0"
+                    placeholder="Enter Prize Worth (0 for None)"
                     className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={eventPerks}
-                    onChange={(e) => setEventPerks(parseInt(e.target.value, 10))}
+                    onChange={(e) => setEventPerks(Math.max(0, parseInt(e.target.value || "0", 10)))}
                   />
                 </div>
               </div>

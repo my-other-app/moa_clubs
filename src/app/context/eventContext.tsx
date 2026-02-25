@@ -43,6 +43,8 @@ export type EventData = {
   event_guidelines: string | null;
   event_tag: string | null;
   speakers: EventSpeaker[];
+  ticket_template_id: number | null;
+  certificate_template_id: number | null;
 };
 
 type EventContextType = {
@@ -85,6 +87,13 @@ export const EventProvider = ({ children }: { children: ReactNode }) => {
     formData.append("additional_details", JSON.stringify(currentData.additional_details || []));
     formData.append("event_guidelines", currentData.event_guidelines || "");
     formData.append("event_tag", currentData.event_tag || "");
+
+    if (currentData.ticket_template_id) {
+      formData.append("ticket_template_id", currentData.ticket_template_id.toString());
+    }
+    if (currentData.certificate_template_id) {
+      formData.append("certificate_template_id", currentData.certificate_template_id.toString());
+    }
 
     // Handle speakers and their photos
     const speakers = currentData.speakers || [];

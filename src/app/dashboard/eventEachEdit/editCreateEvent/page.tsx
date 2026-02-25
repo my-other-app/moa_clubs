@@ -5,6 +5,7 @@ import Image from "next/image";
 import Sidebar from "@/app/components/sidebar";
 import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
+import jsonAPI from "@/app/api/jsonAPI";
 import { v4 as uuidv4 } from "uuid";
 import { ChevronLeft, ChevronDown, Circle, Trash2, Plus, X, Pencil } from "lucide-react";
 
@@ -118,6 +119,12 @@ export default function EditEvent() {
   const [options, setOptions] = useState<string[]>([""]);
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
 
+  // Templates
+  const [ticketTemplates, setTicketTemplates] = useState<any[]>([]);
+  const [certificateTemplates, setCertificateTemplates] = useState<any[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
+  const [selectedCertificateTemplateId, setSelectedCertificateTemplateId] = useState<number | null>(null);
+
   // Warning message
   const [warningMessage, setWarningMessage] = useState<string>("");
 
@@ -137,6 +144,25 @@ export default function EditEvent() {
       }
     };
     fetchCategories();
+
+    // Fetch templates
+    const fetchTemplates = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        const headers = { Authorization: `Bearer ${token}` };
+
+        const [ticketRes, certRes] = await Promise.all([
+          jsonAPI.get("/api/v1/ticket-templates/list", { headers }),
+          jsonAPI.get("/api/v1/certificate-templates/list", { headers }),
+        ]);
+
+        setTicketTemplates(ticketRes.data);
+        setCertificateTemplates(certRes.data);
+      } catch (err) {
+        console.error("Error fetching templates:", err);
+      }
+    };
+    fetchTemplates();
   }, [API_BASE_URL]);
 
   // Fetch event details
@@ -206,6 +232,9 @@ export default function EditEvent() {
             required: d.required
           })));
         }
+
+        if (data.ticket_template_id) setSelectedTemplateId(data.ticket_template_id);
+        if (data.certificate_template_id) setSelectedCertificateTemplateId(data.certificate_template_id);
 
       } catch (error) {
         console.error("Error fetching event details:", error);
@@ -465,6 +494,13 @@ export default function EditEvent() {
       answer: ""
     }));
     formData.append("additional_details", JSON.stringify(additionalDetails));
+
+    if (selectedTemplateId) {
+      formData.append("ticket_template_id", selectedTemplateId.toString());
+    }
+    if (selectedCertificateTemplateId) {
+      formData.append("certificate_template_id", selectedCertificateTemplateId.toString());
+    }
 
     if (eventPoster) {
       formData.append("poster", eventPoster);
@@ -998,6 +1034,50 @@ export default function EditEvent() {
                       ))}
                     </div>
                   )}
+                </div>
+              </div>
+            </div>
+
+            {/* TEMPLATES */}
+            <div>
+              <h2 className="bebas text-[20px] tracking-wide text-black mb-5">TEMPLATES</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex flex-col">
+                  <label className="text-[13px] text-gray-600 mb-1.5">Select Ticket Template</label>
+                  <select
+                    className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    value={selectedTemplateId ?? ""}
+                    onChange={(e) => setSelectedTemplateId(e.target.value ? parseInt(e.target.value, 10) : null)}
+                  >
+                    <option value="">Default Template</option>
+                    {ticketTemplates.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}{t.is_default ? " (Default)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    Customize templates in the Ticket Designer
+                  </p>
+                </div>
+
+                <div className="flex flex-col">
+                  <label className="text-[13px] text-gray-600 mb-1.5">Select Certificate Template</label>
+                  <select
+                    className="h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    value={selectedCertificateTemplateId ?? ""}
+                    onChange={(e) => setSelectedCertificateTemplateId(e.target.value ? parseInt(e.target.value, 10) : null)}
+                  >
+                    <option value="">Default Template</option>
+                    {certificateTemplates.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}{t.is_default ? " (Default)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    Customize templates in the Certificate Designer
+                  </p>
                 </div>
               </div>
             </div>

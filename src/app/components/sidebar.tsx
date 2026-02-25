@@ -12,6 +12,7 @@ import {
   LogOut,
   Menu,
   X,
+  Ticket,
 } from "lucide-react";
 
 const Sidebar = () => {
@@ -89,6 +90,17 @@ const Sidebar = () => {
               )}`}
             >
               <Bell size={20} />
+            </div>
+          </Link>
+
+          {/* Ticket Designer */}
+          <Link href="/dashboard/ticketTemplate">
+            <div
+              className={`w-11 h-11 rounded-full flex items-center justify-center cursor-pointer transition-colors ${getButtonClasses(
+                "/dashboard/ticketTemplate"
+              )}`}
+            >
+              <Ticket size={20} />
             </div>
           </Link>
 

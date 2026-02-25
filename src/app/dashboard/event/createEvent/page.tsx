@@ -20,6 +20,11 @@ interface Guest {
   photo: File | null;
 }
 
+interface Template {
+  id: number;
+  name: string;
+}
+
 
 
 const interestCategories = [
@@ -106,6 +111,11 @@ export default function CreateEvent() {
   const [eventPerks, setEventPerks] = useState<number>(0);
   const [eventGuidelines, setEventGuidelines] = useState("");
 
+  const [ticketTemplates, setTicketTemplates] = useState<Template[]>([]);
+  const [certificateTemplates, setCertificateTemplates] = useState<Template[]>([]);
+  const [selectedTicketTemplate, setSelectedTicketTemplate] = useState<number | null>(null);
+  const [selectedCertificateTemplate, setSelectedCertificateTemplate] = useState<number | null>(null);
+
 
 
   // Speakers/Guests state
@@ -160,7 +170,26 @@ export default function CreateEvent() {
         window.alert("Failed to fetch categories. Please try again later.");
       }
     };
+
+    const fetchTemplates = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        const headers = { Authorization: `Bearer ${token}` };
+
+        const [ticketRes, certRes] = await Promise.all([
+          axios.get(`${API_BASE_URL}/api/v1/ticket-templates/list`, { headers }),
+          axios.get(`${API_BASE_URL}/api/v1/certificate-templates/list`, { headers }),
+        ]);
+
+        setTicketTemplates(ticketRes.data);
+        setCertificateTemplates(certRes.data);
+      } catch (error) {
+        console.error("Error fetching templates:", error);
+      }
+    };
+
     fetchCategories();
+    fetchTemplates();
   }, [API_BASE_URL]);
 
   const handlePosterUpload = (e: ChangeEvent<HTMLInputElement>) => {
@@ -216,6 +245,8 @@ export default function CreateEvent() {
         photo: g.photo, // Pass the file object
         photo_url: undefined,
       })),
+      ticket_template_id: selectedTicketTemplate,
+      certificate_template_id: selectedCertificateTemplate,
     };
 
     // Save event data in context and navigate to the next step
@@ -640,6 +671,47 @@ export default function CreateEvent() {
                   value={eventGuidelines}
                   onChange={(e) => setEventGuidelines(e.target.value)}
                 ></textarea>
+              </div>
+            </div>
+
+            {/* TEMPLATES SECTION */}
+            <div>
+              <h2 className="text-[20px] bebas font-normal mb-5 tracking-wide">TEMPLATES</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex flex-col">
+                  <label className="font-sans text-gray-600 text-[13px] mb-1.5">
+                    Ticket Template
+                  </label>
+                  <select
+                    className="font-sans h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    value={selectedTicketTemplate ?? ""}
+                    onChange={(e) => setSelectedTicketTemplate(e.target.value ? parseInt(e.target.value) : null)}
+                  >
+                    <option value="">Default Template</option>
+                    {ticketTemplates.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex flex-col">
+                  <label className="font-sans text-gray-600 text-[13px] mb-1.5">
+                    Certificate Template
+                  </label>
+                  <select
+                    className="font-sans h-[42px] px-3 py-2.5 text-[14px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    value={selectedCertificateTemplate ?? ""}
+                    onChange={(e) => setSelectedCertificateTemplate(e.target.value ? parseInt(e.target.value) : null)}
+                  >
+                    <option value="">Default Template</option>
+                    {certificateTemplates.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 

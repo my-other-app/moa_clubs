@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   Ticket,
+  Award,
 } from "lucide-react";
 
 const Sidebar = () => {
@@ -101,6 +102,17 @@ const Sidebar = () => {
               )}`}
             >
               <Ticket size={20} />
+            </div>
+          </Link>
+
+          {/* Certificate Designer */}
+          <Link href="/dashboard/certificateTemplate">
+            <div
+              className={`w-11 h-11 rounded-full flex items-center justify-center cursor-pointer transition-colors ${getButtonClasses(
+                "/dashboard/certificateTemplate"
+              )}`}
+            >
+              <Award size={20} />
             </div>
           </Link>
 
